@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="src/style.css">
+    <meta name="theme-color" content="#121212">
+    <meta name="description" content="Defenda a Terra neste jogo arcade inspirado em Space Invaders.">
+    <title>Space Invaders</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+</head>
+<body>
+    <section class="score-ui">
+        <div>
+            <span class="score">Pontos: <span>0</span></span>
+            <span class="level">Nível: <span>1</span></span>
+            <span class="high">Recorde: <span>0</span></span>
+            <span class="lives">Vidas: <span>3</span></span>
+        </div>
+    </section>
+
+    <div class="hud-controls" aria-label="Controles do jogo">
+        <button class="toggle-mute" type="button" aria-label="Alternar som">🔊</button>
+        <button class="toggle-pause" type="button" aria-label="Pausar jogo">⏸</button>
+    </div>
+
+    <section class="start-screen screen">
+        <div>
+            <h1>Space Invaders</h1>
+            <p class="instructions">Mova-se com ←/→ (ou A/D) ou com o mouse e atire com Espaço ou clique. P pausa, M liga/desliga o som e Enter reinicia a partida.<br><br>No celular: arraste o dedo para mover e mantenha pressionado para atirar.</p>
+            <button class="button-play">Jogar</button>
+        </div>
+
+        <span>Pressione Esc durante o jogo para sair</span>
+    </section>
+
+    <div class="pause-overlay" aria-live="polite">Jogo pausado</div>
+
+    <section class="game-over screen">
+        <div>
+            <h1>Fim de jogo</h1>
+            <button class="button-restart">Reiniciar</button>
+            <button class="button-exit">Sair</button>
+        </div>
+    </section>
+
+    <div class="exit-modal">
+        <div class="exit-modal-content" role="dialog" aria-modal="true" aria-labelledby="exit-question">
+            <p id="exit-question">Deseja sair do jogo? (S/N)</p>
+            <div class="exit-modal-buttons">
+                <button class="exit-btn-yes">Sim</button>
+                <button class="exit-btn-no">Não</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas></canvas>
+
+    <script type="module" src="src/index.js"></script>
+</body>
+</html>

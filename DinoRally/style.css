@@ -1,0 +1,87 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #05060f;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+}
+
+/* Controles de toque (só aparecem em telas sensíveis ao toque) */
+.touch {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 12px;
+    pointer-events: none;
+}
+
+.touch.show {
+    display: flex;
+}
+
+.touch-group {
+    display: flex;
+    gap: 10px;
+}
+
+.touch button {
+    pointer-events: auto;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: rgba(10, 14, 30, 0.45);
+    color: #fff;
+    font-size: 1.5rem;
+    font-family: system-ui, sans-serif;
+    backdrop-filter: blur(3px);
+    touch-action: none;
+}
+
+.touch button.active {
+    background: rgba(52, 204, 163, 0.55);
+    border-color: #34cca3;
+}
+
+.touch .gas {
+    width: 78px;
+    height: 78px;
+    border-color: rgba(52, 204, 163, 0.7);
+}
+
+.touch .brake {
+    border-color: rgba(255, 90, 60, 0.6);
+}
+
+.touch .touch-pause {
+    width: 46px;
+    height: 46px;
+    font-size: 1rem;
+    align-self: flex-end;
+}

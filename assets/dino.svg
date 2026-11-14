@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="DinoGames">
+  <title>DinoGames</title>
+  <style>
+    /* Contorno verde-escuro, ajustado ao tema claro/escuro. */
+    .line { stroke: #0B4D3C; }
+    @media (prefers-color-scheme: dark) { .line { stroke: #15805F; } }
+  </style>
+  <g class="line" stroke-width="44" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Espinhos (desenhados atrás do corpo) -->
+    <g fill="#F5B021">
+      <path d="M160 840 Q65 840 68 755 Q135 735 235 760 Z"/>
+      <path d="M248 712 Q148 702 150 605 Q222 585 305 615 Z"/>
+      <path d="M308 572 Q212 552 222 450 Q292 430 355 460 Z"/>
+      <path d="M358 408 Q268 372 284 265 Q352 245 415 290 Z"/>
+      <path d="M440 210 Q425 120 470 62 Q545 78 580 148 Z"/>
+      <path d="M628 140 Q668 58 732 34 Q795 80 798 172 Z"/>
+    </g>
+
+    <!-- Corpo -->
+    <path fill="#34CCA3" d="M40 880
+      C120 850 220 790 280 640
+      C330 520 350 380 400 280
+      C450 170 560 120 690 125
+      C830 130 930 220 935 330
+      C940 420 870 470 790 468
+      L745 490
+      C770 570 790 650 800 745
+      C825 695 880 685 930 712
+      C975 740 985 860 950 920
+      C920 955 820 950 700 948
+      L120 935
+      C60 932 20 912 40 880 Z"/>
+
+    <!-- Detalhes -->
+    <g fill="none">
+      <path d="M738 440 Q770 478 835 462"/>
+      <path d="M600 510 C660 560 705 610 668 652 C628 690 565 655 515 600"/>
+      <path d="M700 762 L800 762"/>
+    </g>
+  </g>
+
+  <!-- Olho -->
+  <circle cx="655" cy="255" r="32" fill="#0B0B24"/>
+</svg>

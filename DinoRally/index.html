@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0d26">
+    <title>Dino Rally</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="stage">
+        <canvas id="game" tabindex="0" aria-label="Dino Rally"></canvas>
+
+        <div class="touch" aria-label="Controles de toque">
+            <div class="touch-group">
+                <button type="button" data-key="left" aria-label="Esquerda">◀</button>
+                <button type="button" data-key="right" aria-label="Direita">▶</button>
+            </div>
+            <button type="button" class="touch-pause" data-key="pause" aria-label="Pausar">❚❚</button>
+            <div class="touch-group">
+                <button type="button" data-key="brake" class="brake" aria-label="Freio">▼</button>
+                <button type="button" data-key="gas" class="gas" aria-label="Acelerar">▲</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="rally.js"></script>
+</body>
+</html>

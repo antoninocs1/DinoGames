@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#04121f">
+    <title>Batalha Naval</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="ocean" aria-hidden="true"></div>
+
+    <main class="game" id="game">
+        <header class="bar">
+            <h1 class="title">Batalha <span>Naval</span></h1>
+            <p class="status" id="status" aria-live="polite">Posicione sua frota.</p>
+            <div class="bar-actions">
+                <label class="select">
+                    <span>IA</span>
+                    <select id="difficulty" aria-label="Dificuldade">
+                        <option value="easy">Fácil</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="hard">Difícil</option>
+                    </select>
+                </label>
+                <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                <button class="btn" id="btn-new" type="button" title="Novo jogo (N)">Novo jogo</button>
+            </div>
+        </header>
+
+        <section class="boards" id="boards">
+            <div class="board-wrap player-side">
+                <div class="board-head">
+                    <h2>Sua frota</h2>
+                    <span class="fleet-count" id="player-left"></span>
+                </div>
+                <div class="board" id="player-board" role="grid" aria-label="Seu tabuleiro"></div>
+            </div>
+
+            <div class="board-wrap enemy-side">
+                <div class="board-head">
+                    <h2>Frota inimiga</h2>
+                    <span class="fleet-count" id="enemy-left"></span>
+                </div>
+                <div class="board enemy" id="enemy-board" role="grid" aria-label="Tabuleiro inimigo">
+                    <div class="sonar" aria-hidden="true"></div>
+                </div>
+            </div>
+
+            <aside class="panel" id="panel">
+                <div class="setup" id="setup">
+                    <h3>Posicionamento</h3>
+                    <p class="hint">Clique no seu tabuleiro para posicionar cada navio. <kbd>R</kbd> ou o botão direito do mouse giram.</p>
+                    <ul class="ship-list" id="ship-list"></ul>
+                    <div class="setup-actions">
+                        <button class="btn" id="btn-rotate" type="button">⟳ Girar <kbd>R</kbd></button>
+                        <button class="btn" id="btn-random" type="button">🎲 Aleatório</button>
+                        <button class="btn" id="btn-clear" type="button">Limpar</button>
+                    </div>
+                    <button class="btn primary" id="btn-start" type="button" disabled>Iniciar batalha</button>
+                </div>
+
+                <div class="stats" id="stats" hidden>
+                    <h3>Placar</h3>
+                    <dl>
+                        <div><dt>Disparos</dt><dd id="stat-shots">0</dd></div>
+                        <div><dt>Acertos</dt><dd id="stat-hits">0</dd></div>
+                        <div><dt>Precisão</dt><dd id="stat-acc">0%</dd></div>
+                        <div><dt>Vitórias</dt><dd id="stat-wins">0</dd></div>
+                    </dl>
+                    <p class="hint">Clique na frota inimiga para atirar. Teclado: setas + <kbd>Enter</kbd>.</p>
+                    <ol class="log" id="log"></ol>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <div class="overlay" id="overlay" hidden>
+        <div class="overlay-card">
+            <h2 id="overlay-title">Vitória!</h2>
+            <p id="overlay-text"></p>
+            <button class="btn primary" id="btn-again" type="button">Jogar de novo</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

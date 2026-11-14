@@ -1,0 +1,629 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #04121f;
+    --panel: rgba(6, 26, 44, 0.78);
+    --border: rgba(110, 200, 255, 0.22);
+    --text: #e6f4ff;
+    --dim: #8fb3cc;
+    --accent: #36d1ff;
+    --hit: #ff5a3c;
+    --miss: #9fd8ff;
+    --ship: #8796a8;
+    --cell: clamp(24px, 3.4vw, 40px);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden auto;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- Oceano animado ao fundo ---------- */
+
+.ocean {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(ellipse at 20% 10%, rgba(54, 209, 255, 0.18), transparent 55%),
+        radial-gradient(ellipse at 85% 90%, rgba(0, 120, 200, 0.25), transparent 60%),
+        linear-gradient(180deg, #06223a 0%, #04121f 100%);
+}
+
+.ocean::before,
+.ocean::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: repeating-radial-gradient(circle at 50% 50%, rgba(120, 210, 255, 0.05) 0 2px, transparent 2px 38px);
+    animation: drift 40s linear infinite;
+}
+
+.ocean::after {
+    background: repeating-linear-gradient(115deg, rgba(120, 210, 255, 0.035) 0 1px, transparent 1px 22px);
+    animation-duration: 26s;
+    animation-direction: reverse;
+}
+
+@keyframes drift {
+    to {
+        transform: translate(120px, 60px) rotate(8deg);
+    }
+}
+
+/* ---------- Barra superior ---------- */
+
+.game {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px;
+}
+
+.bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+}
+
+.title {
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.title span {
+    color: var(--accent);
+}
+
+.status {
+    flex: 1;
+    min-width: 180px;
+    color: var(--dim);
+    font-weight: 600;
+}
+
+.status.good {
+    color: #7dffb0;
+}
+
+.status.bad {
+    color: #ff9a85;
+}
+
+.bar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.select {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dim);
+    font-size: 0.85rem;
+}
+
+select,
+.btn {
+    font: inherit;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+select option {
+    background: #06223a;
+}
+
+.btn:hover:not(:disabled) {
+    background: rgba(54, 209, 255, 0.15);
+    border-color: var(--accent);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn.icon {
+    width: 40px;
+    padding: 8px 0;
+}
+
+.btn.primary {
+    background: linear-gradient(180deg, #36d1ff, #1593d6);
+    border-color: transparent;
+    color: #022033;
+    font-weight: 700;
+}
+
+.btn.primary:hover:not(:disabled) {
+    filter: brightness(1.1);
+    background: linear-gradient(180deg, #36d1ff, #1593d6);
+}
+
+kbd {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.75em;
+    padding: 1px 5px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Tabuleiros ---------- */
+
+.boards {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 18px;
+    margin-top: 14px;
+    align-items: start;
+}
+
+.board-wrap {
+    padding: 12px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+}
+
+.board-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.board-head h2 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.enemy-side h2 {
+    color: #ff9a85;
+}
+
+.fleet-count {
+    color: var(--dim);
+    font-size: 0.8rem;
+}
+
+.board {
+    position: relative;
+    display: grid;
+    grid-template-columns: calc(var(--cell) * 0.7) repeat(10, var(--cell));
+    grid-template-rows: calc(var(--cell) * 0.7) repeat(10, var(--cell));
+    gap: 2px;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.board.shake {
+    animation: shake 0.35s;
+}
+
+@keyframes shake {
+    20% { transform: translate(-4px, 2px); }
+    40% { transform: translate(4px, -2px); }
+    60% { transform: translate(-3px, -1px); }
+    80% { transform: translate(2px, 1px); }
+}
+
+.label {
+    display: grid;
+    place-items: center;
+    color: var(--dim);
+    font-size: calc(var(--cell) * 0.33);
+    font-weight: 700;
+}
+
+.cell {
+    position: relative;
+    border: 0;
+    border-radius: 4px;
+    background: rgba(40, 120, 180, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(120, 210, 255, 0.12);
+    cursor: default;
+    transition: background-color 0.15s;
+}
+
+.enemy .cell {
+    cursor: crosshair;
+}
+
+.enemy.locked .cell {
+    cursor: wait;
+}
+
+.enemy .cell:not(.shot):hover,
+.enemy .cell.cursor {
+    background: rgba(255, 90, 60, 0.28);
+    box-shadow: inset 0 0 0 2px rgba(255, 150, 120, 0.7);
+}
+
+.cell.preview {
+    background: rgba(125, 255, 176, 0.35);
+}
+
+.cell.preview.invalid {
+    background: rgba(255, 90, 60, 0.4);
+}
+
+/* Navio: segmentos de casco com pontas arredondadas */
+.cell.ship::before {
+    content: "";
+    position: absolute;
+    inset: 12%;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #b7c3d1, var(--ship) 55%, #5b6878);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+.cell.ship.h::before { left: -2px; right: -2px; }
+.cell.ship.v::before { top: -2px; bottom: -2px; }
+.cell.ship.h.start::before { left: 14%; border-radius: 40% 3px 3px 40%; }
+.cell.ship.h.end::before { right: 14%; border-radius: 3px 50% 50% 3px; }
+.cell.ship.v.start::before { top: 14%; border-radius: 40% 40% 3px 3px; }
+.cell.ship.v.end::before { bottom: 14%; border-radius: 3px 3px 50% 50%; }
+
+.cell.ship.sunk::before {
+    background: linear-gradient(180deg, #6a2a24, #3b1714);
+    animation: sink 0.8s ease-out;
+}
+
+@keyframes sink {
+    from { transform: scale(1.15); filter: brightness(2); }
+}
+
+/* Disparos */
+.cell.miss::after {
+    content: "";
+    position: absolute;
+    inset: 36%;
+    border-radius: 50%;
+    background: var(--miss);
+    opacity: 0.75;
+}
+
+.cell.hit::after {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 60%, #fff3b0 0 15%, #ffb02e 30%, var(--hit) 55%, rgba(255, 60, 30, 0) 72%);
+    animation: flame 0.7s ease-in-out infinite alternate;
+}
+
+.cell.sunk-cell::after {
+    animation: none;
+    background: radial-gradient(circle, rgba(40, 20, 20, 0.85) 0 40%, transparent 70%);
+}
+
+@keyframes flame {
+    from { transform: scale(0.9) translateY(1px); filter: brightness(0.9); }
+    to { transform: scale(1.1) translateY(-1px); filter: brightness(1.25); }
+}
+
+/* Efeitos temporários (explosão, splash) */
+.fx {
+    position: absolute;
+    pointer-events: none;
+    z-index: 3;
+    border-radius: 50%;
+}
+
+.fx.boom {
+    background: radial-gradient(circle, #fff 0 10%, #ffd36b 25%, #ff6a2c 50%, rgba(255, 40, 0, 0) 70%);
+    animation: boom 0.55s ease-out forwards;
+}
+
+@keyframes boom {
+    from { transform: scale(0.2); opacity: 1; }
+    to { transform: scale(2.6); opacity: 0; }
+}
+
+.fx.splash {
+    border: 2px solid rgba(180, 230, 255, 0.9);
+    animation: splash 0.7s ease-out forwards;
+}
+
+@keyframes splash {
+    from { transform: scale(0.2); opacity: 1; }
+    to { transform: scale(2.2); opacity: 0; }
+}
+
+.fx.spark {
+    width: 5px;
+    height: 5px;
+    background: #ffd36b;
+    box-shadow: 0 0 6px #ff8a2c;
+    animation: spark 0.6s ease-out forwards;
+}
+
+@keyframes spark {
+    to { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+.fx.drop {
+    width: 4px;
+    height: 4px;
+    background: #bfeaff;
+    animation: spark 0.55s ease-out forwards;
+}
+
+/* Sonar varrendo o tabuleiro inimigo */
+.sonar {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 160%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(from 0deg, rgba(54, 209, 255, 0.16), transparent 18%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sweep 4s linear infinite;
+    z-index: 2;
+    mix-blend-mode: screen;
+}
+
+@keyframes sweep {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---------- Painel lateral ---------- */
+
+.panel {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    min-width: 220px;
+}
+
+.panel h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+.hint {
+    color: var(--dim);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.ship-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.ship-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.ship-list li.current {
+    border-color: var(--accent);
+    background: rgba(54, 209, 255, 0.1);
+}
+
+.ship-list li.placed {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.ship-dots {
+    display: flex;
+    gap: 3px;
+}
+
+.ship-dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--ship);
+}
+
+.setup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.setup-actions .btn {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 0.85rem;
+}
+
+#btn-start {
+    width: 100%;
+    padding: 12px;
+}
+
+.stats dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.stats dl div {
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.stats dt {
+    font-size: 0.72rem;
+    color: var(--dim);
+    text-transform: uppercase;
+}
+
+.stats dd {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.log {
+    list-style: none;
+    max-height: 180px;
+    overflow: auto;
+    font-size: 0.82rem;
+    color: var(--dim);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.log li.you { color: #a8e6ff; }
+.log li.enemy { color: #ffb4a6; }
+.log li.big { font-weight: 700; color: #ffe08a; }
+
+/* ---------- Fim de jogo ---------- */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(2, 10, 18, 0.72);
+    backdrop-filter: blur(3px);
+    z-index: 10;
+    animation: fade 0.3s;
+}
+
+@keyframes fade {
+    from { opacity: 0; }
+}
+
+.overlay-card {
+    text-align: center;
+    padding: 30px 36px;
+    border-radius: 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    animation: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes pop {
+    from { transform: scale(0.7); }
+}
+
+.overlay-card h2 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.overlay-card p {
+    color: var(--dim);
+    margin-bottom: 18px;
+}
+
+.overlay.win h2 { color: #7dffb0; }
+.overlay.lose h2 { color: #ff8a75; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 1080px) {
+    .boards {
+        grid-template-columns: auto auto;
+    }
+
+    .panel {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    :root {
+        --cell: min(8vw, 34px);
+    }
+
+    .game {
+        padding: 8px;
+    }
+
+    .boards {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 10px;
+    }
+
+    .board-wrap {
+        padding: 8px;
+    }
+
+    /* No posicionamento só importa o seu tabuleiro e o painel da frota */
+    .game:not(.battle) .enemy-side { display: none; }
+
+    /* Na batalha, o tabuleiro inimigo vem primeiro e o seu fica menor */
+    .battle .enemy-side { order: -1; }
+    .battle .player-side { --cell: min(5.4vw, 24px); }
+
+    .panel {
+        width: 100%;
+    }
+
+    .title {
+        font-size: 1.05rem;
+    }
+
+    .status {
+        order: 3;
+        flex-basis: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+    }
+}

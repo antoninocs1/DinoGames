@@ -1,0 +1,91 @@
+// Service worker do DinoGames: deixa os jogos disponíveis offline e permite instalar como app.
+// Ao alterar arquivos do projeto, aumente CACHE_VERSION para que os usuários recebam a atualização.
+const CACHE_VERSION = "dinogames-v1";
+
+const APP_FILES = [
+    "./",
+    "index.html",
+    "manifest.webmanifest",
+    "hub/hub.css",
+    "hub/hub.js",
+    "hub/icons.js",
+    "hub/games.js",
+    "assets/dino.svg",
+    "assets/icons/icon-192.png",
+    "assets/icons/icon-512.png",
+    "assets/icons/icon-maskable-512.png",
+    "assets/icons/apple-touch-icon.png",
+
+    "Tetris/index.html",
+    "Tetris/tetris.css",
+    "Tetris/tetris.js",
+    "Tetris/fx.js",
+
+    "SpaceInvaders/index.html",
+    "SpaceInvaders/src/style.css",
+    "SpaceInvaders/src/index.js",
+    "SpaceInvaders/src/utils/constants.js",
+    "SpaceInvaders/src/classes/AudioEngine.js",
+    "SpaceInvaders/src/classes/Enemy.js",
+    "SpaceInvaders/src/classes/Grid.js",
+    "SpaceInvaders/src/classes/Invader.js",
+    "SpaceInvaders/src/classes/Obstacle.js",
+    "SpaceInvaders/src/classes/Particle.js",
+    "SpaceInvaders/src/classes/Player.js",
+    "SpaceInvaders/src/classes/Projectile.js",
+    "SpaceInvaders/src/classes/SoundEffects.js",
+    "SpaceInvaders/src/classes/Star.js",
+    "SpaceInvaders/src/assets/images/engine.png",
+    "SpaceInvaders/src/assets/images/engine_sprites.png",
+    "SpaceInvaders/src/assets/images/invader.png",
+    "SpaceInvaders/src/assets/images/spaceship.png",
+    "SpaceInvaders/src/assets/audios/explosion.mp3",
+    "SpaceInvaders/src/assets/audios/hit.mp3",
+    "SpaceInvaders/src/assets/audios/next_level.mp3",
+    "SpaceInvaders/src/assets/audios/shoot.mp3",
+
+    "BatalhaNaval/index.html",
+    "BatalhaNaval/style.css",
+    "BatalhaNaval/game.js",
+
+    "DinoRally/index.html",
+    "DinoRally/style.css",
+    "DinoRally/rally.js",
+];
+
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open(CACHE_VERSION)
+            .then((cache) => cache.addAll(APP_FILES))
+            .then(() => self.skipWaiting())
+    );
+});
+
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys()
+            .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))))
+            .then(() => self.clients.claim())
+    );
+});
+
+// Rede primeiro (sempre a versão mais nova quando online); sem conexão, usa o cache.
+self.addEventListener("fetch", (event) => {
+    const { request } = event;
+    if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+
+    event.respondWith(
+        caches.open(CACHE_VERSION).then(async (cache) => {
+            try {
+                const response = await fetch(request);
+                if (response.ok) cache.put(request, response.clone());
+                return response;
+            } catch {
+                const cached = await cache.match(request, { ignoreSearch: true });
+                if (cached) return cached;
+                if (request.mode === "navigate") return cache.match("index.html");
+                throw new Error("offline");
+            }
+        })
+    );
+});

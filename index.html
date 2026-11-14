@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f1117">
+    <meta name="description" content="DinoGames - coleção de jogos clássicos em JavaScript.">
+    <title>DinoGames</title>
+    <link rel="icon" type="image/svg+xml" href="assets/dino.svg">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DinoGames">
+    <script>
+        // Aplica o tema antes da renderização para evitar "piscar".
+        (function () {
+            var theme = "dark";
+            try {
+                theme = localStorage.getItem("dinogames-theme") ||
+                    (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+            } catch (e) { /* armazenamento indisponível */ }
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
+    <link rel="stylesheet" href="hub/hub.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar" id="sidebar" aria-label="Menu de jogos">
+            <a class="brand" href="#" data-home>
+                <span class="brand-icon" data-dino></span>
+                <span class="brand-text">Dino<strong>Games</strong></span>
+            </a>
+
+            <p class="sidebar-label">Jogos</p>
+            <nav class="game-list" id="game-list" aria-label="Jogos"></nav>
+
+            <p class="sidebar-label">Geral</p>
+            <nav class="game-list" aria-label="Geral">
+                <a class="game-link nav-link" href="#" data-home data-page="home" title="Início">
+                    <span class="game-link-icon" data-icon="home"></span>
+                    <span class="game-link-title">Início</span>
+                </a>
+                <a class="game-link nav-link" href="#sobre" data-page="sobre" title="Sobre">
+                    <span class="game-link-icon" data-icon="info"></span>
+                    <span class="game-link-title">Sobre</span>
+                </a>
+                <a class="game-link nav-link support-link" href="#apoie" data-page="apoie" title="Nos apoie">
+                    <span class="game-link-icon" data-icon="heart"></span>
+                    <span class="game-link-title">Nos apoie</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="social" aria-label="Redes sociais">
+                    <a class="social-link" href="https://github.com/antoninocs1" target="_blank" rel="noopener noreferrer" title="GitHub" aria-label="GitHub"><span data-icon="github"></span></a>
+                    <a class="social-link" href="https://instagram.com/promoverobem" target="_blank" rel="noopener noreferrer" title="Instagram @promoverobem" aria-label="Instagram"><span data-icon="instagram"></span></a>
+                    <a class="social-link" href="https://promoverobem.blogspot.com/" target="_blank" rel="noopener noreferrer" title="Blog" aria-label="Blog"><span data-icon="globe"></span></a>
+                    <a class="social-link" href="mailto:antoninocs@yahoo.com.br" title="E-mail: antoninocs@yahoo.com.br" aria-label="E-mail"><span data-icon="mail"></span></a>
+                </div>
+                <button class="sidebar-collapse" id="sidebar-collapse" type="button" aria-label="Recolher menu" title="Recolher menu">
+                    <span aria-hidden="true">«</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="backdrop" id="backdrop" hidden></div>
+
+        <main class="main">
+            <header class="topbar">
+                <button class="icon-btn menu-toggle" id="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">☰</button>
+                <h1 class="topbar-title" id="topbar-title">Início</h1>
+                <div class="topbar-actions" id="topbar-actions" hidden>
+                    <button class="icon-btn" id="btn-reload" type="button" title="Reiniciar jogo (recarregar)" aria-label="Reiniciar jogo">⟳</button>
+                    <button class="icon-btn" id="btn-fullscreen" type="button" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+                    <button class="icon-btn" id="btn-close" type="button" title="Fechar jogo" aria-label="Fechar jogo">✕</button>
+                </div>
+                <span class="topbar-divider" id="topbar-divider" hidden></span>
+                <div class="topbar-tools">
+                    <button class="icon-btn install-btn" id="btn-install" type="button" title="Instalar o DinoGames como app" aria-label="Instalar app" hidden>
+                        <span data-icon="download"></span><span class="install-label">Instalar</span>
+                    </button>
+                    <button class="icon-btn theme-toggle" id="btn-theme" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">
+                        <span class="theme-icon-sun" data-icon="sun"></span>
+                        <span class="theme-icon-moon" data-icon="moon"></span>
+                    </button>
+                    <button class="icon-btn glow-toggle-button" id="btn-glow" type="button" title="Ativar efeito lanterna" aria-label="Alternar efeito lanterna" aria-pressed="false">
+                        <span data-icon="flashlight"></span>
+                    </button>
+                </div>
+            </header>
+
+            <section class="home page" id="home">
+                <div class="home-hero">
+                    <span class="home-dino" data-dino></span>
+                    <h2>Bem-vindo ao DinoGames</h2>
+                    <p>Escolha um jogo no menu ou em um dos cartões abaixo.</p>
+                </div>
+                <div class="cards" id="cards"></div>
+                <p class="server-warning" id="server-warning" hidden>
+                    Você abriu o arquivo diretamente (file://). Alguns jogos usam módulos JavaScript e
+                    precisam de um servidor local. Rode <code>npm start</code> na pasta do projeto e acesse
+                    <code>http://localhost:8080</code>.
+                </p>
+            </section>
+
+            <section class="page about" id="page-sobre" hidden>
+                <div class="page-inner">
+                    <span class="about-logo" data-dino></span>
+                    <span class="badge">Sobre</span>
+                    <h2>Sobre o DinoGames</h2>
+                    <p class="lead">Uma coleção de jogos clássicos feitos com JavaScript, HTML e CSS — sem instalação, direto no navegador do computador ou do celular.</p>
+                    <p>
+                        Cada jogo roda em sua própria janela dentro do DinoGames e salva o seu recorde no navegador.
+                        Os jogos se adaptam ao tamanho da tela e têm controles de toque no celular.
+                    </p>
+
+                    <div class="stats">
+                        <div class="stat"><span class="stat-number" id="stat-games">2</span><span class="stat-label">Jogos</span></div>
+                        <div class="stat"><span class="stat-number">100%</span><span class="stat-label">Gratuito</span></div>
+                        <div class="stat"><span class="stat-number">📱💻</span><span class="stat-label">Celular e PC</span></div>
+                    </div>
+
+                    <h3>Instale como app</h3>
+                    <p>
+                        O DinoGames funciona offline e pode ser instalado no celular ou no computador.
+                        No Android/Chrome use o botão <strong>Instalar</strong> no topo (ou o menu do navegador → “Instalar app”).
+                        No iPhone/iPad, abra no Safari, toque em <strong>Compartilhar</strong> e depois em
+                        <strong>Adicionar à Tela de Início</strong>.
+                    </p>
+
+                    <h3>Contato e redes sociais</h3>
+                    <div class="contacts">
+                        <a class="contact-btn" href="mailto:antoninocs@yahoo.com.br"><span data-icon="mail"></span> antoninocs@yahoo.com.br</a>
+                        <a class="contact-btn" href="https://github.com/antoninocs1" target="_blank" rel="noopener noreferrer"><span data-icon="github"></span> GitHub</a>
+                        <a class="contact-btn" href="https://promoverobem.blogspot.com/" target="_blank" rel="noopener noreferrer"><span data-icon="globe"></span> Blog</a>
+                        <a class="contact-btn" href="https://instagram.com/promoverobem" target="_blank" rel="noopener noreferrer"><span data-icon="instagram"></span> @promoverobem</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="page support" id="page-apoie" hidden>
+                <div class="page-inner">
+                    <div class="support-kicker"><span data-icon="heart"></span> Nos apoie</div>
+                    <h2>Apoie o DinoGames</h2>
+                    <p class="lead">Ajude-nos a manter os jogos gratuitos e em constante evolução.</p>
+
+                    <div class="support-pix-card">
+                        <div class="support-pix-brand">
+                            <span class="support-pix-mark">PIX</span>
+                            <span>Doação via PIX</span>
+                        </div>
+                        <div class="support-pix-info">
+                            <span>Chave PIX</span>
+                            <strong id="support-pix-key">71988177989</strong>
+                        </div>
+                        <div class="support-pix-info">
+                            <span>Beneficiário</span>
+                            <strong>Antonino Costa da Silva</strong>
+                        </div>
+                        <button type="button" class="btn-primary" id="support-copy-pix">
+                            <span data-icon="copy"></span> Copiar chave PIX
+                        </button>
+                    </div>
+
+                    <p class="support-thanks" id="support-copy-feedback" aria-live="polite">Obrigado pelo seu apoio!</p>
+
+                    <section class="support-why">
+                        <h3>Por que doar?</h3>
+                        <ul>
+                            <li>Manter os jogos gratuitos para todos</li>
+                            <li>Financiar novos jogos e melhorias</li>
+                            <li>Sustentar os custos de hospedagem</li>
+                            <li>Ajudar a dedicar mais tempo ao desenvolvimento</li>
+                        </ul>
+                    </section>
+                </div>
+            </section>
+
+            <section class="player" id="player" hidden>
+                <div class="game-window" id="game-window">
+                    <div class="loading" id="loading">Carregando…</div>
+                    <iframe id="game-frame" title="Jogo" allow="fullscreen; autoplay" allowfullscreen></iframe>
+                </div>
+                <aside class="info" id="info"></aside>
+            </section>
+        </main>
+    </div>
+
+    <script src="hub/icons.js"></script>
+    <script src="hub/games.js"></script>
+    <script src="hub/hub.js"></script>
+</body>
+</html>

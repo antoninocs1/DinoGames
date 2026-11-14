@@ -1,0 +1,9 @@
+{
+  "name": "dinogames",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Coleção de jogos em JavaScript/HTML/CSS com menu lateral.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
