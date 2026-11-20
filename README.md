@@ -39,6 +39,19 @@ Quem cria a partida recebe um código de 4 letras; na mesma rede, os amigos abre
 escolhem **Labirinto do Ratinho → Online: entrar** e digitam o código. No GitHub Pages (só arquivos estáticos)
 os modos locais funcionam, mas o online precisa do `npm start`.
 
+## Nova versão
+
+Antes de publicar, rode:
+
+```bash
+npm run versao            # 1.004 -> 1.005 (ou: npm run versao -- 1.100)
+```
+
+O script atualiza a versão mostrada no rodapé do menu (`hub/hub.js`), o cache do PWA (`sw.js`) e os
+`?v=` dos arquivos `.js`/`.css` de cada página. Quem estiver com o app aberto vê o aviso
+**Nova versão do DinoGames disponível → Atualizar**. Se algo ficar preso numa versão antiga, o botão
+⟳ no topo (**Limpar cookies/cache e carregar versão atual**) apaga cookies, caches e o service worker e recarrega.
+
 ## Publicar (GitHub Pages)
 
 Todos os caminhos são relativos, então o app funciona em `https://<usuario>.github.io/DinoGames/`.

@@ -25,8 +25,11 @@
         apoie: { el: $("page-apoie"), title: "Nos apoie" },
     };
 
-    // Versão do app (mostrada no rodapé do menu). Aumente a cada publicação.
-    const APP_VERSION = "1.003";
+    // Versão do app (mostrada no rodapé do menu). Para publicar uma nova versão rode
+    // "npm run versao": ele atualiza este número, o cache do sw.js e os ?v= dos arquivos.
+    const APP_VERSION = "1.004";
+    // Abre os jogos com ?v= para o navegador não usar arquivos de uma versão antiga.
+    const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${APP_VERSION}`;
     $("app-version").innerHTML = `<span class="app-version-label">Versão </span>${APP_VERSION}`;
 
     const COLLAPSED_KEY = "dinogames-sidebar-collapsed";
@@ -137,7 +140,7 @@
         renderInfo(game);
 
         frame.title = game.title;
-        frame.src = game.path;
+        frame.src = withVersion(game.path);
     };
 
     const openPage = (name) => {
@@ -309,7 +312,7 @@
     $("btn-reload").addEventListener("click", () => {
         if (!currentGame) return;
         loading.hidden = false;
-        frame.src = currentGame.path;
+        frame.src = withVersion(currentGame.path);
     });
 
     $("btn-fullscreen").addEventListener("click", () => {
@@ -329,9 +332,56 @@
 
     // ---------- PWA: modo offline e instalação ----------
 
+    // ---------- Limpar cookies/cache e carregar a versão atual (igual ao PCF) ----------
+    const clearCacheAndReload = async () => {
+        if (!confirm("Limpar cookies/cache deste navegador e recarregar a versão atual?")) return;
+        try {
+            document.cookie.split(";").forEach((cookie) => {
+                const name = cookie.split("=")[0].trim();
+                if (name) document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+            });
+            if (window.caches) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map((key) => caches.delete(key)));
+            }
+            if ("serviceWorker" in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map((reg) => reg.unregister()));
+            }
+        } catch (err) {
+            console.warn("[DinoGames] Falha ao limpar cache/cookies:", err);
+        } finally {
+            const url = new URL(window.location.href);
+            url.searchParams.set("refresh", Date.now().toString());
+            window.location.replace(url.toString());
+        }
+    };
+    $("btn-refresh-cache").addEventListener("click", clearCacheAndReload);
+
+    // Tira o ?refresh= da barra de endereço depois de recarregar.
+    if (new URLSearchParams(location.search).has("refresh")) {
+        const url = new URL(location.href);
+        url.searchParams.delete("refresh");
+        history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+    }
+
+    // ---------- Aviso de nova versão ----------
+    // Quando uma versão nova do service worker assume o controle, oferece recarregar.
+    const updateToast = $("update-toast");
+    $("btn-update").addEventListener("click", () => window.location.reload());
+
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
+        const hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (hadController) updateToast.hidden = false;
+        });
         window.addEventListener("load", () => {
-            navigator.serviceWorker.register("sw.js").catch(() => { /* sem modo offline */ });
+            navigator.serviceWorker.register("sw.js").then((reg) => {
+                // Procura atualização ao voltar para o app (útil quando ele fica aberto muito tempo).
+                document.addEventListener("visibilitychange", () => {
+                    if (!document.hidden) reg.update().catch(() => {});
+                });
+            }).catch(() => { /* sem modo offline */ });
         });
     }
 

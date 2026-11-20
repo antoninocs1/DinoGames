@@ -996,3 +996,28 @@ kbd {
         transition: none !important;
     }
 }
+
+/* ---------- Aviso de nova versão ---------- */
+
+.update-toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: calc(100% - 32px);
+    padding: 10px 12px 10px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    font-size: 0.9rem;
+}
+
+.update-toast .btn-primary {
+    padding: 7px 14px;
+}
