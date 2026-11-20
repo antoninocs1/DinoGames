@@ -216,6 +216,34 @@ a {
     padding-top: 12px;
 }
 
+.app-version {
+    display: block;
+    margin-top: 10px;
+    border-top: 1px solid var(--border); /* tracinho separando dos ícones */
+    padding: 8px 10px 2px;
+    color: var(--text-dim);
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.app.collapsed .app-version {
+    padding: 8px 0 2px;
+    text-align: center;
+    font-size: 0.66rem;
+}
+
+.app.collapsed .app-version-label {
+    display: none;
+}
+
+@media (max-width: 860px) {
+    .app.collapsed .app-version-label {
+        display: inline;
+    }
+}
+
 .social {
     display: flex;
     gap: 2px;

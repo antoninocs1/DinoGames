@@ -116,6 +116,7 @@ body {
 
 .bar-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
 }
@@ -309,6 +310,7 @@ kbd {
 .cell.miss::after {
     content: "";
     position: absolute;
+    z-index: 2;
     inset: 36%;
     border-radius: 50%;
     background: var(--miss);
@@ -318,6 +320,7 @@ kbd {
 .cell.hit::after {
     content: "";
     position: absolute;
+    z-index: 2;
     inset: 18%;
     border-radius: 50%;
     background: radial-gradient(circle at 50% 60%, #fff3b0 0 15%, #ffb02e 30%, var(--hit) 55%, rgba(255, 60, 30, 0) 72%);
@@ -338,7 +341,7 @@ kbd {
 .fx {
     position: absolute;
     pointer-events: none;
-    z-index: 3;
+    z-index: 4;
     border-radius: 50%;
 }
 
@@ -399,6 +402,298 @@ kbd {
 
 @keyframes sweep {
     to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---------- Navios desenhados (vista de cima) ---------- */
+
+/* Camada sobre as células, com a mesma grade do tabuleiro */
+.ship-layer {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: inherit;
+    grid-template-rows: inherit;
+    gap: inherit;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* No modo desenho, os blocos das células somem */
+.sprites .cell.ship::before {
+    display: none;
+}
+
+.sprite {
+    position: relative;
+}
+
+/* O casco é sempre desenhado na horizontal; navios verticais são girados */
+.sprite .hull {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--cell) * var(--n) + 2px * (var(--n) - 1));
+    height: var(--cell);
+    transform: translate(-50%, -50%);
+    transition: filter 0.2s, opacity 0.2s;
+}
+
+.sprite.v .hull {
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.sprite .bob {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.sprite svg {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 2px rgba(0, 20, 40, 0.5));
+}
+
+.sprite.sunk svg {
+    filter: grayscale(0.7) sepia(0.4) brightness(0.5) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    opacity: 0.85;
+}
+
+/* Fantasma: pré-visualização do próximo navio e navio sendo arrastado */
+.sprite.ghost .hull {
+    opacity: 0.55;
+}
+
+.sprite.ghost.solid .hull {
+    opacity: 0.9;
+    filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45));
+}
+
+.sprite.ghost.invalid .hull {
+    filter: sepia(1) hue-rotate(-45deg) saturate(5) drop-shadow(0 0 4px #ff5a3c);
+}
+
+/* Durante o posicionamento: tocar gira, segurar e arrastar move */
+.game:not(.battle) #player-board {
+    touch-action: none;
+}
+
+.game:not(.battle) #player-board .cell.ship {
+    cursor: grab;
+}
+
+.game.dragging,
+.game.dragging #player-board .cell {
+    cursor: grabbing;
+}
+
+/* Miniaturas na lista da frota */
+.ship-mini {
+    display: block;
+    width: calc(var(--n) * 14px);
+    height: 14px;
+}
+
+.ship-mini svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ---------- Cenário: ondas ---------- */
+
+.sprite .wake,
+.sprite .bow-wave {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+}
+
+.scene-waves.battle .sprite:not(.sunk) .wake,
+.scene-waves.battle .sprite:not(.sunk) .bow-wave {
+    display: block;
+}
+
+/* Esteira de espuma atrás da popa */
+.sprite .wake {
+    right: 97%;
+    top: 22%;
+    width: calc(var(--cell) * 0.9);
+    height: 56%;
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+    clip-path: polygon(0 0, 100% 38%, 100% 62%, 0 100%, 0 82%, 82% 52%, 82% 48%, 0 18%);
+    transform-origin: right center;
+    animation: wake 1.4s ease-in-out infinite alternate;
+}
+
+/* Marola na proa */
+.sprite .bow-wave {
+    left: 88%;
+    top: 14%;
+    width: 16%;
+    max-width: calc(var(--cell) * 0.45);
+    height: 72%;
+    border: 2px solid rgba(255, 255, 255, 0.65);
+    border-left: 0;
+    border-radius: 0 60% 60% 0;
+    animation: bow-wave 1.2s ease-out infinite;
+}
+
+@keyframes wake {
+    from { transform: scaleX(0.75); opacity: 0.45; }
+    to { transform: scaleX(1.1); opacity: 0.9; }
+}
+
+@keyframes bow-wave {
+    from { transform: scale(0.7); opacity: 0.9; }
+    to { transform: scale(1.25) translateX(2px); opacity: 0; }
+}
+
+/* Balanço do navio */
+.scene-waves.battle .sprite:not(.sunk) .bob {
+    animation: bob 3.2s ease-in-out infinite;
+}
+
+.scene-waves.battle .sprite:nth-child(2n) .bob {
+    animation-duration: 2.7s;
+    animation-delay: -1.1s;
+}
+
+.scene-waves.battle .sprite:nth-child(3n) .bob {
+    animation-duration: 3.6s;
+    animation-delay: -2s;
+}
+
+@keyframes bob {
+    0%, 100% { transform: rotate(-1.2deg) translateY(0); }
+    50% { transform: rotate(1.2deg) translateY(1.5px); }
+}
+
+/* ---------- Cenário: nuvens ---------- */
+
+.clouds {
+    display: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.scene-clouds.battle .clouds {
+    display: block;
+}
+
+/* Nuvem de desenho: topo com bolhas, base reta e sombreado azulado embaixo */
+.cloud {
+    position: absolute;
+    left: -30%;
+    top: var(--y);
+    width: calc(var(--cell) * 1.8 * var(--s));
+    aspect-ratio: 100 / 44;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 44'%3E%3Cpath fill='%23c9e3f4' d='M8 42 Q1 42 3 36 Q5 30 14 31 Q13 20 26 19 Q29 8 43 10 Q55 3 64 14 Q74 9 81 20 Q93 19 95 30 Q99 42 90 42 Z'/%3E%3Cpath fill='white' transform='translate(0 -3.5)' d='M8 42 Q1 42 3 36 Q5 30 14 31 Q13 20 26 19 Q29 8 43 10 Q55 3 64 14 Q74 9 81 20 Q93 19 95 30 Q99 42 90 42 Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    opacity: 0.38;
+    /* sombra projetada na água */
+    filter: drop-shadow(calc(var(--cell) * 0.35) calc(var(--cell) * 0.6) 0 rgba(0, 30, 60, 0.12));
+    animation: cloud var(--d) linear infinite;
+    animation-delay: var(--delay);
+}
+
+@keyframes cloud {
+    from { left: -30%; }
+    to { left: 110%; }
+}
+
+/* ---------- Tema "céu azul" (mar claro, grade branca) ---------- */
+
+.theme-sky {
+    --panel: rgba(10, 92, 145, 0.5);
+    --border: rgba(255, 255, 255, 0.35);
+    --dim: #e3f4ff;
+    --accent: #ffffff;
+}
+
+body.theme-sky {
+    background: #3cb4e6;
+}
+
+.theme-sky .ocean {
+    background: linear-gradient(180deg, #55c3ef 0%, #2fa3da 100%);
+}
+
+.theme-sky .ocean::before,
+.theme-sky .ocean::after {
+    opacity: 0.6;
+}
+
+.theme-sky .title span,
+.theme-sky .enemy-side h2 {
+    color: #ffffff;
+}
+
+.theme-sky .label {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 50, 90, 0.4);
+}
+
+.theme-sky .cell {
+    border-radius: 0;
+    background: #a9dcf5;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95);
+}
+
+.theme-sky .enemy .cell:not(.shot):hover,
+.theme-sky .enemy .cell.cursor {
+    background: #ffc7b8;
+    box-shadow: 0 0 0 1px #fff, inset 0 0 0 2px #ff7a5c;
+}
+
+.theme-sky .cell.preview {
+    background: #9df0c2;
+}
+
+.theme-sky .cell.preview.invalid {
+    background: #ffab9a;
+}
+
+/* Água: um "X" escuro como na marcação em papel */
+.theme-sky .cell.miss::after {
+    inset: 28%;
+    border-radius: 0;
+    opacity: 0.75;
+    background:
+        linear-gradient(45deg, transparent 42%, #34495e 42% 58%, transparent 58%),
+        linear-gradient(-45deg, transparent 42%, #34495e 42% 58%, transparent 58%);
+}
+
+.theme-sky .sonar {
+    background: conic-gradient(from 0deg, rgba(0, 70, 120, 0.16), transparent 18%);
+    mix-blend-mode: multiply;
+}
+
+.theme-sky select option {
+    background: #0a5c91;
+}
+
+.theme-sky .btn.primary {
+    background: linear-gradient(180deg, #ffffff, #d6f0ff);
+    color: #0a4c78;
+}
+
+.theme-sky .btn.primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, #ffffff, #d6f0ff);
+}
+
+.theme-sky .status.good { color: #ffffff; }
+.theme-sky .status.bad { color: #ffe1d9; }
+.theme-sky .log li.you { color: #ffffff; }
+.theme-sky .log li.enemy { color: #ffe1d9; }
+.theme-sky .log li.big { color: #fff3b0; }
+
+.theme-sky .ship-list li.current {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* ---------- Painel lateral ---------- */

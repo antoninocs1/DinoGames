@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#04121f">
     <title>Batalha Naval</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,6 +23,29 @@
                         <option value="easy">Fácil</option>
                         <option value="normal" selected>Normal</option>
                         <option value="hard">Difícil</option>
+                    </select>
+                </label>
+                <label class="select">
+                    <span>Navios</span>
+                    <select id="ship-style" aria-label="Aparência dos navios">
+                        <option value="sprites" selected>Desenho</option>
+                        <option value="blocks">Blocos</option>
+                    </select>
+                </label>
+                <label class="select">
+                    <span>Cenário</span>
+                    <select id="scene" aria-label="Cenário da batalha">
+                        <option value="all" selected>Nuvens + ondas</option>
+                        <option value="clouds">Nuvens</option>
+                        <option value="waves">Ondas</option>
+                        <option value="radar">Só radar</option>
+                    </select>
+                </label>
+                <label class="select">
+                    <span>Tema</span>
+                    <select id="theme" aria-label="Tema do mar">
+                        <option value="dark" selected>Noturno</option>
+                        <option value="sky">Céu azul</option>
                     </select>
                 </label>
                 <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
@@ -51,7 +75,7 @@
             <aside class="panel" id="panel">
                 <div class="setup" id="setup">
                     <h3>Posicionamento</h3>
-                    <p class="hint">Clique no seu tabuleiro para posicionar cada navio. <kbd>R</kbd> ou o botão direito do mouse giram.</p>
+                    <p class="hint">Clique no seu tabuleiro para posicionar cada navio (<kbd>R</kbd> ou botão direito giram). Depois, toque num navio para girá-lo ou segure e arraste para mudá-lo de casa.</p>
                     <ul class="ship-list" id="ship-list"></ul>
                     <div class="setup-actions">
                         <button class="btn" id="btn-rotate" type="button">⟳ Girar <kbd>R</kbd></button>
@@ -84,6 +108,7 @@
         </div>
     </div>
 
+    <script src="../assets/combobox.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

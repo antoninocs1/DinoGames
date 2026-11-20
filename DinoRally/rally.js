@@ -349,6 +349,10 @@ const state = {
 };
 
 const input = { left: false, right: false, gas: false, brake: false };
+// Mouse/dedo: x = posição desejada na pista (null = sem controle pelo ponteiro);
+// botão esquerdo acelera e o direito freia.
+const pointer = { x: null, gas: false, brake: false };
+const braking = () => input.brake || pointer.brake;
 
 const createCars = () => {
     state.cars = [];
@@ -359,10 +363,17 @@ const createCars = () => {
             rgb: hslToRgb(hue, rand(0.55, 0.85), rand(0.42, 0.58)),
             z: wrapZ(z),
             offset: LANES[Math.floor(Math.random() * 3)] + rand(-0.08, 0.08),
-            speed: MAX_SPEED * rand(0.22, 0.5),
+            speed: 0,
+            cruise: MAX_SPEED * rand(0.22, 0.5), // velocidade que o carro gosta de andar
+            target: 0, // faixa de destino (offset)
+            bump: 0, // segundos balançando depois de uma batida
             lastRel: 0,
         });
     }
+    state.cars.forEach((car) => {
+        car.speed = car.cruise;
+        car.target = car.offset;
+    });
 };
 
 const quotaFor = (day) => BASE_QUOTA + QUOTA_STEP * (day - 1);
@@ -432,15 +443,17 @@ const update = (dt) => {
     state.crashTimer = Math.max(0, state.crashTimer - dt);
 
     // Direção (com leve inércia, mais forte na neve)
-    const target = crashed ? 0 : (input.left ? -1 : 0) + (input.right ? 1 : 0);
+    const keySteer = (input.left ? -1 : 0) + (input.right ? 1 : 0);
+    const pointerSteer = pointer.x === null ? 0 : clamp((pointer.x - state.playerX) * 3, -1, 1);
+    const target = crashed ? 0 : keySteer || pointerSteer;
     state.steer = lerp(state.steer, target, Math.min(1, dt * (6 * grip + 2)));
     state.playerX += state.steer * dx * (0.6 + 0.4 * grip);
     state.playerX -= dx * speedRatio * playerSeg.curve * CENTRIFUGAL;
 
     // Aceleração
     if (crashed) state.speed += DECEL * dt;
-    else if (input.gas) state.speed += ACCEL * dt;
-    else if (input.brake) state.speed += BRAKE * dt;
+    else if (input.gas || pointer.gas) state.speed += ACCEL * dt;
+    else if (braking()) state.speed += BRAKE * dt;
     else state.speed += DECEL * dt;
 
     const offroad = Math.abs(state.playerX) > 1;
@@ -489,7 +502,7 @@ const update = (dt) => {
             state.passed = 0;
             state.quota = quotaFor(state.day);
             state.goalReached = false;
-            state.cars.forEach((car) => (car.speed = Math.min(MAX_SPEED * 0.7, car.speed * 1.06)));
+            state.cars.forEach((car) => (car.cruise = Math.min(MAX_SPEED * 0.7, car.cruise * 1.06)));
             popup(`DIA ${state.day}`, "#ffd36b");
             sound.newDay();
         } else {
@@ -500,8 +513,84 @@ const update = (dt) => {
     state.shake = Math.max(0, state.shake - dt * 30);
 };
 
+// ---------- Tráfego: os carros não se atravessam ----------
+const CAR_LEN = SEG_LEN * 0.8; // comprimento do carro na pista
+const LOOK_AHEAD = SEG_LEN * 10; // até onde o motorista enxerga
+const SIDE_GAP = CAR_HALF * 2.1; // abaixo disso, dois carros dividem a faixa
+
+// Algo ocupando a faixa `offset` entre `from` e `to` (relativo ao carro)?
+const laneBlocked = (car, offset, from, to, playerZ) => {
+    const busy = (z, off) => {
+        const d = relZ(z - car.z);
+        return d > from && d < to && Math.abs(off - offset) < SIDE_GAP;
+    };
+    if (busy(playerZ, state.playerX)) return true;
+    return state.cars.some((o) => o !== car && (busy(o.z, o.offset) || busy(o.z, o.target)));
+};
+
+const bumpSound = (rel) => {
+    // Só se ouve a batida quando ela acontece perto do jogador
+    if (Math.abs(rel) < SEG_LEN * 30) sound.crash();
+};
+
+const updateTraffic = (dt, playerZ) => {
+    state.cars.forEach((car) => {
+        car.bump = Math.max(0, car.bump - dt);
+        // Obstáculo mais próximo à frente na mesma faixa (outro carro ou o jogador)
+        let ahead = null;
+        let gap = Infinity;
+        const consider = (z, offset, speed, isPlayer) => {
+            const d = relZ(z - car.z);
+            if (d > 0 && d < LOOK_AHEAD && d < gap && Math.abs(offset - car.offset) < SIDE_GAP) {
+                gap = d;
+                ahead = { speed, isPlayer, offset };
+            }
+        };
+        if (state.phase === "playing") consider(playerZ, state.playerX, state.speed, true);
+        state.cars.forEach((o) => o !== car && consider(o.z, o.offset, o.speed, false));
+
+        let want = car.cruise;
+        if (ahead && ahead.speed < car.cruise) {
+            // Tenta ultrapassar pela faixa vizinha livre; senão, segue atrás
+            const changing = Math.abs(car.target - car.offset) > 0.02;
+            if (!changing) {
+                const lane = LANES.reduce((best, l) => (Math.abs(l - car.offset) < Math.abs(best - car.offset) ? l : best), LANES[0]);
+                const options = LANES.filter((l) => l !== lane && Math.abs(l - lane) < 0.7)
+                    .sort(() => Math.random() - 0.5);
+                const free = options.find((l) => !laneBlocked(car, l, -CAR_LEN * 2, CAR_LEN * 6, playerZ));
+                if (free !== undefined) car.target = free + rand(-0.06, 0.06);
+            }
+            if (gap < CAR_LEN * 5) want = Math.min(want, ahead.speed * (gap < CAR_LEN * 2 ? 0.9 : 1));
+        }
+        const rate = want < car.speed ? MAX_SPEED * 0.9 : MAX_SPEED * 0.15; // freia forte, acelera devagar
+        car.speed += clamp(want - car.speed, -rate * dt, rate * dt);
+        car.offset += clamp(car.target - car.offset, -0.7 * dt, 0.7 * dt);
+
+        // Encostou mesmo assim: batida
+        if (ahead && gap < CAR_LEN && car.speed > ahead.speed) {
+            const rel = relZ(car.z - playerZ);
+            car.speed = ahead.speed * 0.8;
+            car.bump = 0.6;
+            car.target = clamp(car.offset + (car.offset <= ahead.offset ? -0.25 : 0.25), -0.9, 0.9);
+            if (ahead.isPlayer) {
+                // Bateram na sua traseira: tranco e um empurrãozinho
+                state.shake = Math.max(state.shake, 8);
+                state.speed = Math.min(MAX_SPEED, state.speed + MAX_SPEED * 0.05);
+            } else {
+                const other = state.cars.find((o) => o !== car && relZ(o.z - car.z) === gap);
+                if (other) {
+                    other.bump = 0.6;
+                    other.speed = Math.min(other.speed + MAX_SPEED * 0.03, other.cruise);
+                }
+            }
+            bumpSound(rel);
+        }
+    });
+};
+
 const updateCars = (dt) => {
     const playerZ = state.position + PLAYER_Z;
+    updateTraffic(dt, playerZ);
     state.cars.forEach((car) => {
         car.z = wrapZ(car.z + car.speed * dt);
         const rel = relZ(car.z - playerZ);
@@ -512,7 +601,8 @@ const updateCars = (dt) => {
                 state.passed++;
                 sound.pass();
             } else if (car.lastRel <= 0 && rel > 0) {
-                state.passed--;
+                // Fui ultrapassado: a conta volta a subir, mas nunca passa da cota do dia
+                state.passed = Math.max(0, state.passed - 1);
             }
         }
         car.lastRel = rel;
@@ -953,7 +1043,8 @@ const drawSprites = (visible, pal) => {
         // Pista plana: objetos nunca ficam atrás de morros, então não é preciso recortar.
         if (item.car) {
             const w = CAR_W * scale * (view.w / 2);
-            drawCar(x, y, w, item.car.rgb, pal, { alpha });
+            const tilt = item.car.bump > 0 ? Math.sin(state.time * 40) * 0.1 * (item.car.bump / 0.6) : 0;
+            drawCar(x, y, w, item.car.rgb, pal, { alpha, tilt });
         } else {
             const s = item.sprite;
             if (s.type === "tree") drawTree(x, y, 700 * (s.scale || 1) * scale * (view.w / 2), pal, alpha);
@@ -1134,7 +1225,7 @@ const render = () => {
     const p = playerScreen();
     const tilt = -state.steer * 0.08 * (state.speed / MAX_SPEED);
     const wobble = state.crashTimer > 0 ? Math.sin(state.time * 50) * 0.12 : 0;
-    drawCar(p.x, p.y, p.w, [47, 191, 149], pal, { player: true, tilt: tilt + wobble, braking: input.brake && state.speed > 0 });
+    drawCar(p.x, p.y, p.w, [47, 191, 149], pal, { player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0 });
 
     drawParticles();
     drawSpeedLines();
@@ -1158,7 +1249,8 @@ const render = () => {
     if (state.phase === "start") {
         drawOverlay("DINO RALLY", [
             "Ultrapasse a cota de carros antes que o dia acabe.",
-            isTouch ? "Toque para começar" : "Enter para começar · ←→ dirigir · ↑ acelerar · ↓ frear",
+            isTouch ? "Toque para começar · arraste o dedo na pista para dirigir" : "Enter para começar · ←→ dirigir · ↑ acelerar · ↓ frear",
+            isTouch ? "" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
             best.km > 0 ? `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}` : "",
         ], "#34cca3");
     } else if (state.phase === "paused") {
@@ -1200,6 +1292,7 @@ window.addEventListener("keydown", (event) => {
     if (action) {
         event.preventDefault();
         input[action] = true;
+        if (action === "left" || action === "right") releasePointerSteer();
         return;
     }
     if (event.code === "Enter" || event.code === "NumpadEnter") confirm();
@@ -1214,15 +1307,48 @@ window.addEventListener("keyup", (event) => {
 
 const autoPause = () => {
     Object.keys(input).forEach((k) => (input[k] = false));
+    pointer.gas = pointer.brake = false;
     if (state.phase === "playing") state.phase = "paused";
 };
 window.addEventListener("blur", autoPause);
 document.addEventListener("visibilitychange", () => document.hidden && autoPause());
 
-canvas.addEventListener("pointerdown", () => {
+// ---------- Mouse / dedo ----------
+// A posição horizontal do ponteiro vira a posição desejada do carro na pista.
+const aimPointer = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    pointer.x = clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1) * 1.25;
+    canvas.classList.add("pointer-steer");
+};
+const releasePointerSteer = () => {
+    pointer.x = null;
+    canvas.classList.remove("pointer-steer");
+};
+const readButtons = (event) => {
+    if (event.pointerType !== "mouse") return;
+    pointer.gas = (event.buttons & 1) !== 0;
+    pointer.brake = (event.buttons & 2) !== 0;
+};
+
+canvas.addEventListener("pointerdown", (event) => {
     canvas.focus();
-    if (state.phase !== "playing") confirm();
+    sound.ensure();
+    if (state.phase !== "playing") {
+        confirm();
+        return;
+    }
+    canvas.setPointerCapture?.(event.pointerId);
+    aimPointer(event);
+    readButtons(event);
 });
+canvas.addEventListener("pointermove", (event) => {
+    // Mouse dirige só de passar; o dedo dirige enquanto está na tela
+    if (event.pointerType === "mouse" || event.buttons) aimPointer(event);
+    readButtons(event);
+});
+canvas.addEventListener("pointerup", readButtons);
+canvas.addEventListener("pointercancel", () => (pointer.gas = pointer.brake = false));
+canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
 const touch = document.querySelector(".touch");
 if (isTouch) touch.classList.add("show");
@@ -1239,6 +1365,7 @@ touch.querySelectorAll("button").forEach((btn) => {
         } else {
             if (state.phase !== "playing") confirm();
             input[key] = true;
+            if (key === "left" || key === "right") releasePointerSteer();
         }
     };
     const up = () => {

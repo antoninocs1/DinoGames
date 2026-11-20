@@ -1,4 +1,5 @@
 // Servidor estático mínimo (sem dependências) para rodar o DinoGames localmente.
+// Também hospeda as partidas online do Labirinto do Ratinho (WebSocket em /maze-ws).
 // Uso: node server.js [porta]   ->   http://localhost:8080
 const http = require("http");
 const fs = require("fs");
@@ -21,7 +22,7 @@ const TYPES = {
     ".ogg": "audio/ogg",
 };
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
     let urlPath;
     try {
         urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
@@ -51,6 +52,10 @@ http.createServer((req, res) => {
             res.end(data);
         });
     });
-}).listen(PORT, () => {
+});
+
+require("./Maze/maze-server").attach(server);
+
+server.listen(PORT, () => {
     console.log(`DinoGames rodando em http://localhost:${PORT}`);
 });

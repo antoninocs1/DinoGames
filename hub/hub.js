@@ -25,6 +25,10 @@
         apoie: { el: $("page-apoie"), title: "Nos apoie" },
     };
 
+    // Versão do app (mostrada no rodapé do menu). Aumente a cada publicação.
+    const APP_VERSION = "1.003";
+    $("app-version").innerHTML = `<span class="app-version-label">Versão </span>${APP_VERSION}`;
+
     const COLLAPSED_KEY = "dinogames-sidebar-collapsed";
     const THEME_KEY = "dinogames-theme";
     const GLOW_KEY = "dinogames-glow";

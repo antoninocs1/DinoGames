@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#12141f">
+    <title>Labirinto do Ratinho</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="stage" id="stage">
+        <canvas id="game" tabindex="0" aria-label="Labirinto do Ratinho"></canvas>
+
+        <section class="menu" id="menu" aria-label="Menu">
+            <div class="menu-card">
+                <h1>Labirinto do <span>Ratinho</span></h1>
+                <p class="lead">Saia do canto superior esquerdo e chegue ao queijo no canto inferior direito.
+                    <strong>Cuidado: as paredes mudam de lugar durante a corrida!</strong></p>
+
+                <div class="modes">
+                    <button class="mode" type="button" data-mode="solo" data-help="Encontre a saída o mais rápido possível. Com o gato ligado você tem 3 vidas.">
+                        <span>Jogar sozinho</span><small>contra o relógio</small>
+                    </button>
+                    <div class="mode-row">
+                        <button class="mode" type="button" data-mode="cpu" data-help="Apostem corrida: você contra um ratinho do computador.">
+                            <span>Contra o computador</span>
+                        </button>
+                        <label class="field">
+                            <span>Dificuldade</span>
+                            <select id="ai-level" aria-label="Dificuldade">
+                                <option value="0">Fácil</option>
+                                <option value="1" selected>Médio</option>
+                                <option value="2">Difícil</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button class="mode" type="button" data-mode="two" data-help="Dois jogadores no mesmo teclado: Jogador 1 usa WASD, Jogador 2 usa as setas.">
+                        <span>Dois jogadores</span><small>mesmo teclado</small>
+                    </button>
+                    <button class="mode" type="button" data-mode="host" data-help="Cria uma partida online (2 a 4 jogadores) e mostra o código para os amigos.">
+                        <span>Online: criar partida</span>
+                    </button>
+                    <div class="mode-row">
+                        <button class="mode" type="button" data-mode="join" data-help="Digite o código da partida que o seu amigo criou.">
+                            <span>Online: entrar</span>
+                        </button>
+                        <label class="field">
+                            <span>Código</span>
+                            <input id="room-code" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD" aria-label="Código da partida">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="options">
+                    <label class="field">
+                        <span>Gato, túneis e ratoeiras</span>
+                        <select id="hazards" aria-label="Gato, túneis e ratoeiras">
+                            <option value="1">Ligado</option>
+                            <option value="0">Desligado</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Tema</span>
+                        <select id="theme" aria-label="Tema"></select>
+                    </label>
+                    <button class="icon-btn" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <p class="help" id="help">Túneis e ratoeiras desde a 1ª rodada; gato e biscoito de força a partir da 2ª.</p>
+                <p class="keys">Setas/WASD: mover · Esc: menu · P: pausa · T: tema · M: som · Tab: jogadores (online)</p>
+            </div>
+        </section>
+
+        <!-- Controles de toque (celular) -->
+        <div class="touch" id="touch" aria-label="Controles de toque">
+            <button class="touch-menu" type="button" data-touch="menu" aria-label="Voltar ao menu">☰</button>
+            <div class="dpad">
+                <button type="button" data-dir="0" class="up" aria-label="Cima">▲</button>
+                <button type="button" data-dir="3" class="left" aria-label="Esquerda">◀</button>
+                <button type="button" data-dir="1" class="right" aria-label="Direita">▶</button>
+                <button type="button" data-dir="2" class="down" aria-label="Baixo">▼</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../assets/combobox.js"></script>
+    <script src="maze-core.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

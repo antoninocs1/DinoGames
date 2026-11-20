@@ -1,6 +1,6 @@
 // Service worker do DinoGames: deixa os jogos disponíveis offline e permite instalar como app.
 // Ao alterar arquivos do projeto, aumente CACHE_VERSION para que os usuários recebam a atualização.
-const CACHE_VERSION = "dinogames-v1";
+const CACHE_VERSION = "dinogames-v4";
 
 const APP_FILES = [
     "./",
@@ -11,6 +11,8 @@ const APP_FILES = [
     "hub/icons.js",
     "hub/games.js",
     "assets/dino.svg",
+    "assets/combobox.js",
+    "assets/combobox.css",
     "assets/icons/icon-192.png",
     "assets/icons/icon-512.png",
     "assets/icons/icon-maskable-512.png",
@@ -51,6 +53,30 @@ const APP_FILES = [
     "DinoRally/index.html",
     "DinoRally/style.css",
     "DinoRally/rally.js",
+
+    "Maze/index.html",
+    "Maze/style.css",
+    "Maze/maze-core.js",
+    "Maze/game.js",
+    "Maze/sounds/caught.wav",
+    "Maze/sounds/countdown.wav",
+    "Maze/sounds/eat.wav",
+    "Maze/sounds/error.wav",
+    "Maze/sounds/finish.wav",
+    "Maze/sounds/gameover.wav",
+    "Maze/sounds/go.wav",
+    "Maze/sounds/hiss.wav",
+    "Maze/sounds/join.wav",
+    "Maze/sounds/leave.wav",
+    "Maze/sounds/lose.wav",
+    "Maze/sounds/menu_move.wav",
+    "Maze/sounds/menu_select.wav",
+    "Maze/sounds/meow.wav",
+    "Maze/sounds/plop.wav",
+    "Maze/sounds/snap.wav",
+    "Maze/sounds/step.wav",
+    "Maze/sounds/wall_change.wav",
+    "Maze/sounds/win.wav",
 ];
 
 self.addEventListener("install", (event) => {

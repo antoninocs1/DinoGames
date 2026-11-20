@@ -10,8 +10,9 @@ celular (controles de toque). Pode ser instalado como **PWA** e funciona offline
 | --- | --- |
 | **Tetris** | Blocos de vidro 3D, linhas que racham e estilhaçam, onda de choque no TETRIS, peça fantasma, guardar peça, fila de próximas, sons sintetizados e **peças especiais** (tecla `E`): pedra que quebra a peça em que bate e peça transparente que tapa buracos. |
 | **Space Invaders** | Ondas de invasores, inimigos com mais vida, chefão a cada 5 níveis com rajada de 3 tiros, recorde salvo. |
-| **Batalha Naval** | Posicionamento manual (botão direito/`R` gira) ou aleatório, IA em três níveis (fácil, normal e difícil com mapa de probabilidade), explosões, splash e sonar. |
-| **Dino Rally** | Corrida de resistência em pseudo-3D: ultrapasse a cota de carros de cada dia passando por amanhecer, sol, neve, pôr do sol, noite com faróis e neblina. Motor com som grave e suave. |
+| **Batalha Naval** | Navios desenhados (vista de cima) ou em blocos; toque num navio para girar e arraste para mover; IA em três níveis; cenário com nuvens e ondas, tema noturno ou céu azul; radar. |
+| **Dino Rally** | Corrida de resistência em pseudo-3D: ultrapasse a cota de carros de cada dia passando por amanhecer, sol, neve, pôr do sol, noite com faróis e neblina. Os outros carros mudam de faixa para ultrapassar e batem entre si. Dirija pelo teclado, pelo mouse (botão esquerdo acelera, direito freia) ou arrastando o dedo. |
+| **Labirinto do Ratinho** | Leve o ratinho ao queijo enquanto as paredes mudam de lugar. Gato, túneis, ratoeiras e biscoito de força. Sozinho (3 vidas), contra o computador, 2 jogadores no mesmo teclado ou **online** (2 a 4 jogadores). No celular em pé o labirinto fica em pé. |
 
 ## Recursos do app
 
@@ -31,6 +32,13 @@ npm start          # ou: node server.js
 
 Não há dependências para instalar — o `server.js` usa só o Node.js.
 
+### Labirinto online
+
+O modo online do Labirinto do Ratinho usa o próprio `server.js` (WebSocket em `/maze-ws`, sem dependências).
+Quem cria a partida recebe um código de 4 letras; na mesma rede, os amigos abrem `http://<IP-do-anfitrião>:8080`,
+escolhem **Labirinto do Ratinho → Online: entrar** e digitam o código. No GitHub Pages (só arquivos estáticos)
+os modos locais funcionam, mas o online precisa do `npm start`.
+
 ## Publicar (GitHub Pages)
 
 Todos os caminhos são relativos, então o app funciona em `https://<usuario>.github.io/DinoGames/`.
@@ -44,7 +52,9 @@ hub/                  # estilos, ícones, catálogo de jogos e lógica do menu
 assets/               # ícone do dinossauro e ícones do PWA
 manifest.webmanifest  # configuração do PWA
 sw.js                 # service worker (offline)
-Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/
+Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/  Maze/
+assets/combobox.js    # lista dos <select> no celular (modelo do PCF)
+Maze/maze-server.js   # partidas online do Labirinto (usado pelo server.js)
 ```
 
 Para adicionar um jogo, crie a pasta dele e inclua uma entrada em `hub/games.js`

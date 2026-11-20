@@ -1,0 +1,282 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #12141f;
+    --panel: rgba(13, 15, 26, 0.92);
+    --border: rgba(110, 160, 255, 0.28);
+    --text: #e8ecf5;
+    --dim: #b3bacb;
+    --gold: #ffd94d;
+    --accent: #5294fa;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: var(--text);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    touch-action: none;
+}
+
+/* ---------- Menu ---------- */
+
+.menu {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    overflow: auto;
+}
+
+.menu-card {
+    width: min(560px, 100%);
+    padding: 22px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.menu h1 {
+    text-align: center;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+
+.menu h1 span {
+    color: #fff;
+}
+
+.lead {
+    margin: 8px 0 16px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.lead strong {
+    color: #ffb070;
+    font-weight: 600;
+}
+
+.modes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mode-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.mode-row .mode {
+    flex: 1;
+}
+
+.mode {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mode small {
+    color: var(--dim);
+    font-weight: 400;
+    font-size: 0.8rem;
+}
+
+.mode:hover,
+.mode:focus-visible {
+    outline: none;
+    background: #33528c;
+    border-color: var(--accent);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--dim);
+    font-size: 0.72rem;
+}
+
+.field select,
+.field input {
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+}
+
+.field input {
+    width: 5.5ch;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: text;
+    user-select: text;
+}
+
+.field select option {
+    background: #1a1c29;
+}
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.options .field {
+    flex: 1;
+    min-width: 150px;
+}
+
+.icon-btn {
+    width: 48px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.help {
+    min-height: 2.6em;
+    margin-top: 14px;
+    text-align: center;
+    color: var(--gold);
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+
+.keys {
+    margin-top: 6px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 0.74rem;
+}
+
+/* ---------- Controles de toque ---------- */
+
+.touch {
+    display: none;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.touch.show {
+    display: block;
+}
+
+.touch button {
+    pointer-events: auto;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: rgba(10, 14, 30, 0.5);
+    color: #fff;
+    font-size: 1.3rem;
+    touch-action: none;
+}
+
+.touch button.active {
+    background: rgba(82, 148, 250, 0.6);
+    border-color: var(--accent);
+}
+
+.touch-menu {
+    position: absolute;
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    width: 42px;
+    height: 42px;
+}
+
+.dpad {
+    position: absolute;
+    right: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(3, 58px);
+    grid-template-rows: repeat(3, 58px);
+    gap: 4px;
+}
+
+.dpad button {
+    width: 58px;
+    height: 58px;
+}
+
+/* Celular em pé: o D-pad fica centralizado na faixa abaixo do labirinto */
+@media (orientation: portrait) {
+    .dpad {
+        right: 50%;
+        transform: translateX(50%);
+    }
+
+    .touch-menu {
+        top: auto;
+        right: auto;
+        left: 12px;
+        bottom: max(14px, env(safe-area-inset-bottom));
+    }
+}
+
+.dpad .up { grid-area: 1 / 2; }
+.dpad .left { grid-area: 2 / 1; }
+.dpad .right { grid-area: 2 / 3; }
+.dpad .down { grid-area: 3 / 2; }

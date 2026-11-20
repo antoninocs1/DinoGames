@@ -71,4 +71,21 @@ window.DINO_GAMES = [
             ["M", "Som liga/desliga"],
         ],
     },
+    {
+        id: "labirinto",
+        title: "Labirinto do Ratinho",
+        icon: "maze",
+        path: "Maze/index.html",
+        color: "#5294fa",
+        description: "Leve o ratinho até o queijo num labirinto cujas paredes mudam de lugar. Sozinho, contra o computador, 2 jogadores ou online.",
+        controls: [
+            ["Setas / WASD", "Mover"],
+            ["WASD × Setas", "Jogador 1 × Jogador 2"],
+            ["Esc", "Voltar ao menu"],
+            ["P", "Pausar"],
+            ["T", "Trocar tema"],
+            ["Tab", "Jogadores (online)"],
+            ["M", "Som liga/desliga"],
+        ],
+    },
 ];

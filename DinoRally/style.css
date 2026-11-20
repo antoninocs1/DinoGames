@@ -85,3 +85,8 @@ canvas {
     font-size: 1rem;
     align-self: flex-end;
 }
+
+/* Mouse: a direção segue o ponteiro (botão esquerdo acelera, direito freia) */
+canvas.pointer-steer {
+    cursor: crosshair;
+}
