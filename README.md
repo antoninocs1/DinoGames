@@ -13,6 +13,7 @@ celular (controles de toque). Pode ser instalado como **PWA** e funciona offline
 | **Batalha Naval** | Navios desenhados (vista de cima) ou em blocos; toque num navio para girar e arraste para mover; IA em três níveis; cenário com nuvens e ondas, tema noturno ou céu azul; radar. |
 | **Dino Rally** | Corrida de resistência em pseudo-3D: ultrapasse a cota de carros de cada dia passando por amanhecer, sol, neve, pôr do sol, noite com faróis e neblina. Os outros carros mudam de faixa para ultrapassar e batem entre si. Dirija pelo teclado, pelo mouse (botão esquerdo acelera, direito freia) ou arrastando o dedo. |
 | **Labirinto do Ratinho** | Leve o ratinho ao queijo enquanto as paredes mudam de lugar. Gato, túneis, ratoeiras e biscoito de força. Sozinho (3 vidas), contra o computador, 2 jogadores no mesmo teclado ou **online** (2 a 4 jogadores). No celular em pé o labirinto fica em pé. |
+| **Damas** | Regras oficiais da CBD (64 casas): captura obrigatória em cadeia, Lei da Maioria, dama voadora, Tema Turco e regras de empate. Contra o computador em 4 níveis (Fácil, Médio, Difícil, Mestre — a IA roda num Web Worker) ou 2 jogadores; desfazer, dica, girar tabuleiro, 4 temas de tabuleiro e sons sintetizados. |
 
 ## Recursos do app
 
@@ -65,7 +66,7 @@ hub/                  # estilos, ícones, catálogo de jogos e lógica do menu
 assets/               # ícone do dinossauro e ícones do PWA
 manifest.webmanifest  # configuração do PWA
 sw.js                 # service worker (offline)
-Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/  Maze/
+Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/  Maze/  Damas/
 assets/combobox.js    # lista dos <select> no celular (modelo do PCF)
 Maze/maze-server.js   # partidas online do Labirinto (usado pelo server.js)
 ```

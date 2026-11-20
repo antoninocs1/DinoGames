@@ -88,4 +88,22 @@ window.DINO_GAMES = [
             ["M", "Som liga/desliga"],
         ],
     },
+    {
+        id: "damas",
+        title: "Damas",
+        icon: "checkers",
+        path: "Damas/index.html",
+        color: "#d9ab62",
+        description: "Jogo de damas com as regras oficiais da CBD: captura obrigatória, Lei da Maioria e dama voadora. Contra o computador (4 níveis) ou 2 jogadores.",
+        controls: [
+            ["Clique / toque", "Escolher peça e casa"],
+            ["Setas + Enter", "Jogar pelo teclado"],
+            ["Esc", "Cancelar seleção"],
+            ["U / Ctrl+Z", "Desfazer"],
+            ["H", "Dica"],
+            ["F", "Girar tabuleiro"],
+            ["N", "Nova partida"],
+            ["M", "Som liga/desliga"],
+        ],
+    },
 ];

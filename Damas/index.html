@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#151b26">
+    <title>Damas</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.005">
+    <link rel="stylesheet" href="style.css?v=1.005">
+</head>
+<body data-board="madeira">
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 17h14l1.5-9-4.5 3.5L12 5l-4 6.5L3.5 8z" fill="currentColor"/><rect x="5" y="18.5" width="14" height="2" rx="1" fill="currentColor"/></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Regras oficiais CBD</p>
+                    <h1>Damas</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field">
+                    <span>Modo</span>
+                    <select id="mode" aria-label="Modo de jogo">
+                        <option value="cpu">Computador</option>
+                        <option value="two">2 jogadores</option>
+                    </select>
+                </label>
+                <label class="field cpu-only">
+                    <span>Nível</span>
+                    <select id="level" aria-label="Nível do computador">
+                        <option value="facil">Fácil</option>
+                        <option value="medio">Médio</option>
+                        <option value="dificil">Difícil</option>
+                        <option value="mestre">Mestre</option>
+                    </select>
+                </label>
+                <label class="field cpu-only">
+                    <span>Suas peças</span>
+                    <select id="color" aria-label="Cor das suas peças">
+                        <option value="1">Brancas (começa)</option>
+                        <option value="-1">Pretas</option>
+                        <option value="0">Sortear</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Tabuleiro</span>
+                    <select id="board-theme" aria-label="Aparência do tabuleiro">
+                        <option value="madeira">Madeira</option>
+                        <option value="marmore">Mármore</option>
+                        <option value="verde">Torneio verde</option>
+                        <option value="noite">Noite azul</option>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="board-area">
+                <div class="player-strip top" id="strip-top"></div>
+                <div class="board-frame">
+                    <div class="board" id="board" role="grid" aria-label="Tabuleiro de damas"></div>
+                    <div class="overlay" id="overlay" hidden>
+                        <div class="overlay-card">
+                            <div class="overlay-icon" id="overlay-icon"></div>
+                            <h2 id="overlay-title">Fim de jogo</h2>
+                            <p id="overlay-text"></p>
+                            <div class="overlay-actions">
+                                <button class="btn primary" id="overlay-new" type="button">Nova partida</button>
+                                <button class="btn" id="overlay-close" type="button">Ver tabuleiro</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-strip bottom" id="strip-bottom"></div>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite">Vez das brancas</div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-new" type="button" title="Nova partida (N)">Nova partida</button>
+                    <button class="btn" id="btn-undo" type="button" title="Desfazer (U / Ctrl+Z)">↶ Desfazer</button>
+                    <button class="btn" id="btn-hint" type="button" title="Dica (H)">💡 Dica</button>
+                    <button class="btn icon" id="btn-flip" type="button" title="Girar tabuleiro (F)" aria-label="Girar tabuleiro">⇅</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card score">
+                    <h2>Placar</h2>
+                    <div class="score-row" id="score"></div>
+                </div>
+
+                <div class="card draw-info" id="draw-info" hidden></div>
+
+                <div class="card history">
+                    <h2>Lances</h2>
+                    <ol class="moves" id="moves"></ol>
+                </div>
+
+                <details class="card rules">
+                    <summary>Regras (CBD — 64 casas)</summary>
+                    <ul>
+                        <li>As brancas começam. A grande diagonal escura fica à esquerda de cada jogador.</li>
+                        <li>A pedra anda uma casa para frente na diagonal; captura para frente e para trás.</li>
+                        <li>A dama anda e captura quantas casas quiser, parando em qualquer casa livre após a peça capturada.</li>
+                        <li><strong>A captura é obrigatória</strong> (não existe sopro) e continua em cadeia.</li>
+                        <li><strong>Lei da Maioria:</strong> é obrigatório capturar o maior número de peças; pedra e dama valem o mesmo.</li>
+                        <li>Duas peças juntas na mesma diagonal não podem ser capturadas.</li>
+                        <li><strong>Tema Turco:</strong> as peças capturadas só saem no fim do lance e não podem ser capturadas duas vezes.</li>
+                        <li>A pedra só vira dama se <em>terminar</em> o lance na última linha.</li>
+                        <li>Empate: 20 lances seguidos só de damas de cada jogador, sem captura nem movimento de pedra; mesma posição pela 3ª vez; finais de 2×2, 2×1, 2×(1+pedra), 1×1 e 1×(1+pedra) damas após 5 lances de cada; 3 peças contra 1 dama na grande diagonal após 5 lances.</li>
+                        <li>Vence quem capturar ou imobilizar todas as peças do adversário.</li>
+                    </ul>
+                </details>
+
+                <p class="keys">Clique/toque na peça e na casa marcada · Setas + Enter · Esc cancela · N nova · U desfaz · H dica · F gira · M som</p>
+            </aside>
+        </section>
+    </main>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <script src="../assets/combobox.js?v=1.005"></script>
+    <script src="engine.js?v=1.005"></script>
+    <script src="game.js?v=1.005"></script>
+</body>
+</html>
