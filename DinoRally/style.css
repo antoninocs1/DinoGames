@@ -45,6 +45,18 @@ canvas {
     display: flex;
 }
 
+/* Invertido (padrão): acelerar/frear à esquerda e direção à direita */
+.touch.swapped {
+    flex-direction: row-reverse;
+}
+
+.touch-middle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
 .touch-group {
     display: flex;
     gap: 10px;
@@ -79,11 +91,15 @@ canvas {
     border-color: rgba(255, 90, 60, 0.6);
 }
 
-.touch .touch-pause {
+.touch .touch-pause,
+.touch .touch-swap {
     width: 46px;
     height: 46px;
     font-size: 1rem;
-    align-self: flex-end;
+}
+
+.touch .touch-swap {
+    font-size: 1.25rem;
 }
 
 /* Mouse: a direção segue o ponteiro (botão esquerdo acelera, direito freia) */

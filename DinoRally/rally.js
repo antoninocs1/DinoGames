@@ -1249,8 +1249,8 @@ const render = () => {
     if (state.phase === "start") {
         drawOverlay("DINO RALLY", [
             "Ultrapasse a cota de carros antes que o dia acabe.",
-            isTouch ? "Toque para começar · arraste o dedo na pista para dirigir" : "Enter para começar · ←→ dirigir · ↑ acelerar · ↓ frear",
-            isTouch ? "" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
+            isTouch ? "Toque para começar · arraste o dedo sobre o carro para dirigir" : "Enter para começar · ←→ dirigir · ↑ acelerar · ↓ frear",
+            isTouch ? "Botão ⇄ troca o lado dos controles" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
             best.km > 0 ? `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}` : "",
         ], "#34cca3");
     } else if (state.phase === "paused") {
@@ -1313,15 +1313,30 @@ const autoPause = () => {
 window.addEventListener("blur", autoPause);
 document.addEventListener("visibilitychange", () => document.hidden && autoPause());
 
+const capture = (el, event) => {
+    try { el.setPointerCapture?.(event.pointerId); } catch { /* ponteiro já liberado */ }
+};
+
 // ---------- Mouse / dedo ----------
-// A posição horizontal do ponteiro vira a posição desejada do carro na pista.
+// Mouse: a posição horizontal do ponteiro vira a posição desejada do carro na pista.
+// Dedo: arrastar para a direita/esquerda (de preferência em cima do carro) leva o carro junto,
+// a partir de onde ele está (movimento relativo, como se o dedo empurrasse o carro).
+const DRAG_GAIN = 3; // arrastar a largura inteira da tela = 3 unidades de pista (a pista vai de -1 a 1)
+let drag = null; // { id, startX, startCar } enquanto um dedo dirige
+
 const aimPointer = (event) => {
     const rect = canvas.getBoundingClientRect();
     pointer.x = clamp(((event.clientX - rect.left) / rect.width) * 2 - 1, -1, 1) * 1.25;
     canvas.classList.add("pointer-steer");
 };
+const dragTo = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const dx = (event.clientX - drag.startX) / rect.width;
+    pointer.x = clamp(drag.startCar + dx * DRAG_GAIN, -1.25, 1.25);
+};
 const releasePointerSteer = () => {
     pointer.x = null;
+    drag = null;
     canvas.classList.remove("pointer-steer");
 };
 const readButtons = (event) => {
@@ -1337,27 +1352,61 @@ canvas.addEventListener("pointerdown", (event) => {
         confirm();
         return;
     }
-    canvas.setPointerCapture?.(event.pointerId);
-    aimPointer(event);
-    readButtons(event);
+    capture(canvas, event);
+    if (event.pointerType === "mouse") {
+        aimPointer(event);
+        readButtons(event);
+    } else if (!drag) {
+        drag = { id: event.pointerId, startX: event.clientX, startCar: state.playerX };
+        pointer.x = state.playerX;
+    }
 });
 canvas.addEventListener("pointermove", (event) => {
-    // Mouse dirige só de passar; o dedo dirige enquanto está na tela
-    if (event.pointerType === "mouse" || event.buttons) aimPointer(event);
-    readButtons(event);
+    if (event.pointerType === "mouse") {
+        aimPointer(event);
+        readButtons(event);
+    } else if (drag && event.pointerId === drag.id) {
+        dragTo(event);
+    }
 });
-canvas.addEventListener("pointerup", readButtons);
-canvas.addEventListener("pointercancel", () => (pointer.gas = pointer.brake = false));
+const endDrag = (event) => {
+    if (event.pointerType === "mouse") readButtons(event);
+    else if (drag && event.pointerId === drag.id) releasePointerSteer();
+};
+canvas.addEventListener("pointerup", endDrag);
+canvas.addEventListener("pointercancel", (event) => {
+    pointer.gas = pointer.brake = false;
+    endDrag(event);
+});
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
+// ---------- Botões de toque ----------
+// Por padrão os botões ficam invertidos: acelerar/frear à esquerda e direção à direita.
+// O botão ⇄ troca os lados e a escolha fica salva.
+const SWAP_KEY = "dinogames-rally-swap";
 const touch = document.querySelector(".touch");
+const swapBtn = touch.querySelector(".touch-swap");
+const applySwap = (swapped) => {
+    touch.classList.toggle("swapped", swapped);
+    swapBtn.setAttribute("aria-pressed", String(swapped));
+    swapBtn.title = swapped
+        ? "Botões invertidos: acelerar/frear à esquerda (toque para trocar)"
+        : "Botões normais: direção à esquerda (toque para trocar)";
+};
+applySwap(storage.get(SWAP_KEY) !== "0");
+swapBtn.addEventListener("click", () => {
+    const swapped = !touch.classList.contains("swapped");
+    storage.set(SWAP_KEY, swapped ? "1" : "0");
+    applySwap(swapped);
+});
+
 if (isTouch) touch.classList.add("show");
-touch.querySelectorAll("button").forEach((btn) => {
+touch.querySelectorAll("button[data-key]").forEach((btn) => {
     const key = btn.dataset.key;
     const down = (event) => {
         event.preventDefault();
         sound.ensure();
-        btn.setPointerCapture?.(event.pointerId);
+        capture(btn, event);
         btn.classList.add("active");
         if (key === "pause") {
             if (state.phase === "playing") togglePause();

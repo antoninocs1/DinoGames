@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#10251b">
+    <title>Dominó</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.006">
+    <link rel="stylesheet" href="style.css?v=1.006">
+</head>
+<body data-mesa="feltro">
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.4" fill="currentColor"/><path d="M8.5 12h7" stroke="#1d3b2c" stroke-width="1.3"/><circle cx="12" cy="7" r="1.4" fill="#1d3b2c"/><circle cx="10" cy="15.2" r="1.2" fill="#1d3b2c"/><circle cx="14" cy="18.6" r="1.2" fill="#1d3b2c"/></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Dominó brasileiro</p>
+                    <h1>Dominó</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field">
+                    <span>Modo</span>
+                    <select id="mode" aria-label="Modo de jogo">
+                        <option value="4">Duplas (4 jogadores)</option>
+                        <option value="2">1 contra 1 (com monte)</option>
+                        <option value="3">3 jogadores (com monte)</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Nível</span>
+                    <select id="level" aria-label="Nível do computador">
+                        <option value="facil">Fácil</option>
+                        <option value="medio">Médio</option>
+                        <option value="dificil">Difícil</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Partida até</span>
+                    <select id="target" aria-label="Pontos para vencer a partida">
+                        <option value="3">3 pontos</option>
+                        <option value="6">6 pontos</option>
+                        <option value="10">10 pontos</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Mesa</span>
+                    <select id="mesa" aria-label="Aparência da mesa">
+                        <option value="feltro">Feltro verde</option>
+                        <option value="madeira">Madeira</option>
+                        <option value="noite">Noite azul</option>
+                        <option value="vinho">Vinho</option>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="table-area">
+                <div class="table" id="table">
+                    <div class="seat seat-top" id="seat-top"></div>
+                    <div class="seat seat-left" id="seat-left"></div>
+                    <div class="seat seat-right" id="seat-right"></div>
+                    <div class="felt" id="felt">
+                        <svg class="board" id="board" role="img" aria-label="Mesa do dominó"></svg>
+                        <button class="stock" id="stock" type="button" title="Comprar do monte (C)" hidden>
+                            <span class="stock-tile" aria-hidden="true"></span>
+                            <span>Monte <strong id="stock-count">0</strong></span>
+                        </button>
+                        <div class="toast" id="toast" aria-live="polite"></div>
+                        <div class="overlay" id="overlay" hidden>
+                            <div class="overlay-card">
+                                <div class="overlay-icon" id="overlay-icon"></div>
+                                <h2 id="overlay-title">Fim da rodada</h2>
+                                <p id="overlay-text"></p>
+                                <div class="overlay-hands" id="overlay-hands"></div>
+                                <div class="overlay-actions">
+                                    <button class="btn primary" id="overlay-next" type="button">Próxima rodada</button>
+                                    <button class="btn" id="overlay-close" type="button">Ver mesa</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="me" id="me">
+                    <div class="me-head">
+                        <strong>Você</strong>
+                        <small id="me-info"></small>
+                    </div>
+                    <div class="hand" id="hand" role="listbox" aria-label="Suas peças"></div>
+                </div>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite">Embaralhando…</div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-new" type="button" title="Nova partida (N)">Nova partida</button>
+                    <button class="btn" id="btn-draw" type="button" title="Comprar do monte (C)">Comprar</button>
+                    <button class="btn" id="btn-pass" type="button" title="Passar a vez (P)">Passar</button>
+                    <button class="btn icon" id="btn-hint" type="button" title="Dica (H)" aria-label="Dica">💡</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card score">
+                    <h2>Placar <small id="score-target"></small></h2>
+                    <div class="score-row" id="score"></div>
+                    <p class="record" id="record"></p>
+                </div>
+
+                <div class="card history">
+                    <h2>Jogadas</h2>
+                    <ol class="moves" id="moves"></ol>
+                </div>
+
+                <details class="card rules">
+                    <summary>Regras</summary>
+                    <ul>
+                        <li>28 peças (do 0|0 ao 6|6); cada jogador recebe 7. Com 5 carroças na mesma mão, embaralha de novo.</li>
+                        <li><strong>Duplas:</strong> você e o parceiro (em frente) contra a outra dupla, sem monte.</li>
+                        <li><strong>1 contra 1 e 3 jogadores:</strong> as peças que sobram formam o monte. Sem peça que encaixe, compre até poder jogar; sem monte, passe.</li>
+                        <li>Na 1ª rodada começa quem tem a maior carroça (em duplas, o 6|6). Depois, começa quem ganhou a rodada anterior.</li>
+                        <li>A peça deve encaixar em uma das duas pontas com o mesmo número. A vez passa para a direita.</li>
+                        <li><strong>Pontos da batida:</strong> simples 1 · carroça 2 · lá-e-lô (a peça servia nas duas pontas) 3 · cruzada (carroça nas duas pontas iguais) 4.</li>
+                        <li><strong>Jogo fechado:</strong> se ninguém puder jogar, ganha 1 ponto quem tiver menos pontos na mão. Empate entre adversários: ninguém pontua.</li>
+                    </ul>
+                </details>
+
+                <p class="keys">Toque na peça (e na ponta marcada na mesa) · 1–9 escolhe a peça · ← → ponta · C compra · P passa · H dica · N nova · M som</p>
+            </aside>
+        </section>
+    </main>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <script src="../assets/combobox.js?v=1.006"></script>
+    <script src="engine.js?v=1.006"></script>
+    <script src="game.js?v=1.006"></script>
+</body>
+</html>

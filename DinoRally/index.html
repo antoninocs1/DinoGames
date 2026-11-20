@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b0d26">
     <title>Dino Rally</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="style.css?v=1.005">
+    <link rel="stylesheet" href="style.css?v=1.006">
 </head>
 <body>
     <main class="stage">
@@ -17,7 +17,10 @@
                 <button type="button" data-key="left" aria-label="Esquerda">◀</button>
                 <button type="button" data-key="right" aria-label="Direita">▶</button>
             </div>
-            <button type="button" class="touch-pause" data-key="pause" aria-label="Pausar">❚❚</button>
+            <div class="touch-middle">
+                <button type="button" class="touch-swap" aria-label="Trocar o lado dos botões" aria-pressed="true">⇄</button>
+                <button type="button" class="touch-pause" data-key="pause" aria-label="Pausar">❚❚</button>
+            </div>
             <div class="touch-group">
                 <button type="button" data-key="brake" class="brake" aria-label="Freio">▼</button>
                 <button type="button" data-key="gas" class="gas" aria-label="Acelerar">▲</button>
@@ -25,6 +28,6 @@
         </div>
     </main>
 
-    <script src="rally.js?v=1.005"></script>
+    <script src="rally.js?v=1.006"></script>
 </body>
 </html>

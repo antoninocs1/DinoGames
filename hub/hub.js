@@ -27,7 +27,7 @@
 
     // Versão do app (mostrada no rodapé do menu). Para publicar uma nova versão rode
     // "npm run versao": ele atualiza este número, o cache do sw.js e os ?v= dos arquivos.
-    const APP_VERSION = "1.005";
+    const APP_VERSION = "1.006";
     // Abre os jogos com ?v= para o navegador não usar arquivos de uma versão antiga.
     const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${APP_VERSION}`;
     $("app-version").innerHTML = `<span class="app-version-label">Versão </span>${APP_VERSION}`;
@@ -385,35 +385,92 @@
         });
     }
 
-    const installBtn = $("btn-install");
+    // ---------- Instalar como app (mesmo modelo do PCF) ----------
+    // Os botões ficam visíveis enquanto o DinoGames não estiver rodando instalado.
+    // Com o pedido de instalação do navegador (Chrome/Edge/Android) instala direto;
+    // sem ele (iPhone, Firefox…) mostra as instruções.
+    const installBtns = [$("btn-install"), $("home-install")];
+    const installBox = $("install-box");
+    const installModal = $("install-modal");
     let installPrompt = null;
 
-    // Chrome/Edge/Android: guarda o pedido de instalação para disparar pelo botão.
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+
+    const syncInstall = () => {
+        const hide = isStandalone();
+        installBtns.forEach((btn) => (btn.hidden = hide));
+        installBox.hidden = hide;
+    };
+
+    const showInstallSteps = () => {
+        $("install-steps").innerHTML = isIos
+            ? `<li>Toque no botão <strong>Compartilhar</strong> <span aria-hidden="true">⎋</span> do Safari.</li>
+               <li>Escolha <strong>Adicionar à Tela de Início</strong>.</li>
+               <li>Confirme em <strong>Adicionar</strong>.</li>`
+            : `<li>Abra o menu do navegador (<strong>⋮</strong> ou <strong>…</strong>).</li>
+               <li>Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+               <li>Confirme a instalação.</li>`;
+        $("install-note").textContent = isIos ? "" : "Se a opção não aparecer, use o Chrome, Edge ou Samsung Internet com o site aberto em HTTPS.";
+        installModal.hidden = false;
+        $("install-ok").focus();
+    };
+    const closeInstallSteps = () => (installModal.hidden = true);
+    $("install-ok").addEventListener("click", closeInstallSteps);
+    installModal.addEventListener("click", (event) => event.target === installModal && closeInstallSteps());
+    document.addEventListener("keydown", (event) => event.key === "Escape" && !installModal.hidden && closeInstallSteps());
+
+    const install = async () => {
+        if (!installPrompt) {
+            showInstallSteps();
+            return;
+        }
+        const prompt = installPrompt;
+        installPrompt = null;
+        prompt.prompt();
+        await prompt.userChoice.catch(() => null);
+        syncInstall();
+    };
+
     window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         installPrompt = event;
-        installBtn.hidden = false;
+        syncInstall();
     });
-
-    installBtn.addEventListener("click", async () => {
-        if (!installPrompt) {
-            location.hash = "#sobre"; // instruções (ex.: iPhone)
-            return;
-        }
-        installPrompt.prompt();
-        await installPrompt.userChoice.catch(() => null);
-        installPrompt = null;
-        installBtn.hidden = true;
-    });
-
     window.addEventListener("appinstalled", () => {
-        installBtn.hidden = true;
+        installPrompt = null;
+        syncInstall();
     });
+    installBtns.forEach((btn) => btn.addEventListener("click", install));
+    window.matchMedia("(display-mode: standalone)").addEventListener?.("change", syncInstall);
+    syncInstall();
 
-    // iPhone/iPad no Safari não têm o evento: mostra o botão apontando para as instruções.
-    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-    if (isIos && !isStandalone) installBtn.hidden = false;
+    // ---------- Contador de acessos (mesmo do PCF, no Firestore do projeto pcf5432) ----------
+    // Usa a API REST do Firestore (sem carregar o SDK): soma 1 em meta/dinogames-visits
+    // e mostra o total devolvido. Sem internet ou sem permissão, o contador fica oculto.
+    const countVisit = async () => {
+        if (location.protocol === "file:") return;
+        const project = "pcf5432";
+        const apiKey = "AIzaSyCjfXX8ZECLhQ56C2iggwsaBd3U3DavlQ4";
+        const doc = `projects/${project}/databases/(default)/documents/meta/dinogames-visits`;
+        try {
+            const res = await fetch(`https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    writes: [{ transform: { document: doc, fieldTransforms: [{ fieldPath: "count", increment: { integerValue: "1" } }] } }],
+                }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const count = Number(data.writeResults?.[0]?.transformResults?.[0]?.integerValue) || 1;
+            $("visit-count-label").textContent = count === 1 ? "1 acesso registrado" : `${count.toLocaleString("pt-BR")} acessos registrados`;
+            $("visit-counter").hidden = false;
+        } catch (err) {
+            console.warn("[DinoGames] Contador de acessos indisponível:", err.message);
+        }
+    };
 
     // ---------- Inicialização ----------
 
@@ -429,4 +486,5 @@
     window.addEventListener("hashchange", route);
     window.addEventListener("popstate", route);
     route();
+    countVisit();
 })();
