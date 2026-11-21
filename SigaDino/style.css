@@ -89,6 +89,16 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .pad.wrong .face { filter: brightness(1.25) saturate(.8); }
 @keyframes balanca { 20% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 80% { transform: rotate(-1.5deg); } }
 
+/* Teclado: aparelho largo, teclas pretas de enfeite (o toque passa para a tecla colorida). */
+.device[data-look="teclado"] { width: min(100%, 760px, calc((100vh - 130px) * 1.55)); aspect-ratio: 218 / 140; }
+.device .black-key { fill: url(#g-black); stroke: #000; stroke-width: .8; filter: drop-shadow(0 2px 1.5px #000c); }
+.device .black-key-shine { fill: #ffffff14; }
+.device .over { pointer-events: none; }
+.device .grill { fill: #00000099; stroke: #ffffff12; stroke-width: .4; }
+.device[data-look="teclado"] .pad.lit { transform: scale(.985) translateY(.6px); }
+.device[data-look="teclado"] .pad.wrong { animation-name: balancaLado; }
+@keyframes balancaLado { 25% { transform: translateX(-1.5px); } 60% { transform: translateX(1.5px); } 85% { transform: translateX(-.6px); } }
+
 .device.can-play .pad { cursor: pointer; }
 .device.can-play .pad:hover .face { filter: drop-shadow(0 2.5px 1.5px #000c) brightness(1.15); }
 .device.can-play .pad.lit .face { filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 16px var(--glow)); }
@@ -115,6 +125,8 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .status.turn { border-color: #f9731688; background: #f9731614; }
 .status.good { border-color: #86efac66; color: var(--good); }
 .status.bad { border-color: #fca5a566; color: var(--bad); }
+/* Errou: tom acolhedor, sem vermelho. */
+.status.soft { border-color: #93c5fd66; background: #93c5fd12; color: #bfdbfe; }
 
 .progress { display: flex; flex-wrap: wrap; gap: 5px; min-height: 12px; }
 .progress span { width: 12px; height: 12px; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff22; transition: background .15s; }
@@ -158,6 +170,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
     .field select { min-width: 0; width: 100%; }
     .layout { grid-template-columns: 1fr; gap: 12px; align-items: start; }
     .device { width: min(100%, 520px, calc(100vh - 220px)); }
+    .device[data-look="teclado"] { width: 100%; }
     .status { min-height: 52px; font-size: 14px; }
 }
 @media (min-width: 561px) and (max-width: 860px) {

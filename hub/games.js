@@ -132,10 +132,11 @@ window.DINO_GAMES = [
         icon: "simon",
         path: "SigaDino/index.html",
         color: "#f97316",
-        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Sons suaves e botão para repetir a sequência.",
+        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Disco de 4 cores ou teclado colorido de 7 notas.",
         controls: [
             ["Clique / toque", "Tocar o botão"],
-            ["1–4 / Q W S A", "Verde, vermelho, azul, amarelo"],
+            ["1–4 / Q W S A", "Disco: verde, vermelho, azul, amarelo"],
+            ["1–7 / C D E F G A B", "Teclado: dó, ré, mi, fá, sol, lá, si"],
             ["Enter / N", "Jogar / recomeçar"],
             ["R", "Repetir a sequência"],
             ["Esc", "Parar a partida"],

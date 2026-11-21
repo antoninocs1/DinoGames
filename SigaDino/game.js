@@ -129,12 +129,15 @@
             tb.partials.forEach(([mult, vol, wave = tb.wave]) =>
                 this.tone(freq * mult, seconds, { wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay, raw: tb.raw }));
         },
-        /** "Ô-ôu": duas notas descendo, bem baixinho — avisa sem assustar. */
-        error() {
-            this.tone(440, 0.2, { gain: 0.08, attack: 0.04 });
-            this.tone(349.23, 0.38, { gain: 0.08, attack: 0.04, delay: 0.24 });
+        /** Notas em sequência no som escolhido (o mesmo dos botões). */
+        melody(freqs, stepMs, noteSeconds) {
+            freqs.forEach((freq, i) => setTimeout(() => this.pad(freq, noteSeconds), i * stepMs));
         },
+        /** Errou: duas notas subindo, no som dos botões — "vamos de novo!", sem susto. */
+        error() { this.melody([392, 523.25], 150, 0.16); },
         timeout() { this.error(); },
+        /** Fim de partida: arpejo alegre subindo, como quem diz "boa tentativa!". */
+        gameOver() { this.melody([261.63, 329.63, 392, 523.25], 140, 0.18); },
         start() { [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.14, { gain: 0.06, delay: i * 0.09, attack: 0.02 })); },
         win(freqs) {
             const seq = [...freqs, ...freqs.slice().reverse(), freqs[0] * 2];
@@ -215,10 +218,27 @@
         return `<text class="pad-label" x="${f(x)}" y="${f(y)}" font-size="${size}" fill="${inkFor(pad.color)}">${text}</text>`;
     };
 
+    /**
+     * Retângulo com cantos de cima (rTop) e de baixo (rBottom) arredondados
+     * separadamente — formato das teclas.
+     */
+    const keyPath = (x, y, w, h, rTop, rBottom) => [
+        `M${f(x + rTop)} ${f(y)}`,
+        `H${f(x + w - rTop)}`, `Q${f(x + w)} ${f(y)} ${f(x + w)} ${f(y + rTop)}`,
+        `V${f(y + h - rBottom)}`, `Q${f(x + w)} ${f(y + h)} ${f(x + w - rBottom)} ${f(y + h)}`,
+        `H${f(x + rBottom)}`, `Q${f(x)} ${f(y + h)} ${f(x)} ${f(y + h - rBottom)}`,
+        `V${f(y + rTop)}`, `Q${f(x)} ${f(y)} ${f(x + rTop)} ${f(y)}`, "Z",
+    ].join("");
+
     // =================================================================
-    // Modelos do aparelho. Cada um devolve { pads[], hubR, bodyR }, onde
-    // pads[i] = { shape, label }: shape é o elemento SVG sem fechar (ex.:
-    // 'path d="…"'), usado tanto para a cor quanto para o brilho de vidro.
+    // Modelos do aparelho (o modo escolhe pelo campo "look" de modes.js).
+    // Cada um devolve:
+    //   viewBox  área do desenho
+    //   body     SVG do corpo (por baixo dos botões)
+    //   over     SVG decorativo por cima dos botões (opcional, sem clique)
+    //   hub      { x, y, r } do cubo com o visor e o JOGAR
+    //   pads[i]  { shape, label }: shape é o elemento SVG sem fechar (ex.:
+    //            'path d="…"'), usado tanto para a cor quanto para o vidro.
     // =================================================================
     const LOOKS = {
         // Disco preto com botões em forma de gota (fatias de cantos redondos) e cubo central.
@@ -236,7 +256,50 @@
                 const [lx, ly] = polar((r1 + r2) / 2 + 2, mid);
                 return { shape, label: mode.labels ? label(pad, lx, ly, n > 7 ? 7.5 : 10) : "" };
             });
-            return { pads, hubR, bodyR: 97 };
+            const R = 97;
+            return {
+                viewBox: "-100 -100 200 200",
+                body: `<circle class="body" r="${R}"/><circle class="body-well" r="${R - 6}"/>`,
+                hub: { x: 0, y: 0, r: hubR },
+                pads,
+            };
+        },
+
+        // Teclado colorido: uma tecla por nota, pontas arredondadas e relevo
+        // como os botões do disco. As teclas pretas são só enfeite (o toque
+        // passa para a tecla colorida de baixo).
+        teclado(mode) {
+            const n = mode.pads.length;
+            const W = 210, keyW = 27, gap = 2.6;
+            const keysW = n * keyW;
+            const x0 = -keysW / 2;
+            const top = -20, keyH = 80;
+            const pads = mode.pads.map((pad, i) => {
+                const x = x0 + i * keyW + gap / 2;
+                const w = keyW - gap;
+                const shape = `path d="${keyPath(x, top, w, keyH, 2.5, 8)}"`;
+                return { shape, label: mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5) : "" };
+            });
+            // Teclas pretas entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
+            const blacks = [0, 1, 3, 4, 5].filter((i) => i < n - 1).map((i) => {
+                const cx = x0 + (i + 1) * keyW;
+                const bw = 15, bh = 47;
+                return `<path class="black-key" d="${keyPath(cx - bw / 2, top - 1, bw, bh, 1.5, 4)}"/>` +
+                    `<path class="black-key-shine" d="${keyPath(cx - bw / 2 + 2.4, top + 1, bw - 4.8, bh - 9, 1, 3)}"/>`;
+            }).join("");
+            const bodyTop = -64, bodyH = 132;
+            // Furinhos de alto-falante dos dois lados do visor.
+            const grill = (cx) => [0, 1, 2].map((r) => [0, 1, 2, 3, 4].map((c) =>
+                `<circle class="grill" cx="${cx - 12 + c * 6}" cy="${-49 + r * 6}" r="1.4"/>`).join("")).join("");
+            return {
+                viewBox: `${-W / 2 - 4} ${bodyTop - 4} ${W + 8} ${bodyH + 8}`,
+                body: `<rect class="body" x="${-W / 2}" y="${bodyTop}" width="${W}" height="${bodyH}" rx="16"/>` +
+                    `<rect class="body-well" x="${x0 - 4}" y="${top - 4}" width="${keysW + 8}" height="${keyH + 8}" rx="9"/>` +
+                    grill(-62) + grill(62),
+                over: blacks,
+                hub: { x: 0, y: -45, r: 18 },
+                pads,
+            };
         },
     };
 
@@ -287,6 +350,11 @@
                 <stop offset=".6" stop-color="#000" stop-opacity=".08"/>
                 <stop offset="1" stop-color="#000" stop-opacity=".55"/>
             </linearGradient>
+            <linearGradient id="g-black" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2b2b33"/>
+                <stop offset=".85" stop-color="#121217"/>
+                <stop offset="1" stop-color="#050507"/>
+            </linearGradient>
             <linearGradient id="g-screen" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stop-color="#2a0f12"/>
                 <stop offset="1" stop-color="#0c0405"/>
@@ -310,12 +378,12 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", look: "anel", timbre: "suave", level: "normal", strict: "0", goal: "20" };
+    const DEFAULTS = { v: 2, mode: "cores4", timbre: "suave", level: "normal", strict: "0", goal: "20" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
-    if (saved.v !== 2) { delete saved.strict; delete saved.look; }
+    if (saved.v !== 2) delete saved.strict;
+    delete saved.look; // o desenho agora vem do modo (campo "look" em modes.js)
     const prefs = Object.assign({}, DEFAULTS, saved, { v: 2 });
-    if (!LOOKS[prefs.look]) prefs.look = "anel";
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
     const records = storage.get(RECORDS_KEY) || {};
 
@@ -332,7 +400,8 @@
 
     // ---------- Desenho ----------
     const build = () => {
-        const look = (LOOKS[prefs.look] || LOOKS.anel)(mode);
+        const lookName = LOOKS[mode.look] ? mode.look : "anel";
+        const look = LOOKS[lookName](mode);
         const pads = look.pads.map(({ shape, label: text }, i) => {
             const pad = mode.pads[i];
             const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${pad.color}`;
@@ -343,15 +412,15 @@
                 <${shape} class="bevel" clip-path="url(#cp${i})"/>
                 <${shape} class="gloss"/>${text}</g>`;
         }).join("");
-        const r = look.hubR;
-        const R = look.bodyR;
-        ui.device.dataset.look = prefs.look;
+        const r = look.hub.r;
+        ui.device.dataset.look = lookName;
+        ui.device.setAttribute("viewBox", look.viewBox);
         ui.device.innerHTML = `
             ${defsSvg()}
-            <circle class="body" r="${R}"/>
-            <circle class="body-well" r="${R - 6}"/>
+            ${look.body}
             <g class="pads">${pads}</g>
-            <g class="hub" id="hub" role="button" tabindex="0" aria-label="Jogar">
+            ${look.over ? `<g class="over" aria-hidden="true">${look.over}</g>` : ""}
+            <g class="hub" id="hub" role="button" tabindex="0" aria-label="Jogar" transform="translate(${look.hub.x} ${look.hub.y})">
                 <circle class="hub-disc" r="${r}"/>
                 <ellipse class="hub-shine" cy="${-r * 0.74}" rx="${r * 0.42}" ry="${r * 0.13}"/>
                 <rect class="hub-screen" x="${-r * 0.62}" y="${-r * 0.5}" width="${r * 1.24}" height="${r * 0.62}" rx="4"/>
@@ -362,7 +431,7 @@
         hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text") };
         hub.el.addEventListener("click", startGame);
         hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGame(); } });
-        if (game) setCount(phase === "over" && !game.won ? "!!" : game.won ? "★★" : two(game.length));
+        if (game) setCount(game.won ? "★★" : phase === "over" ? two(game.score) : two(game.length));
         renderKeys();
         renderScore();
         setInputEnabled(phase === "input");
@@ -532,19 +601,18 @@
         phase = "wait";
         if (timedOut) {
             game.press(-1); // registra o erro na partida
-            sound.timeout();
+            if (game.strict) sound.gameOver(); else sound.timeout();
         } else {
-            sound.error();
+            if (game.strict) sound.gameOver(); else sound.error();
             if (padEls[pressed]) padEls[pressed].classList.add("wrong");
             setTimeout(() => padEls[pressed]?.classList.remove("wrong"), 600);
         }
-        setCount("!!");
-
         if (!game.strict) {
-            setStatus(timedOut ? "Tempo esgotado! Ouça de novo." : "Errou! Ouça de novo.", "bad");
+            setStatus(timedOut
+                ? "Sem pressa! Vamos ouvir de novo. 🎵"
+                : pick(["Quase! Vamos ouvir de novo. 🎵", "Foi por pouco! Ouça mais uma vez.", "Tudo bem, acontece! Ouça de novo."]), "soft");
             await sleep(1100);
             if (id !== run) return;
-            setCount(two(game.length));
             playback(id);
             return;
         }
@@ -554,8 +622,12 @@
         const score = game.score;
         const best = saveRecord(score);
         const name = mode.pads[expected]?.name;
-        const why = timedOut ? "Tempo esgotado" : "Errou";
-        setStatus(`${why}! O certo era ${name}. Você acertou ${score} ${score === 1 ? "passo" : "passos"}${best ? " — novo recorde! 🏆" : "."}`, "bad");
+        const opening = timedOut ? "O tempo acabou — boa tentativa!" : "Boa tentativa!";
+        const result = score
+            ? ` Você acertou ${score} ${score === 1 ? "passo" : "passos"}${best ? " — novo recorde! 🏆" : "."}`
+            : "";
+        setCount(two(score));
+        setStatus(`${opening}${result} O próximo era ${name}. Vamos jogar de novo? 💪`, "soft");
         setHubText("JOGAR");
         hub.el.setAttribute("aria-label", "Jogar de novo");
         ui.btnStart.textContent = "Jogar de novo";
