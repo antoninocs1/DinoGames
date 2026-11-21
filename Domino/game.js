@@ -138,7 +138,7 @@
     };
 
     const SEATS = { 2: [null, "top"], 3: [null, "right", "top"], 4: [null, "right", "top", "left"] };
-    const NAMES = { 2: ["Você", "Rex"], 3: ["Você", "Rex", "Tri"], 4: ["Você", "Rex", "Tri", "Ptera"] };
+    const NAMES = { 2: ["Você", "Cat"], 3: ["Você", "Cat", "Dino"], 4: ["Você", "Cat", "Dino", "Dog"] };
 
     const prefs = Object.assign({ mode: "4", level: "medio", target: "6", mesa: "feltro" }, storage.get(PREFS_KEY) || {});
     const stats = Object.assign({ wins: 0, losses: 0 }, storage.get(STATS_KEY) || {});
@@ -158,7 +158,7 @@
     let matchOver = false;
     let viewOnly = false;
 
-    const teamName = (team) => (n === 4 ? (team === 0 ? "Você + Tri" : "Rex + Ptera") : names[team]);
+    const teamName = (team) => (n === 4 ? (team === 0 ? "Você + Dino" : "Cat + Dog") : names[team]);
     const teamCount = () => (n === 4 ? 2 : n);
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
     const humanTurn = () => round && !round.over && round.turn === 0;
@@ -254,7 +254,7 @@
         }
         newTile = null;
         const pts = E.handPips(hand);
-        ui.meInfo.textContent = `${hand.length} ${hand.length === 1 ? "peça" : "peças"} · ${pts} pontos na mão${n === 4 ? " · parceiro: Tri (em frente)" : ""}`;
+        ui.meInfo.textContent = `${hand.length} ${hand.length === 1 ? "peça" : "peças"} · ${pts} pontos na mão${n === 4 ? " · parceiro: Dino (em frente)" : ""}`;
     }
 
     function renderStatus() {

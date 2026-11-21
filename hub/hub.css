@@ -611,59 +611,53 @@ kbd {
 
 /* ---------- Botão instalar (PWA) — estilo do PCF ---------- */
 
-/* Sombra colorida em degradê (as cores dos jogos) atrás dos botões. */
+/* Sombra colorida em degradê só do lado de fora (o botão fica com fundo sólido). */
 .glow-btn,
 .install-btn {
-    position: relative;
-    isolation: isolate;
+    --glow-a: #3b82f6;
+    --glow-b: #34cca3;
+    box-shadow:
+        -10px 10px 22px -14px var(--glow-a),
+        10px 10px 22px -14px var(--glow-b);
+    transition: box-shadow 0.2s ease, transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.glow-btn::before,
-.install-btn::before {
-    content: "";
-    position: absolute;
-    inset: 6px 4px -4px;
-    z-index: -1;
-    border-radius: inherit;
-    background: linear-gradient(90deg, #34cca3, #36d1ff, #941cff, #f5b021, #e2b866);
-    background-size: 200% 100%;
-    filter: blur(14px);
-    opacity: 0.45;
-    transition: opacity 0.2s ease, filter 0.2s ease;
-    animation: glow-shift 6s linear infinite;
-    pointer-events: none;
+.glow-btn:hover,
+.install-btn:hover {
+    box-shadow:
+        -12px 12px 26px -12px var(--glow-a),
+        12px 12px 26px -12px var(--glow-b);
 }
 
-.glow-btn:hover::before,
-.install-btn:hover::before {
-    opacity: 0.85;
-    filter: blur(18px);
+/* Igual ao botão "Instalar" do PCF: contorno azul, fundo transparente. */
+.install-btn,
+.pwa-install-btn {
+    --pcf-accent: #3b82f6;
+    color: var(--pcf-accent);
+    background: transparent;
+    border: 1px solid rgba(59, 130, 246, 0.55);
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 500;
 }
 
-@keyframes glow-shift {
-    to { background-position: 200% 0; }
+[data-theme="light"] .install-btn,
+[data-theme="light"] .pwa-install-btn {
+    --pcf-accent: #2563eb;
+}
+
+.install-btn:hover,
+.pwa-install-btn:hover {
+    background: rgba(59, 130, 246, 0.12);
 }
 
 .install-btn {
     width: auto;
     display: inline-flex;
-    gap: 6px;
-    padding: 0 12px;
-    color: var(--brand);
-    background: var(--bg-elev);
-    border-color: color-mix(in srgb, var(--brand) 55%, var(--border));
-    font-weight: 600;
-    font-size: 0.85rem;
-}
-
-.install-btn::before {
-    inset: 4px 2px -2px;
-    filter: blur(8px);
-    opacity: 0.35;
-}
-
-.install-btn:hover {
-    background: color-mix(in srgb, var(--brand) 12%, var(--bg-elev));
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    font-size: 0.9rem;
 }
 
 .install-btn[hidden] {
@@ -703,9 +697,9 @@ kbd {
     transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.pcf-btn::before {
-    background: linear-gradient(90deg, #3b82f6, #34cca3, #941cff, #3b82f6);
-    background-size: 200% 100%;
+.pcf-btn {
+    --glow-a: #3b82f6;
+    --glow-b: #941cff;
 }
 
 .pcf-btn:hover {
@@ -780,20 +774,10 @@ kbd {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 42px;
-    padding: 10px 16px;
-    border-radius: 10px;
-    border: 1px solid color-mix(in srgb, var(--brand) 55%, var(--border));
-    background: var(--bg-elev);
-    color: var(--brand);
-    font: inherit;
-    font-weight: 600;
+    min-height: 38px;
+    padding: 9px 15px;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-
-.pwa-install-btn:hover {
-    background: color-mix(in srgb, var(--brand) 12%, var(--bg-elev));
 }
 
 .pwa-install-hint {
@@ -901,13 +885,6 @@ kbd {
 @media (max-width: 860px) {
     .app.collapsed .game-link-ext {
         display: initial;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .glow-btn::before,
-    .install-btn::before {
-        animation: none;
     }
 }
 
