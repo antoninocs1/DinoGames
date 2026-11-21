@@ -15,11 +15,17 @@
                Se omitido, o 1º botão fica logo à esquerda do topo.
      pads      lista em sentido horário, cada um com:
                  name   nome (leitores de tela, rótulos e mensagens)
-                 short  rótulo curto opcional (ex.: "Dó♯")
+                 short  rótulo curto opcional
+                 flat   nome com bemol (ex.: "Ré♭" para o "Dó♯"); o jogador
+                        escolhe no seletor ♯/♭ qual nome aparece
                  color  cor do botão
                  freq   frequência do som em Hz
                  keys   teclas que tocam o botão (minúsculas)
-                 sharp  true = tecla "preta" (sustenido/bemol), botão menor no anel
+                 sharp  true = tecla "preta" (sustenido/bemol): no teclado é a
+                        tecla preta, no anel um botão menor; "color" é a cor
+                        com que ela acende
+     freeMode  modo usado no "Tocar livre" (ex.: o teclado de 7 notas vira o
+               de 12, para as teclas pretas também tocarem)
    ===================================================================== */
 (() => {
     "use strict";
@@ -38,6 +44,30 @@
         { name: "Lá",  color: "#3949ab", freq: NOTE(9),  keys: ["6", "a"] },
         { name: "Si",  color: "#8e24aa", freq: NOTE(11), keys: ["7", "b"] },
     ];
+
+    /** Mistura duas cores (a luz da tecla preta é a média das vizinhas). */
+    const mix = (a, b) => "#" + [1, 3, 5].map((k) =>
+        Math.round((parseInt(a.substr(k, 2), 16) + parseInt(b.substr(k, 2), 16)) / 2)
+            .toString(16).padStart(2, "0")).join("");
+
+    // Escala cromática: as 7 notas coloridas + 5 teclas pretas.
+    // Teclas do computador das pretas: Q W T Y U (R já é "repetir").
+    const SHARPS = [
+        { after: 0, name: "Dó♯",  flat: "Ré♭",  key: "q" },
+        { after: 1, name: "Ré♯",  flat: "Mi♭",  key: "w" },
+        { after: 3, name: "Fá♯",  flat: "Sol♭", key: "t" },
+        { after: 4, name: "Sol♯", flat: "Lá♭",  key: "y" },
+        { after: 5, name: "Lá♯",  flat: "Si♭",  key: "u" },
+    ];
+    const CHROMATIC = RAINBOW_NOTES.flatMap((pad, i) => {
+        const s = SHARPS.find((x) => x.after === i);
+        if (!s) return [pad];
+        return [pad, {
+            name: s.name, flat: s.flat, sharp: true, keys: [s.key],
+            color: mix(pad.color, RAINBOW_NOTES[i + 1].color),
+            freq: +(pad.freq * Math.pow(2, 1 / 12)).toFixed(2),
+        }];
+    });
 
     window.SIGA_DINO_MODES = {
         // Modelo clássico de 4 cores. Os tons formam um acorde de Dó maior
@@ -59,7 +89,17 @@
             enabled: true,
             look: "teclado",
             labels: true,
+            freeMode: "teclado12",
             pads: RAINBOW_NOTES,
+        },
+
+        // Teclado com as teclas pretas (sustenidos/bemóis) também na sequência.
+        teclado12: {
+            title: "Teclado (12 notas ♯/♭)",
+            enabled: true,
+            look: "teclado",
+            labels: true,
+            pads: CHROMATIC,
         },
 
         // As mesmas 7 notas no disco. Para liberar, troque enabled para true.
@@ -71,26 +111,13 @@
             pads: RAINBOW_NOTES,
         },
 
-        // Depois: escala cromática (12 sons, com sustenidos/bemóis).
+        // As 12 notas no disco. Para liberar, troque enabled para true.
         cromatica12: {
-            title: "12 notas (♯/♭)",
+            title: "12 notas (disco)",
             enabled: false,
             labels: true,
             rotate: -90,
-            pads: [
-                { name: "Dó",       short: "Dó",  color: "#e11d48", freq: NOTE(0),  keys: ["1"] },
-                { name: "Dó♯ / Ré♭", short: "Dó♯", color: "#9f1239", freq: NOTE(1),  keys: ["2"], sharp: true },
-                { name: "Ré",       short: "Ré",  color: "#f97316", freq: NOTE(2),  keys: ["3"] },
-                { name: "Ré♯ / Mi♭", short: "Ré♯", color: "#9a3412", freq: NOTE(3),  keys: ["4"], sharp: true },
-                { name: "Mi",       short: "Mi",  color: "#facc15", freq: NOTE(4),  keys: ["5"] },
-                { name: "Fá",       short: "Fá",  color: "#22c55e", freq: NOTE(5),  keys: ["6"] },
-                { name: "Fá♯ / Sol♭", short: "Fá♯", color: "#166534", freq: NOTE(6),  keys: ["7"], sharp: true },
-                { name: "Sol",      short: "Sol", color: "#14b8a6", freq: NOTE(7),  keys: ["8"] },
-                { name: "Sol♯ / Lá♭", short: "Sol♯", color: "#115e59", freq: NOTE(8),  keys: ["9"], sharp: true },
-                { name: "Lá",       short: "Lá",  color: "#6366f1", freq: NOTE(9),  keys: ["0"] },
-                { name: "Lá♯ / Si♭", short: "Lá♯", color: "#3730a3", freq: NOTE(10), keys: ["-"], sharp: true },
-                { name: "Si",       short: "Si",  color: "#c026d3", freq: NOTE(11), keys: ["="] },
-            ],
+            pads: CHROMATIC,
         },
     };
 })();

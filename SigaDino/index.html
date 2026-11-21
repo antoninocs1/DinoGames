@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.018">
-    <link rel="stylesheet" href="style.css?v=1.018">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.019">
+    <link rel="stylesheet" href="style.css?v=1.019">
 </head>
 <body>
     <main class="app">
@@ -32,6 +32,13 @@
                     <select id="play" aria-label="Tipo de jogo">
                         <option value="memoria">Siga a sequência</option>
                         <option value="livre">Tocar livre</option>
+                    </select>
+                </label>
+                <label class="field" id="field-accidental" hidden>
+                    <span>Nomes ♯/♭</span>
+                    <select id="accidental" aria-label="Mostrar sustenido ou bemol">
+                        <option value="sustenido">♯ Sustenido (Dó♯)</option>
+                        <option value="bemol">♭ Bemol (Ré♭)</option>
                     </select>
                 </label>
                 <label class="field">
@@ -101,6 +108,7 @@
                         <li>Demorou demais para responder? Conta como uma tentativa.</li>
                         <li>Em <strong>Modelo</strong>, escolha o disco de 4 cores ou o <strong>teclado colorido</strong> de 7 notas (dó, ré, mi, fá, sol, lá, si).</li>
                         <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
+                        <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
                 </details>
@@ -112,10 +120,10 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.018"></script>
-    <script src="sounds.js?v=1.018"></script>
-    <script src="modes.js?v=1.018"></script>
-    <script src="engine.js?v=1.018"></script>
-    <script src="game.js?v=1.018"></script>
+    <script src="../assets/combobox.js?v=1.019"></script>
+    <script src="sounds.js?v=1.019"></script>
+    <script src="modes.js?v=1.019"></script>
+    <script src="engine.js?v=1.019"></script>
+    <script src="game.js?v=1.019"></script>
 </body>
 </html>

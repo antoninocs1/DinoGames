@@ -213,9 +213,12 @@
         return mode.pads.map((_, i) => first + i * span);
     };
 
+    /** Nome mostrado do botão: com bemol (Ré♭) ou sustenido (Dó♯), conforme a escolha. */
+    const noteName = (pad) => (prefs.accidental === "bemol" && pad.flat) || pad.short || pad.name;
+
     const label = (pad, x, y, size) => {
-        const text = pad.short || pad.name;
-        return `<text class="pad-label" x="${f(x)}" y="${f(y)}" font-size="${size}" fill="${inkFor(pad.color)}">${text}</text>`;
+        const ink = pad.sharp ? "#fff" : inkFor(pad.color); // tecla preta: letra branca
+        return `<text class="pad-label" x="${f(x)}" y="${f(y)}" font-size="${size}" fill="${ink}">${noteName(pad)}</text>`;
     };
 
     /**
@@ -266,24 +269,31 @@
         },
 
         // Teclado colorido: uma tecla por nota, pontas arredondadas e relevo
-        // como os botões do disco. As teclas pretas são só enfeite (o toque
-        // passa para a tecla colorida de baixo).
+        // como os botões do disco. Notas "sharp" viram teclas pretas que tocam
+        // (e acendem na cor da mistura das vizinhas). Sem elas, as teclas
+        // pretas são só enfeite (o toque passa para a tecla colorida de baixo).
         teclado(mode) {
-            const n = mode.pads.length;
-            const W = 210, keyW = 27, gap = 2.6;
-            const keysW = n * keyW;
+            const whites = mode.pads.filter((p) => !p.sharp).length;
+            const hasSharps = whites < mode.pads.length;
+            const W = 210, keyW = 27, gap = 2.6, bw = 15, bh = 47;
+            const keysW = whites * keyW;
             const x0 = -keysW / 2;
             const top = -20, keyH = 80;
-            const pads = mode.pads.map((pad, i) => {
-                const x = x0 + i * keyW + gap / 2;
+            let white = 0;
+            const pads = mode.pads.map((pad) => {
+                if (pad.sharp) {
+                    const cx = x0 + white * keyW; // entre a tecla anterior e a próxima
+                    const shape = `path d="${keyPath(cx - bw / 2, top - 1, bw, bh, 1.5, 4)}"`;
+                    return { shape, label: mode.labels ? label(pad, cx, top + bh - 7, noteName(pad).length > 3 ? 4.6 : 5.4) : "" };
+                }
+                const x = x0 + white++ * keyW + gap / 2;
                 const w = keyW - gap;
                 const shape = `path d="${keyPath(x, top, w, keyH, 2.5, 8)}"`;
                 return { shape, label: mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5) : "" };
             });
-            // Teclas pretas entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
-            const blacks = [0, 1, 3, 4, 5].filter((i) => i < n - 1).map((i) => {
+            // Teclas pretas de enfeite entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
+            const blacks = hasSharps ? "" : [0, 1, 3, 4, 5].filter((i) => i < whites - 1).map((i) => {
                 const cx = x0 + (i + 1) * keyW;
-                const bw = 15, bh = 47;
                 return `<path class="black-key" d="${keyPath(cx - bw / 2, top - 1, bw, bh, 1.5, 4)}"/>` +
                     `<path class="black-key-shine" d="${keyPath(cx - bw / 2 + 2.4, top + 1, bw - 4.8, bh - 9, 1, 3)}"/>`;
             }).join("");
@@ -305,7 +315,17 @@
 
     /** Gradientes do aparelho: corpo preto brilhante, botões de vidro colorido. */
     const defsSvg = () => {
-        const padGrads = mode.pads.map((pad, i) => `
+        const padGrads = mode.pads.map((pad, i) => pad.sharp ? `
+            <linearGradient id="pb${i}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#34343d"/>
+                <stop offset=".8" stop-color="#16161c"/>
+                <stop offset="1" stop-color="#060608"/>
+            </linearGradient>
+            <radialGradient id="pl${i}" cx=".5" cy=".55" r=".8">
+                <stop offset="0" stop-color="${shade(pad.color, 0.7)}"/>
+                <stop offset=".5" stop-color="${shade(pad.color, 0.2)}"/>
+                <stop offset="1" stop-color="${shade(pad.color, -0.25)}"/>
+            </radialGradient>` : `
             <radialGradient id="pb${i}" cx=".5" cy=".42" r=".75">
                 <stop offset="0" stop-color="${shade(pad.color, 0.1)}"/>
                 <stop offset=".7" stop-color="${shade(pad.color, -0.08)}"/>
@@ -367,7 +387,7 @@
     // Estado e interface
     // =================================================================
     const ui = {
-        mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
+        mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), accidental: $("accidental"), fieldAccidental: $("field-accidental"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
         device: $("device"), status: $("status"), progress: $("progress"),
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
@@ -378,7 +398,7 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", timbre: "suave", level: "normal", strict: "0", goal: "20" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -387,7 +407,12 @@
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
     const records = storage.get(RECORDS_KEY) || {};
 
-    let mode = MODES[prefs.mode];
+    /** Modo desenhado: no "Tocar livre" o teclado de 7 notas ganha as teclas pretas (freeMode). */
+    const pickMode = () => {
+        const chosen = MODES[prefs.mode];
+        return (prefs.play === "livre" && MODES[chosen.freeMode]) || chosen;
+    };
+    let mode = pickMode();
     let padEls = [];       // <g> de cada botão
     let hub = null;        // elementos do cubo central
     let game = null;       // partida (engine)
@@ -407,20 +432,22 @@
         const pads = look.pads.map(({ shape, label: text }, i) => {
             const pad = mode.pads[i];
             const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${pad.color}`;
-            return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${pad.name}">
+            return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${noteName(pad)}">
                 <clipPath id="cp${i}"><${shape}/></clipPath>
                 <${shape} class="face"/>
                 <${shape} class="shade"/>
                 <${shape} class="bevel" clip-path="url(#cp${i})"/>
                 <${shape} class="gloss"/>${text}</g>`;
-        }).join("");
+        });
+        // Teclas pretas (sharp) por último, para ficarem por cima das coloridas.
+        const drawn = [...pads.filter((_, i) => !mode.pads[i].sharp), ...pads.filter((_, i) => mode.pads[i].sharp)].join("");
         const r = look.hub.r;
         ui.device.dataset.look = lookName;
         ui.device.setAttribute("viewBox", look.viewBox);
         ui.device.innerHTML = `
             ${defsSvg()}
             ${look.body}
-            <g class="pads">${pads}</g>
+            <g class="pads">${drawn}</g>
             ${look.over ? `<g class="over" aria-hidden="true">${look.over}</g>` : ""}
             <g class="hub" id="hub" role="button" tabindex="0" aria-label="Jogar" transform="translate(${look.hub.x} ${look.hub.y})">
                 <circle class="hub-disc" r="${r}"/>
@@ -429,8 +456,10 @@
                 <text class="hub-count" id="hub-count" y="${-r * 0.19 + 0.5}" font-size="${r * 0.48}">--</text>
                 <text class="hub-text" id="hub-text" y="${r * 0.52}" font-size="${r * 0.24}">JOGAR</text>
             </g>`;
-        padEls = [...ui.device.querySelectorAll(".pad")];
-        hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text") };
+        padEls = [];
+        ui.device.querySelectorAll(".pad").forEach((el) => { padEls[Number(el.dataset.i)] = el; });
+        hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text"), size: r * 0.48 };
+        ui.fieldAccidental.hidden = !mode.pads.some((p) => p.flat);
         hub.el.addEventListener("click", startGame);
         hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGame(); } });
         if (game) setCount(game.won ? "★★" : phase === "over" ? two(game.score) : two(game.length));
@@ -441,7 +470,7 @@
     };
 
     const renderKeys = () => {
-        const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${p.short || p.name}`).join(" · ");
+        const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${noteName(p)}`).join(" · ");
         ui.keys.textContent = isFree()
             ? `Toque à vontade ou use o teclado: ${list} · M som`
             : `Toque nos botões ou use o teclado: ${list} · Enter joga · R repete · Esc para · M som`;
@@ -452,7 +481,12 @@
         ui.btnReplay.disabled = !on;
     };
 
-    const setCount = (text) => { if (hub) hub.count.textContent = text; };
+    /** Texto do visor; scale < 1 diminui a letra (nomes de 4 letras, como SOL♯). */
+    const setCount = (text, scale = 1) => {
+        if (!hub) return;
+        hub.count.textContent = text;
+        hub.count.setAttribute("font-size", f(hub.size * scale));
+    };
     const setHubText = (text) => { if (hub) hub.text.textContent = text; };
     const two = (n) => String(n).padStart(2, "0");
 
@@ -628,7 +662,7 @@
         phase = "over";
         const score = game.score;
         const best = saveRecord(score);
-        const name = mode.pads[expected]?.name;
+        const name = mode.pads[expected] ? noteName(mode.pads[expected]) : "";
         const opening = timedOut ? "O tempo acabou — boa tentativa!" : "Boa tentativa!";
         const result = score
             ? ` Você acertou ${score} ${score === 1 ? "passo" : "passos"}${best ? " — novo recorde! 🏆" : "."}`
@@ -694,8 +728,8 @@
     const playFree = (i) => {
         light(i, 420);
         const pad = mode.pads[i];
-        const text = pad.short || pad.name;
-        setCount(text.length <= 3 ? text.toUpperCase() : "♪");
+        const text = noteName(pad);
+        setCount(text.length <= 4 ? text.toUpperCase() : "♪", text.length > 3 ? 0.78 : 1);
     };
 
     const resetIdle = (message) => {
@@ -758,8 +792,9 @@
         if (game) resetIdle(message);
         else renderScore();
     };
-    bindSelect(ui.mode, "mode", () => { mode = MODES[prefs.mode]; resetIdle(); build(); });
-    bindSelect(ui.play, "play", () => resetIdle());
+    bindSelect(ui.mode, "mode", () => { mode = pickMode(); resetIdle(); build(); });
+    bindSelect(ui.play, "play", () => { mode = pickMode(); resetIdle(); build(); });
+    bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;

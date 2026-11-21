@@ -93,6 +93,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .device[data-look="teclado"] { width: min(100%, 760px, calc((100vh - 130px) * 1.55)); aspect-ratio: 218 / 140; }
 .device .black-key { fill: url(#g-black); stroke: #000; stroke-width: .8; filter: drop-shadow(0 2px 1.5px #000c); }
 .device .black-key-shine { fill: #ffffff14; }
+.pad.sharp:not(.lit) .gloss { opacity: .35; } /* tecla preta tocável: vidro escuro, brilho discreto */
 .device .over { pointer-events: none; }
 .device .grill { fill: #00000099; stroke: #ffffff12; stroke-width: .4; }
 .device[data-look="teclado"] .pad.lit { transform: scale(.985) translateY(.6px); }

@@ -27,7 +27,7 @@
 
     // Versão do app (mostrada no rodapé do menu). Para publicar uma nova versão rode
     // "npm run versao": ele atualiza este número, o cache do sw.js e os ?v= dos arquivos.
-    const APP_VERSION = "1.018";
+    const APP_VERSION = "1.019";
     // Abre os jogos com ?v= para o navegador não usar arquivos de uma versão antiga.
     const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${APP_VERSION}`;
     $("app-version").innerHTML = `<span class="app-version-label">Versão </span>${APP_VERSION}`;
