@@ -5,9 +5,9 @@
    Regras (dominó brasileiro, 28 peças do duplo-seis):
    - Cada jogador recebe 7 peças. Em duplas (4 jogadores) não sobra monte;
      com 2 ou 3 jogadores as peças restantes formam o monte para comprar.
-   - 1ª rodada: começa quem tem o às (carroça 1|1) e é obrigado a jogá-lo.
-     Se o 1|1 ficou no monte (2 ou 3 jogadores), vale a próxima carroça
-     (2|2, 3|3 … 6|6, 0|0). Nas seguintes começa quem ganhou a anterior
+   - 1ª rodada: começa quem tem o ás (1|1, padrão) ou a sena (6|6), conforme
+     a opção, e é obrigado a jogá-la. Se ela ficou no monte (2 ou 3 jogadores),
+     vale a próxima carroça (ás: 2|2, 3|3 … 6|6, 0|0; sena: 5|5, 4|4 … 0|0). Nas seguintes começa quem ganhou a anterior
      (em duplas, a dupla vencedora sai pelo jogador que bateu).
    - Quem não tem peça que encaixe compra do monte até poder jogar;
      sem monte, passa a vez.
@@ -47,9 +47,9 @@
     // ---------------------------------------------------------------
 
     /**
-     * Cria uma rodada. starter = quem começa (null = quem tem o às 1|1, obrigado a jogá-lo).
+     * Cria uma rodada. starter = quem começa (null = quem tem o ás 1|1 ou a sena 6|6 (opening), obrigado a jogá-la).
      */
-    function newRound(n, starter = null) {
+    function newRound(n, starter = null, opening = 1) {
         let hands, stock;
         // Com 5 carroças ou mais na mesma mão, embaralha de novo.
         do {
@@ -60,8 +60,8 @@
 
         let mustPlay = null;
         if (starter === null) {
-            // Às (1|1); se estiver no monte, a próxima carroça; sem nenhuma, a peça mais pesada.
-            const ORDER = [1, 2, 3, 4, 5, 6, 0];
+            // Ás (1|1) ou sena (6|6), conforme a opção; se estiver no monte, a próxima carroça; sem nenhuma, a peça mais pesada.
+            const ORDER = opening === 6 ? [6, 5, 4, 3, 2, 1, 0] : [1, 2, 3, 4, 5, 6, 0];
             let best = null;
             for (const v of ORDER) {
                 const p = hands.findIndex((h) => h.some((t) => t[0] === v && t[1] === v));

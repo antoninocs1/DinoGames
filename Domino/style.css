@@ -280,7 +280,7 @@ h1 { margin: 0; font: 700 26px Georgia, "Times New Roman", serif; letter-spacing
     .table { height: clamp(300px, calc(100vh - 330px), 640px); }
 }
 @media (min-width: 561px) and (max-width: 960px) {
-    .settings { grid-template-columns: repeat(4, 1fr); }
+    .settings { grid-template-columns: repeat(5, 1fr); }
 }
 @media (max-width: 560px) {
     .table { gap: 6px; }

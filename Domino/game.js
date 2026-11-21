@@ -127,7 +127,7 @@
     // Estado
     // =================================================================
     const ui = {
-        mode: $("mode"), level: $("level"), target: $("target"), mesa: $("mesa"),
+        mode: $("mode"), level: $("level"), target: $("target"), mesa: $("mesa"), opening: $("opening"),
         felt: $("felt"), board: $("board"), hand: $("hand"), me: $("me"), meInfo: $("me-info"),
         status: $("status"), moves: $("moves"), score: $("score"), scoreTarget: $("score-target"), record: $("record"),
         stock: $("stock"), stockCount: $("stock-count"), toast: $("toast"),
@@ -140,7 +140,7 @@
     const SEATS = { 2: [null, "top"], 3: [null, "right", "top"], 4: [null, "right", "top", "left"] };
     const NAMES = { 2: ["Você", "Cat"], 3: ["Você", "Cat", "Dino"], 4: ["Você", "Cat", "Dino", "Dog"] };
 
-    const prefs = Object.assign({ mode: "4", level: "medio", target: "6", mesa: "feltro" }, storage.get(PREFS_KEY) || {});
+    const prefs = Object.assign({ mode: "4", level: "medio", target: "6", mesa: "feltro", opening: "1" }, storage.get(PREFS_KEY) || {});
     const stats = Object.assign({ wins: 0, losses: 0 }, storage.get(STATS_KEY) || {});
 
     let n = 4;
@@ -336,7 +336,7 @@
     function startRound(starter) {
         gen++;
         roundNo++;
-        round = E.newRound(n, starter);
+        round = E.newRound(n, starter, Number(ui.opening.value));
         selected = null;
         hintMove = null;
         viewOnly = false;
@@ -532,7 +532,7 @@
     ui.btnSound.addEventListener("click", toggleSound);
 
     const savePrefs = () => {
-        Object.assign(prefs, { mode: ui.mode.value, level: ui.level.value, target: ui.target.value, mesa: ui.mesa.value });
+        Object.assign(prefs, { mode: ui.mode.value, level: ui.level.value, target: ui.target.value, mesa: ui.mesa.value, opening: ui.opening.value });
         storage.set(PREFS_KEY, prefs);
     };
     ui.mode.addEventListener("change", () => { savePrefs(); newMatch(); });
@@ -542,6 +542,12 @@
         if (!matchOver && scores.some((s) => s >= target)) newMatch(); else renderScore();
     });
     ui.level.addEventListener("change", savePrefs);
+    // Vale a partir da próxima partida se a atual já começou; antes da 1ª jogada, recomeça já.
+    ui.opening.addEventListener("change", () => {
+        savePrefs();
+        if (roundNo === 1 && round && E.onTable(round) === 0) newMatch();
+        else toast(`A próxima partida começa com ${ui.opening.value === "6" ? "a sena (6|6)" : "o ás (1|1)"}`);
+    });
     ui.mesa.addEventListener("change", () => { document.body.dataset.mesa = ui.mesa.value; savePrefs(); });
 
     window.addEventListener("keydown", (event) => {
@@ -597,6 +603,7 @@
     ui.mode.value = prefs.mode;
     ui.level.value = prefs.level;
     ui.target.value = prefs.target;
+    ui.opening.value = prefs.opening;
     ui.mesa.value = prefs.mesa;
     document.body.dataset.mesa = ui.mesa.value;
     updateSoundBtn();
