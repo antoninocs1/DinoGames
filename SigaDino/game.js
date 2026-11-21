@@ -2,13 +2,15 @@
    Siga o Dino — aparelho, som e andamento da partida
    ---------------------------------------------------------------------
    Organização:
-     sound     sons sintetizados (Web Audio, sem arquivos)
+     sound     toca os botões (sons gerados ou arquivos, ver sounds.js)
+               e os efeitos (início, erro, vitória)
      LOOKS     desenho do aparelho ("anel"); recebe a lista de botões e
                devolve as formas — funciona para qualquer quantidade de
                botões (4 cores, 7 notas, 12 notas…)
      partida   playback da sequência, toques do jogador e resultado
    Para um novo modelo de aparelho, acrescente uma função em LOOKS (e um
-   seletor para escolhê-lo); para novos botões, veja modes.js.
+   seletor para escolhê-lo); para novos botões, veja modes.js; para
+   novos sons, veja sounds.js.
    Pensado para crianças: sons sempre suaves, sem distorção.
    ===================================================================== */
 (() => {
@@ -31,25 +33,14 @@
     // =================================================================
     // Som (Web Audio)
     // =================================================================
-    /**
-     * Timbres dos botões. Todos suaves: ataque macio, sem ondas ásperas
-     * (quadrada/serra) e passando por um filtro que corta os agudos.
-     *   partials  [múltiplo da frequência, volume relativo, onda opcional]
-     *   attack    segundos até o volume máximo
-     *   decay     true = o som vai sumindo (sino); false = sustenta enquanto acende
-     *   raw       true = sai direto, sem o filtro (o som da 1ª versão do jogo)
-     */
-    const TIMBRES = {
-        suave:    { wave: "sine",     partials: [[1, 1], [2, 0.12]],             attack: 0.03,  decay: false },
-        sininho:  { wave: "sine",     partials: [[1, 1], [3, 0.1], [4.2, 0.04]], attack: 0.006, decay: true },
-        classico: { wave: "triangle", partials: [[1, 1]],                        attack: 0.02,  decay: false },
-        inicial:  { wave: "triangle", partials: [[1, 1.3], [2, 0.23, "sine"]],    attack: 0.012, decay: false, raw: true },
-    };
+    /** Opções do seletor "Som" (sons gerados e arquivos), definidas em sounds.js. */
+    const SOUNDS = window.SIGA_DINO_SOUNDS;
 
     const sound = {
         ctx: null,
         out: null,
         timbre: "suave",
+        buffers: {},   // arquivo -> AudioBuffer já decodificado (ou a Promise do carregamento)
         enabled: storage.get(SOUND_KEY) !== false,
         ensure() {
             if (!this.ctx) {
@@ -91,9 +82,50 @@
             osc.start(t);
             osc.stop(end + 0.3);
         },
-        /** Som de um botão no timbre escolhido. */
+        /** Baixa e decodifica o arquivo de uma opção de som (uma vez só). */
+        load(name) {
+            const opt = SOUNDS[name];
+            const ctx = this.ensure();
+            if (!ctx || opt?.type !== "sample" || this.buffers[opt.file]) return;
+            this.buffers[opt.file] = fetch(opt.file)
+                .then((r) => r.arrayBuffer())
+                .then((data) => new Promise((ok, fail) => ctx.decodeAudioData(data, ok, fail)))
+                .then((buffer) => (this.buffers[opt.file] = buffer))
+                .catch(() => delete this.buffers[opt.file]); // tenta de novo na próxima vez
+        },
+        /** Toca um arquivo na frequência pedida (muda a velocidade de reprodução). */
+        sample(opt, freq, seconds) {
+            const ctx = this.ensure();
+            const buffer = this.buffers[opt.file];
+            if (!ctx || !this.enabled || !(buffer instanceof AudioBuffer)) return false;
+            const t = ctx.currentTime;
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            src.playbackRate.value = freq / opt.base;
+            const g = ctx.createGain();
+            g.gain.value = 0.55;
+            src.connect(g).connect(this.out);
+            src.start(t);
+            if (!opt.ring) {
+                // Tom contínuo: corta suavemente quando a luz apaga.
+                const end = t + Math.max(0.12, seconds);
+                g.gain.setValueAtTime(0.55, end - 0.05);
+                g.gain.exponentialRampToValueAtTime(0.0001, end + 0.04);
+                src.stop(end + 0.06);
+            }
+            return true;
+        },
+        /** Som de um botão na opção escolhida. */
         pad(freq, seconds) {
-            const tb = TIMBRES[this.timbre] || TIMBRES.suave;
+            const opt = SOUNDS[this.timbre] || SOUNDS.suave;
+            if (opt.type === "sample") {
+                if (this.sample(opt, freq, seconds)) return;
+                this.load(this.timbre);
+                return this.synth(SOUNDS.suave, freq, seconds); // enquanto o arquivo carrega
+            }
+            this.synth(opt, freq, seconds);
+        },
+        synth(tb, freq, seconds) {
             tb.partials.forEach(([mult, vol, wave = tb.wave]) =>
                 this.tone(freq * mult, seconds, { wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay, raw: tb.raw }));
         },
@@ -375,11 +407,17 @@
     const currentScore = () => (game.won ? game.length : game.score);
 
     // ---------- Acender botões ----------
+    /** Frequência do botão i: a do modo, ou a própria da opção de som (tones4). */
+    const padFreq = (i) => {
+        const tones = SOUNDS[prefs.timbre]?.tones4;
+        return tones && mode.pads.length === 4 ? tones[i] : mode.pads[i].freq;
+    };
+
     const light = (i, ms) => {
         const el = padEls[i];
         if (!el) return;
         el.classList.add("lit");
-        sound.pad(mode.pads[i].freq, ms / 1000);
+        sound.pad(padFreq(i), ms / 1000);
         clearTimeout(el._off);
         el._off = setTimeout(() => el.classList.remove("lit"), ms);
     };
@@ -406,6 +444,7 @@
 
     const startGame = () => {
         sound.ensure();
+        sound.load(prefs.timbre);
         stop();
         const id = run;
         game = E.createGame({ padCount: mode.pads.length, goal: Number(prefs.goal), strict: prefs.strict === "1" });
@@ -542,7 +581,7 @@
         hub.el.setAttribute("aria-label", "Jogar de novo");
         renderScore();
         renderProgress();
-        sound.win(mode.pads.map((p) => p.freq));
+        sound.win(mode.pads.map((p, i) => padFreq(i)));
         confetti();
         await sleep(400);
         await flashAll(3, 180, id);
@@ -621,12 +660,17 @@
         else renderScore();
     };
     bindSelect(ui.mode, "mode", () => { mode = MODES[prefs.mode]; resetIdle(); build(); });
-    bindSelect(ui.timbre, "timbre", () => {
+    ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
+    bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;
-        sound.ensure();
-        sound.pad(mode.pads[0].freq, 0.35); // amostra do som escolhido
+        sound.load(prefs.timbre);
+        await sound.buffers[SOUNDS[prefs.timbre].file]; // espera o arquivo para tocar a amostra já certa
+        sound.pad(padFreq(0), 0.35); // amostra do som escolhido
     });
     sound.timbre = prefs.timbre;
+    // Arquivos de som só carregam depois do primeiro toque (regra dos navegadores para áudio).
+    window.addEventListener("pointerdown", () => sound.load(prefs.timbre), { once: true });
+    window.addEventListener("keydown", () => sound.load(prefs.timbre), { once: true });
     ui.btnReplay.addEventListener("click", replay);
     bindSelect(ui.level, "level", () => restartIfPlaying("Velocidade alterada. Toque em Jogar para começar."));
     bindSelect(ui.strict, "strict", () => restartIfPlaying("Opção alterada. Toque em Jogar para começar."));

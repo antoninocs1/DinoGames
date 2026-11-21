@@ -1,6 +1,6 @@
 // Service worker do DinoGames: deixa os jogos disponíveis offline e permite instalar como app.
 // Ao alterar arquivos do projeto, aumente CACHE_VERSION para que os usuários recebam a atualização.
-const CACHE_VERSION = "dinogames-v1.015";
+const CACHE_VERSION = "dinogames-v1.016";
 
 const APP_FILES = [
     "./",
@@ -67,6 +67,11 @@ const APP_FILES = [
 
     "SigaDino/index.html",
     "SigaDino/style.css",
+    "SigaDino/sounds.js",
+    "SigaDino/sounds/eletronico.wav",
+    "SigaDino/sounds/harpa.wav",
+    "SigaDino/sounds/xilofone.wav",
+    "SigaDino/sounds/caixinha.wav",
     "SigaDino/modes.js",
     "SigaDino/engine.js",
     "SigaDino/game.js",
