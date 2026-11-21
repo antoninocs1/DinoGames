@@ -126,4 +126,19 @@ window.DINO_GAMES = [
             ["M", "Som liga/desliga"],
         ],
     },
+    {
+        id: "siga-o-dino",
+        title: "Siga o Dino",
+        icon: "simon",
+        path: "SigaDino/index.html",
+        color: "#f97316",
+        description: "Jogo de memória: repita a sequência de cores e sons, que cresce e acelera a cada acerto. Dois modelos de aparelho.",
+        controls: [
+            ["Clique / toque", "Tocar o botão"],
+            ["1–4 / Q W S A", "Verde, vermelho, azul, amarelo"],
+            ["Enter / N", "Jogar / recomeçar"],
+            ["Esc", "Parar a partida"],
+            ["M", "Som liga/desliga"],
+        ],
+    },
 ];

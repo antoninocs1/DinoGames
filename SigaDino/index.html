@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#14121a">
+    <title>Siga o Dino</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.012">
+    <link rel="stylesheet" href="style.css?v=1.012">
+</head>
+<body>
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 3a9 9 0 0 0-8 8h8z" fill="#22c55e"/><path d="M13 3a9 9 0 0 1 8 8h-8z" fill="#ef4444"/><path d="M13 21a9 9 0 0 0 8-8h-8z" fill="#3b82f6"/><path d="M11 21a9 9 0 0 1-8-8h8z" fill="#facc15"/><circle cx="12" cy="12" r="3.2" fill="#3a3640"/></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Jogo de memória</p>
+                    <h1>Siga o Dino</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field" id="field-mode">
+                    <span>Botões</span>
+                    <select id="mode" aria-label="Conjunto de botões"></select>
+                </label>
+                <label class="field">
+                    <span>Modelo</span>
+                    <select id="look" aria-label="Modelo do aparelho">
+                        <option value="anel">Anel</option>
+                        <option value="flor">Flor</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Velocidade</span>
+                    <select id="level" aria-label="Velocidade">
+                        <option value="facil">Fácil</option>
+                        <option value="normal">Normal</option>
+                        <option value="rapido">Rápido</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Ao errar</span>
+                    <select id="strict" aria-label="O que acontece ao errar">
+                        <option value="1">Fim de jogo</option>
+                        <option value="0">Ouvir de novo</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Objetivo</span>
+                    <select id="goal" aria-label="Tamanho da sequência para vencer">
+                        <option value="8">8 passos</option>
+                        <option value="14">14 passos</option>
+                        <option value="20">20 passos</option>
+                        <option value="31">31 passos</option>
+                        <option value="0">Sem fim</option>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="stage">
+                <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite">Toque em Jogar (ou no centro do aparelho) para começar.</div>
+
+                <div class="progress" id="progress" aria-hidden="true"></div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-start" type="button" title="Jogar (Enter)">Jogar</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card score">
+                    <h2>Placar</h2>
+                    <div class="score-row">
+                        <div><strong id="score-now">0</strong><span>Acertos</span></div>
+                        <div><strong id="score-best">0</strong><span>Recorde</span></div>
+                    </div>
+                    <p class="record" id="record-info"></p>
+                </div>
+
+                <details class="card rules">
+                    <summary>Como jogar</summary>
+                    <ul>
+                        <li>O aparelho acende e toca uma sequência de botões. Repita a sequência na mesma ordem.</li>
+                        <li>A cada acerto a sequência ganha mais um passo — e fica mais rápida a cada 5 passos.</li>
+                        <li><strong>Ao errar:</strong> “Fim de jogo” encerra a partida; “Ouvir de novo” repete a mesma sequência para você tentar outra vez.</li>
+                        <li>Demorou demais para responder? Conta como erro.</li>
+                        <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
+                    </ul>
+                </details>
+
+                <p class="keys" id="keys"></p>
+            </aside>
+        </section>
+    </main>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <script src="../assets/combobox.js?v=1.012"></script>
+    <script src="modes.js?v=1.012"></script>
+    <script src="engine.js?v=1.012"></script>
+    <script src="game.js?v=1.012"></script>
+</body>
+</html>

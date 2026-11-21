@@ -15,6 +15,7 @@ celular (controles de toque). Pode ser instalado como **PWA** e funciona offline
 | **Labirinto do Ratinho** | Leve o ratinho ao queijo enquanto as paredes mudam de lugar. Gato, túneis, ratoeiras e biscoito de força. Sozinho (3 vidas), contra o computador, 2 jogadores no mesmo teclado ou **online** (2 a 4 jogadores). No celular em pé o labirinto fica em pé. |
 | **Damas** | Regras oficiais da CBD (64 casas): captura obrigatória em cadeia, Lei da Maioria, dama voadora, Tema Turco e regras de empate. Contra o computador em 4 níveis (Fácil, Médio, Difícil, Mestre — a IA roda num Web Worker) ou 2 jogadores; desfazer, dica, girar tabuleiro, 4 temas de tabuleiro e sons sintetizados. |
 | **Dominó** | Dominó brasileiro com 28 peças: duplas (você e o parceiro contra o computador, sem monte), 1 contra 1 ou 3 jogadores com monte para comprar. A 1ª rodada sai com o ás (1|1) ou a sena (6|6), à escolha, e as seguintes com quem ganhou a anterior. Batida simples (1), carroça (2), lá-e-lô (3) e cruzada (4); jogo fechado vale 1 ponto para quem tem menos pontos na mão. Computador em 3 níveis, dica, partidas até 3/6/10 pontos e 4 mesas. |
+| **Siga o Dino** | Jogo de memória: repita a sequência de cores e sons, que ganha um passo a cada acerto e acelera a cada 5. Dois modelos de aparelho (anel e flor), 3 velocidades, "fim de jogo" ou "ouvir de novo" ao errar, objetivo de 8 a 31 passos ou sem fim, e recorde por velocidade. Sons sintetizados. Os modos de **7 notas** e **12 notas (♯/♭)** já estão prontos em `SigaDino/modes.js` (basta trocar `enabled` para `true`). |
 
 ## Recursos do app
 
@@ -67,7 +68,7 @@ hub/                  # estilos, ícones, catálogo de jogos e lógica do menu
 assets/               # ícone do dinossauro e ícones do PWA
 manifest.webmanifest  # configuração do PWA
 sw.js                 # service worker (offline)
-Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/  Maze/  Damas/  Domino/
+Tetris/  SpaceInvaders/  BatalhaNaval/  DinoRally/  Maze/  Damas/  Domino/  SigaDino/
 assets/combobox.js    # lista dos <select> no celular (modelo do PCF)
 Maze/maze-server.js   # partidas online do Labirinto (usado pelo server.js)
 ```

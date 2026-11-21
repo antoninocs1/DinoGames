@@ -1,0 +1,158 @@
+/* =====================================================================
+   Siga o Dino — visual
+   ===================================================================== */
+:root {
+    --bg: #14121a;
+    --panel: #ffffff0a;
+    --line: #ffffff17;
+    --text: #f1eff6;
+    --muted: #a7a2b4;
+    --accent: #f97316;
+    --accent-2: #fdba74;
+    --good: #86efac;
+    --bad: #fca5a5;
+    --device: #6f6a6c;
+    --device-2: #575254;
+    --edge: #0d0c10;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+    background:
+        radial-gradient(ellipse at 20% 0%, #2a2140 0, transparent 55%),
+        radial-gradient(ellipse at 100% 100%, #3a2416 0, transparent 50%),
+        var(--bg);
+    -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+
+.app { min-height: 100vh; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- Cabeçalho ---------- */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+    width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px;
+    background: linear-gradient(145deg, #4a4550, #2a272e);
+    box-shadow: 0 8px 22px #f9731626, inset 0 1px 0 #ffffff22;
+}
+.brand-mark svg { width: 30px; height: 30px; }
+.eyebrow { margin: 0; color: var(--accent); font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
+
+.settings { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-left: auto; }
+.field { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
+.field select {
+    min-width: 120px; padding: 7px 28px 7px 10px; border-radius: 9px; border: 1px solid var(--line);
+    background: #100e15 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23f97316'/%3E%3C/svg%3E") no-repeat right 10px center;
+    color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; appearance: none; cursor: pointer;
+}
+.field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---------- Layout ---------- */
+.layout {
+    flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+    align-items: center; gap: 18px; max-width: 1180px; width: 100%; margin: 0 auto;
+}
+.stage { display: grid; place-items: center; min-width: 0; }
+
+/* ---------- Aparelho (SVG) ---------- */
+.device {
+    width: min(100%, calc(100vh - 130px), 640px); min-width: 240px; aspect-ratio: 1; display: block;
+    overflow: visible; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+    filter: drop-shadow(0 22px 34px #000b);
+}
+.device .body { fill: var(--device); stroke: var(--edge); stroke-width: 3.5; }
+.device .body-groove { fill: var(--device-2); stroke: var(--edge); stroke-width: 2.5; }
+
+.pad .face {
+    fill: var(--c); stroke: var(--edge); stroke-width: 3; stroke-linejoin: round;
+    transition: fill .12s, filter .12s;
+}
+.pad.sharp .face { stroke-width: 2.4; }
+.pad-label { font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: inherit; }
+.pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 7px var(--glow)) drop-shadow(0 0 3px #fff8); transition: none; }
+.pad.wrong .face { fill: #fff; filter: drop-shadow(0 0 8px #ff3b3b); }
+
+.device.can-play .pad { cursor: pointer; }
+.device.can-play .pad:hover .face { fill: color-mix(in srgb, var(--c) 82%, white); }
+.device.can-play .pad.lit .face { fill: var(--lit); }
+
+.hub { cursor: pointer; outline: none; }
+.hub-disc { fill: var(--device); stroke: var(--edge); stroke-width: 3.5; transition: fill .15s; }
+.hub:hover .hub-disc, .hub:focus-visible .hub-disc { fill: #7d777a; }
+.hub:focus-visible .hub-disc { stroke: var(--accent); }
+.hub-screen { fill: #1a0d0d; stroke: var(--edge); stroke-width: 1.5; }
+.hub-count {
+    fill: #ff5a4f; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-weight: 800;
+    text-anchor: middle; dominant-baseline: central; letter-spacing: .06em;
+    filter: drop-shadow(0 0 2px #ff3b2f);
+}
+.hub-text { fill: #f4f1f2; font-weight: 800; text-anchor: middle; dominant-baseline: central; letter-spacing: .12em; pointer-events: none; }
+
+/* ---------- Painel ---------- */
+.panel { display: flex; flex-direction: column; gap: 12px; }
+.status {
+    min-height: 64px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel);
+    font-size: 15px; font-weight: 600; line-height: 1.4; display: flex; align-items: center;
+}
+.status.turn { border-color: #f9731688; background: #f9731614; }
+.status.good { border-color: #86efac66; color: var(--good); }
+.status.bad { border-color: #fca5a566; color: var(--bad); }
+
+.progress { display: flex; flex-wrap: wrap; gap: 5px; min-height: 12px; }
+.progress span { width: 12px; height: 12px; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff22; transition: background .15s; }
+.progress span.done { background: var(--c); border-color: transparent; box-shadow: 0 0 6px var(--c); }
+
+.actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.btn {
+    padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text);
+    font: 700 14px inherit; font-family: inherit; cursor: pointer; transition: background .15s, border-color .15s, transform .1s;
+}
+.btn:hover { background: #ffffff18; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: linear-gradient(180deg, #fb8a3c, #ea580c); border-color: #fdba7466; color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.icon { min-width: 46px; font-size: 18px; padding: 8px 10px; }
+
+.card { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); }
+.card h2 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.score-row { display: grid; grid-template-columns: 1fr 1fr; text-align: center; gap: 6px; }
+.score-row div { display: flex; flex-direction: column; gap: 2px; }
+.score-row strong { font-size: 28px; color: var(--accent-2); }
+.score-row span { font-size: 11px; color: var(--muted); }
+.record { margin: 8px 0 0; font-size: 11px; color: var(--muted); text-align: center; }
+
+.rules summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent-2); }
+.rules ul { margin: 10px 0 0; padding-left: 18px; color: #cfcad9; font-size: 12px; line-height: 1.55; }
+.rules li + li { margin-top: 4px; }
+.keys { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+/* ---------- Confete ---------- */
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+.confetti span { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; animation: cair linear forwards; }
+@keyframes cair { to { transform: translate(var(--drift), 105vh) rotate(var(--spin)); opacity: .9; } }
+
+/* ---------- Telas menores ---------- */
+@media (max-width: 860px) {
+    .app { padding: 10px 10px 16px; gap: 10px; }
+    .settings { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); }
+    .field select { min-width: 0; width: 100%; }
+    .layout { grid-template-columns: 1fr; gap: 12px; align-items: start; }
+    .device { width: min(100%, 520px, calc(100vh - 220px)); }
+    .status { min-height: 52px; font-size: 14px; }
+}
+@media (min-width: 561px) and (max-width: 860px) {
+    .settings { grid-template-columns: repeat(4, 1fr); }
+}
+@media (pointer: coarse) {
+    .keys { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
