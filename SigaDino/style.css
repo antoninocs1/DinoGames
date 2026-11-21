@@ -11,9 +11,6 @@
     --accent-2: #fdba74;
     --good: #86efac;
     --bad: #fca5a5;
-    --device: #6f6a6c;
-    --device-2: #575254;
-    --edge: #0d0c10;
     font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
     color: var(--text);
     background: var(--bg);
@@ -66,27 +63,33 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
     overflow: visible; user-select: none; -webkit-user-select: none; touch-action: manipulation;
     filter: drop-shadow(0 22px 34px #000b);
 }
-.device .body { fill: var(--device); stroke: var(--edge); stroke-width: 3.5; }
-.device .body-groove { fill: var(--device-2); stroke: var(--edge); stroke-width: 2.5; }
+.device .body { fill: url(#g-body); stroke: url(#g-rim); stroke-width: 2.2; }
+.device .body-well { fill: url(#g-well); stroke: #ffffff14; stroke-width: .8; }
 
+/* Botões de vidro: gradiente colorido + reflexo branco por cima. */
 .pad .face {
-    fill: var(--c); stroke: var(--edge); stroke-width: 3; stroke-linejoin: round;
-    transition: fill .12s, filter .12s;
+    fill: var(--base); stroke: #00000099; stroke-width: 1.2; stroke-linejoin: round;
+    transition: filter .18s ease-out;
 }
-.pad.sharp .face { stroke-width: 2.4; }
+.pad .gloss { fill: url(#g-gloss); pointer-events: none; transition: opacity .18s; }
 .pad-label { font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: inherit; }
-.pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 7px var(--glow)) drop-shadow(0 0 3px #fff8); transition: none; }
-.pad.wrong .face { fill: #fff; filter: drop-shadow(0 0 8px #ff3b3b); }
+.pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow)); transition: none; }
+.pad.lit .gloss { opacity: .85; }
+/* Errou: o botão balança de leve, sem piscar forte. */
+.pad.wrong { animation: balanca .45s ease-in-out; transform-box: fill-box; transform-origin: center; }
+.pad.wrong .face { filter: brightness(1.25) saturate(.8); }
+@keyframes balanca { 20% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 80% { transform: rotate(-1.5deg); } }
 
 .device.can-play .pad { cursor: pointer; }
-.device.can-play .pad:hover .face { fill: color-mix(in srgb, var(--c) 82%, white); }
-.device.can-play .pad.lit .face { fill: var(--lit); }
+.device.can-play .pad:hover .face { filter: brightness(1.15); }
+.device.can-play .pad.lit .face { filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow)); }
 
 .hub { cursor: pointer; outline: none; }
-.hub-disc { fill: var(--device); stroke: var(--edge); stroke-width: 3.5; transition: fill .15s; }
-.hub:hover .hub-disc, .hub:focus-visible .hub-disc { fill: #7d777a; }
+.hub-disc { fill: url(#g-body); stroke: url(#g-rim); stroke-width: 1.6; transition: filter .15s; }
+.hub:hover .hub-disc, .hub:focus-visible .hub-disc { filter: brightness(1.35); }
 .hub:focus-visible .hub-disc { stroke: var(--accent); }
-.hub-screen { fill: #1a0d0d; stroke: var(--edge); stroke-width: 1.5; }
+.hub-shine { fill: #ffffff1c; pointer-events: none; }
+.hub-screen { fill: url(#g-screen); stroke: #000; stroke-width: 1; }
 .hub-count {
     fill: #ff5a4f; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-weight: 800;
     text-anchor: middle; dominant-baseline: central; letter-spacing: .06em;
@@ -108,7 +111,8 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .progress span { width: 12px; height: 12px; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff22; transition: background .15s; }
 .progress span.done { background: var(--c); border-color: transparent; box-shadow: 0 0 6px var(--c); }
 
-.actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+.btn:disabled, .btn:disabled:hover { opacity: .45; cursor: default; background: #ffffff0d; transform: none; }
 .btn {
     padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text);
     font: 700 14px inherit; font-family: inherit; cursor: pointer; transition: background .15s, border-color .15s, transform .1s;

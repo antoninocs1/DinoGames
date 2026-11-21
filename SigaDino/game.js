@@ -3,12 +3,13 @@
    ---------------------------------------------------------------------
    Organização:
      sound     sons sintetizados (Web Audio, sem arquivos)
-     LOOKS     desenhos do aparelho ("anel" e "flor"); cada um recebe a
-               lista de botões e devolve o SVG — funcionam para qualquer
-               quantidade de botões (4 cores, 7 notas, 12 notas…)
+     LOOKS     desenho do aparelho ("anel"); recebe a lista de botões e
+               devolve as formas — funciona para qualquer quantidade de
+               botões (4 cores, 7 notas, 12 notas…)
      partida   playback da sequência, toques do jogador e resultado
-   Para um novo modelo de aparelho, acrescente uma função em LOOKS e uma
-   <option> no seletor "Modelo"; para novos botões, veja modes.js.
+   Para um novo modelo de aparelho, acrescente uma função em LOOKS (e um
+   seletor para escolhê-lo); para novos botões, veja modes.js.
+   Pensado para crianças: sons sempre suaves, sem distorção.
    ===================================================================== */
 (() => {
     "use strict";
@@ -30,50 +31,80 @@
     // =================================================================
     // Som (Web Audio)
     // =================================================================
+    /**
+     * Timbres dos botões. Todos suaves: ataque macio, sem ondas ásperas
+     * (quadrada/serra) e passando por um filtro que corta os agudos.
+     *   partials  [múltiplo da frequência, volume relativo]
+     *   attack    segundos até o volume máximo
+     *   decay     true = o som vai sumindo (sino); false = sustenta enquanto acende
+     */
+    const TIMBRES = {
+        suave:    { wave: "sine",     partials: [[1, 1], [2, 0.12]],             attack: 0.03,  decay: false },
+        sininho:  { wave: "sine",     partials: [[1, 1], [3, 0.1], [4.2, 0.04]], attack: 0.006, decay: true },
+        classico: { wave: "triangle", partials: [[1, 1]],                        attack: 0.02,  decay: false },
+    };
+
     const sound = {
         ctx: null,
+        out: null,
+        timbre: "suave",
         enabled: storage.get(SOUND_KEY) !== false,
         ensure() {
             if (!this.ctx) {
                 const AC = window.AudioContext || window.webkitAudioContext;
                 if (!AC) return null;
                 this.ctx = new AC();
+                // Saída comum: filtro que arredonda os agudos + compressor que evita picos.
+                const soften = this.ctx.createBiquadFilter();
+                soften.type = "lowpass";
+                soften.frequency.value = 2600;
+                const comp = this.ctx.createDynamicsCompressor();
+                comp.threshold.value = -18;
+                comp.ratio.value = 4;
+                soften.connect(comp).connect(this.ctx.destination);
+                this.out = soften;
             }
             if (this.ctx.state === "suspended") this.ctx.resume();
             return this.ctx;
         },
-        /** Nota com ataque e soltura suaves (sem estalos). */
-        tone(freq, seconds, { type = "triangle", gain = 0.16, delay = 0 } = {}) {
+        /** Uma nota com envelope macio (sem estalos). */
+        tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false } = {}) {
             const ctx = this.ensure();
             if (!ctx || !this.enabled) return;
             const t = ctx.currentTime + delay;
-            const end = t + Math.max(0.06, seconds);
+            const end = t + Math.max(0.12, seconds);
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
-            osc.type = type;
+            osc.type = wave;
             osc.frequency.setValueAtTime(freq, t);
             g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(gain, t + 0.012);
-            g.gain.setValueAtTime(gain, end - 0.05);
-            g.gain.exponentialRampToValueAtTime(0.0001, end);
-            osc.connect(g).connect(ctx.destination);
+            g.gain.exponentialRampToValueAtTime(gain, t + attack);
+            if (decay) {
+                g.gain.exponentialRampToValueAtTime(0.0001, end + 0.25);
+            } else {
+                g.gain.setValueAtTime(gain, Math.max(t + attack, end - 0.08));
+                g.gain.exponentialRampToValueAtTime(0.0001, end + 0.06);
+            }
+            osc.connect(g).connect(this.out);
             osc.start(t);
-            osc.stop(end + 0.02);
+            osc.stop(end + 0.3);
         },
-        /** Som do botão: triângulo + um pouco da oitava para ficar mais "cheio". */
+        /** Som de um botão no timbre escolhido. */
         pad(freq, seconds) {
-            this.tone(freq, seconds, { gain: 0.17 });
-            this.tone(freq * 2, seconds, { type: "sine", gain: 0.03 });
+            const tb = TIMBRES[this.timbre] || TIMBRES.suave;
+            tb.partials.forEach(([mult, vol]) =>
+                this.tone(freq * mult, seconds, { wave: tb.wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay }));
         },
+        /** "Ô-ôu": duas notas descendo, bem baixinho — avisa sem assustar. */
         error() {
-            this.tone(98, 0.7, { type: "sawtooth", gain: 0.06 });
-            this.tone(104, 0.7, { type: "sawtooth", gain: 0.06 });
+            this.tone(440, 0.2, { gain: 0.08, attack: 0.04 });
+            this.tone(349.23, 0.38, { gain: 0.08, attack: 0.04, delay: 0.24 });
         },
-        timeout() { this.tone(330, 0.12, { type: "square", gain: 0.03 }); this.error(); },
-        start() { [523, 659, 784].forEach((f, i) => this.tone(f, 0.12, { gain: 0.07, delay: i * 0.07 })); },
+        timeout() { this.error(); },
+        start() { [523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.14, { gain: 0.06, delay: i * 0.09, attack: 0.02 })); },
         win(freqs) {
             const seq = [...freqs, ...freqs.slice().reverse(), freqs[0] * 2];
-            seq.forEach((f, i) => this.tone(f, 0.16, { gain: 0.1, delay: i * 0.09 }));
+            seq.forEach((f, i) => this.tone(f, 0.2, { gain: 0.07, delay: i * 0.11, attack: 0.01, decay: true }));
         },
     };
 
@@ -134,56 +165,77 @@
     };
 
     // =================================================================
-    // Modelos do aparelho. Cada um devolve { body, pads[], hubR }.
-    // pads[i] é o SVG da "face" do botão i (sem o <g> externo).
+    // Modelos do aparelho. Cada um devolve { pads[], hubR, bodyR }, onde
+    // pads[i] = { shape, label }: shape é o elemento SVG sem fechar (ex.:
+    // 'path d="…"'), usado tanto para a cor quanto para o brilho de vidro.
     // =================================================================
     const LOOKS = {
-        // Modelo 1: disco dividido em fatias, com borda e cubo central.
+        // Disco preto dividido em fatias, com cubo central.
         anel(mode) {
             const n = mode.pads.length;
             const span = 360 / n;
             const hubR = n > 7 ? 30 : 27;
             const r1 = hubR + 5;
-            const gap = n > 7 ? 3 : 5;
+            const gap = n > 7 ? 3.5 : 6;
             const pads = padAngles(mode).map((mid, i) => {
                 const pad = mode.pads[i];
-                const r2 = pad.sharp ? 74 : 90;
-                const face = `<path class="face" d="${sectorPath(r1, r2, mid - span / 2, mid + span / 2, gap)}"/>`;
-                if (!mode.labels) return face;
+                const r2 = pad.sharp ? 72 : 88;
+                const shape = `path d="${sectorPath(r1, r2, mid - span / 2, mid + span / 2, gap)}"`;
                 const [lx, ly] = polar((r1 + r2) / 2 + 2, mid);
-                return face + label(pad, lx, ly, n > 7 ? 7.5 : 10);
+                return { shape, label: mode.labels ? label(pad, lx, ly, n > 7 ? 7.5 : 10) : "" };
             });
-            const body = `<circle class="body" r="98"/><circle class="body-groove" r="92"/>`;
-            return { body, pads, hubR };
+            return { pads, hubR, bodyR: 97 };
         },
+    };
 
-        // Modelo 2: botões redondos em volta de um cubo central, sobre base oval.
-        flor(mode) {
-            const n = mode.pads.length;
-            const ring = n <= 4 ? 44 : 62;
-            const size = Math.min(37, ring * Math.sin(Math.PI / n) * (n <= 4 ? 1.2 : 1.05));
-            const hubR = n <= 4 ? 33 : 30;
-            const pads = padAngles(mode).map((mid, i) => {
-                const pad = mode.pads[i];
-                const r = pad.sharp ? size * 0.78 : size;
-                const [cx, cy] = polar(pad.sharp ? ring + 4 : ring, mid);
-                const face = `<circle class="face" cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}"/>`;
-                if (!mode.labels) return face;
-                const [lx, ly] = polar((pad.sharp ? ring + 4 : ring) + r * 0.25, mid);
-                return face + label(pad, lx, ly, n > 7 ? 7 : 10);
-            });
-            const body = `<ellipse class="body" rx="98" ry="95"/>`;
-            return { body, pads, hubR };
-        },
+    /** Gradientes do aparelho: corpo preto brilhante, botões de vidro colorido. */
+    const defsSvg = () => {
+        const padGrads = mode.pads.map((pad, i) => `
+            <radialGradient id="pb${i}" cx=".5" cy=".42" r=".75">
+                <stop offset="0" stop-color="${shade(pad.color, 0.05)}"/>
+                <stop offset=".65" stop-color="${shade(pad.color, -0.2)}"/>
+                <stop offset="1" stop-color="${shade(pad.color, -0.5)}"/>
+            </radialGradient>
+            <radialGradient id="pl${i}" cx=".5" cy=".45" r=".75">
+                <stop offset="0" stop-color="${shade(pad.color, 0.8)}"/>
+                <stop offset=".45" stop-color="${shade(pad.color, 0.35)}"/>
+                <stop offset="1" stop-color="${shade(pad.color, -0.05)}"/>
+            </radialGradient>`).join("");
+        return `<defs>
+            <radialGradient id="g-body" cx=".4" cy=".3" r=".85">
+                <stop offset="0" stop-color="#4b4b58"/>
+                <stop offset=".45" stop-color="#1d1d26"/>
+                <stop offset="1" stop-color="#050508"/>
+            </radialGradient>
+            <linearGradient id="g-rim" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#b9bccc"/>
+                <stop offset=".35" stop-color="#3d3f4c"/>
+                <stop offset="1" stop-color="#0a0a0f"/>
+            </linearGradient>
+            <radialGradient id="g-well" cx=".5" cy=".5" r=".5">
+                <stop offset=".8" stop-color="#050507"/>
+                <stop offset="1" stop-color="#16161d"/>
+            </radialGradient>
+            <radialGradient id="g-gloss" cx=".38" cy=".22" r=".62">
+                <stop offset="0" stop-color="#fff" stop-opacity=".62"/>
+                <stop offset=".5" stop-color="#fff" stop-opacity=".14"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="g-screen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#2a0f12"/>
+                <stop offset="1" stop-color="#0c0405"/>
+            </linearGradient>
+            ${padGrads}
+        </defs>`;
     };
 
     // =================================================================
     // Estado e interface
     // =================================================================
     const ui = {
-        mode: $("mode"), fieldMode: $("field-mode"), look: $("look"), level: $("level"), strict: $("strict"), goal: $("goal"),
+        mode: $("mode"), fieldMode: $("field-mode"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
         device: $("device"), status: $("status"), progress: $("progress"),
-        btnStart: $("btn-start"), btnSound: $("btn-sound"),
+        btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
     };
@@ -192,7 +244,12 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const prefs = Object.assign({ mode: "cores4", look: "anel", level: "normal", strict: "1", goal: "20" }, storage.get(PREFS_KEY) || {});
+    const DEFAULTS = { v: 2, mode: "cores4", look: "anel", timbre: "suave", level: "normal", strict: "0", goal: "20" };
+    const saved = storage.get(PREFS_KEY) || {};
+    // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
+    if (saved.v !== 2) { delete saved.strict; delete saved.look; }
+    const prefs = Object.assign({}, DEFAULTS, saved, { v: 2 });
+    if (!LOOKS[prefs.look]) prefs.look = "anel";
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
     const records = storage.get(RECORDS_KEY) || {};
 
@@ -210,19 +267,24 @@
     // ---------- Desenho ----------
     const build = () => {
         const look = (LOOKS[prefs.look] || LOOKS.anel)(mode);
-        const pads = look.pads.map((face, i) => {
+        const pads = look.pads.map(({ shape, label: text }, i) => {
             const pad = mode.pads[i];
-            const style = `--c:${shade(pad.color, -0.22)};--lit:${shade(pad.color, 0.38)};--glow:${pad.color}`;
-            return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${pad.name}">${face}</g>`;
+            const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${pad.color}`;
+            return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${pad.name}">
+                <${shape} class="face"/><${shape} class="gloss"/>${text}</g>`;
         }).join("");
         const r = look.hubR;
+        const R = look.bodyR;
         ui.device.dataset.look = prefs.look;
         ui.device.innerHTML = `
-            ${look.body}
+            ${defsSvg()}
+            <circle class="body" r="${R}"/>
+            <circle class="body-well" r="${R - 6}"/>
             <g class="pads">${pads}</g>
             <g class="hub" id="hub" role="button" tabindex="0" aria-label="Jogar">
                 <circle class="hub-disc" r="${r}"/>
-                <rect class="hub-screen" x="${-r * 0.62}" y="${-r * 0.5}" width="${r * 1.24}" height="${r * 0.62}" rx="3"/>
+                <ellipse class="hub-shine" cy="${-r * 0.74}" rx="${r * 0.42}" ry="${r * 0.13}"/>
+                <rect class="hub-screen" x="${-r * 0.62}" y="${-r * 0.5}" width="${r * 1.24}" height="${r * 0.62}" rx="4"/>
                 <text class="hub-count" id="hub-count" y="${-r * 0.19 + 0.5}" font-size="${r * 0.48}">--</text>
                 <text class="hub-text" id="hub-text" y="${r * 0.52}" font-size="${r * 0.24}">JOGAR</text>
             </g>`;
@@ -238,10 +300,13 @@
 
     const renderKeys = () => {
         const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${p.short || p.name}`).join(" · ");
-        ui.keys.textContent = `Toque nos botões ou use o teclado: ${list} · Enter joga · Esc para · M som`;
+        ui.keys.textContent = `Toque nos botões ou use o teclado: ${list} · Enter joga · R repete · Esc para · M som`;
     };
 
-    const setInputEnabled = (on) => ui.device.classList.toggle("can-play", on);
+    const setInputEnabled = (on) => {
+        ui.device.classList.toggle("can-play", on);
+        ui.btnReplay.disabled = !on;
+    };
 
     const setCount = (text) => { if (hub) hub.count.textContent = text; };
     const setHubText = (text) => { if (hub) hub.text.textContent = text; };
@@ -352,6 +417,13 @@
         setStatus("Sua vez! Repita a sequência.", "turn");
         renderProgress();
         armAnswerTimer();
+    };
+
+    /** Botão "Ouvir de novo": repete a sequência (ajuda, sem perder nada). */
+    const replay = () => {
+        if (phase !== "input") return;
+        clearAnswerTimer();
+        playback(run);
     };
 
     const press = (i) => {
@@ -511,7 +583,13 @@
         else renderScore();
     };
     bindSelect(ui.mode, "mode", () => { mode = MODES[prefs.mode]; resetIdle(); build(); });
-    bindSelect(ui.look, "look", () => build());
+    bindSelect(ui.timbre, "timbre", () => {
+        sound.timbre = prefs.timbre;
+        sound.ensure();
+        sound.pad(mode.pads[0].freq, 0.35); // amostra do som escolhido
+    });
+    sound.timbre = prefs.timbre;
+    ui.btnReplay.addEventListener("click", replay);
     bindSelect(ui.level, "level", () => restartIfPlaying("Velocidade alterada. Toque em Jogar para começar."));
     bindSelect(ui.strict, "strict", () => restartIfPlaying("Opção alterada. Toque em Jogar para começar."));
     bindSelect(ui.goal, "goal", () => restartIfPlaying("Objetivo alterado. Toque em Jogar para começar."));
@@ -528,7 +606,8 @@
             startGame();
         } else if (k === "escape") {
             if (game) resetIdle("Partida interrompida. Toque em Jogar para começar.");
-        } else if (k === "m") toggleSound();
+        } else if (k === "r") replay();
+        else if (k === "m") toggleSound();
     });
 
     // Ao trocar de aba ou minimizar, a partida para (evita perder por tempo).

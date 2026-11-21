@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.012">
-    <link rel="stylesheet" href="style.css?v=1.012">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.013">
+    <link rel="stylesheet" href="style.css?v=1.013">
 </head>
 <body>
     <main class="app">
@@ -28,10 +28,11 @@
                     <select id="mode" aria-label="Conjunto de botões"></select>
                 </label>
                 <label class="field">
-                    <span>Modelo</span>
-                    <select id="look" aria-label="Modelo do aparelho">
-                        <option value="anel">Anel</option>
-                        <option value="flor">Flor</option>
+                    <span>Som</span>
+                    <select id="timbre" aria-label="Som dos botões">
+                        <option value="suave">Suave</option>
+                        <option value="sininho">Sininho</option>
+                        <option value="classico">Clássico</option>
                     </select>
                 </label>
                 <label class="field">
@@ -45,8 +46,8 @@
                 <label class="field">
                     <span>Ao errar</span>
                     <select id="strict" aria-label="O que acontece ao errar">
-                        <option value="1">Fim de jogo</option>
                         <option value="0">Ouvir de novo</option>
+                        <option value="1">Fim de jogo</option>
                     </select>
                 </label>
                 <label class="field">
@@ -74,6 +75,7 @@
 
                 <div class="actions">
                     <button class="btn primary" id="btn-start" type="button" title="Jogar (Enter)">Jogar</button>
+                    <button class="btn" id="btn-replay" type="button" title="Ouvir a sequência de novo (R)" disabled>🔁 Repetir</button>
                     <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
                 </div>
 
@@ -91,7 +93,8 @@
                     <ul>
                         <li>O aparelho acende e toca uma sequência de botões. Repita a sequência na mesma ordem.</li>
                         <li>A cada acerto a sequência ganha mais um passo — e fica mais rápida a cada 5 passos.</li>
-                        <li><strong>Ao errar:</strong> “Fim de jogo” encerra a partida; “Ouvir de novo” repete a mesma sequência para você tentar outra vez.</li>
+                        <li><strong>Ao errar:</strong> “Ouvir de novo” repete a mesma sequência para você tentar outra vez; “Fim de jogo” encerra a partida.</li>
+                        <li>Esqueceu? Na sua vez, toque em <strong>🔁 Repetir</strong> para escutar a sequência mais uma vez.</li>
                         <li>Demorou demais para responder? Conta como erro.</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
@@ -104,9 +107,9 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.012"></script>
-    <script src="modes.js?v=1.012"></script>
-    <script src="engine.js?v=1.012"></script>
-    <script src="game.js?v=1.012"></script>
+    <script src="../assets/combobox.js?v=1.013"></script>
+    <script src="modes.js?v=1.013"></script>
+    <script src="engine.js?v=1.013"></script>
+    <script src="game.js?v=1.013"></script>
 </body>
 </html>
