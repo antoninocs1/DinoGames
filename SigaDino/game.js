@@ -241,6 +241,20 @@
                 <stop offset=".5" stop-color="#fff" stop-opacity=".14"/>
                 <stop offset="1" stop-color="#fff" stop-opacity="0"/>
             </radialGradient>
+            <!-- Relevo dos botões: claro em cima, sombra embaixo (luz vindo de cima). -->
+            <linearGradient id="g-shade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff" stop-opacity=".16"/>
+                <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+                <stop offset=".7" stop-color="#000" stop-opacity="0"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".38"/>
+            </linearGradient>
+            <!-- Borda chanfrada: aresta clara em cima, escura embaixo. -->
+            <linearGradient id="g-bevel" x1="0" y1="0" x2=".25" y2="1">
+                <stop offset="0" stop-color="#fff" stop-opacity=".85"/>
+                <stop offset=".4" stop-color="#fff" stop-opacity=".18"/>
+                <stop offset=".6" stop-color="#000" stop-opacity=".08"/>
+                <stop offset="1" stop-color="#000" stop-opacity=".55"/>
+            </linearGradient>
             <linearGradient id="g-screen" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stop-color="#2a0f12"/>
                 <stop offset="1" stop-color="#0c0405"/>
@@ -291,7 +305,11 @@
             const pad = mode.pads[i];
             const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${pad.color}`;
             return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${pad.name}">
-                <${shape} class="face"/><${shape} class="gloss"/>${text}</g>`;
+                <clipPath id="cp${i}"><${shape}/></clipPath>
+                <${shape} class="face"/>
+                <${shape} class="shade"/>
+                <${shape} class="bevel" clip-path="url(#cp${i})"/>
+                <${shape} class="gloss"/>${text}</g>`;
         }).join("");
         const r = look.hubR;
         const R = look.bodyR;

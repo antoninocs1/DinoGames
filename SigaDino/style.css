@@ -67,22 +67,31 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .device .body-well { fill: url(#g-well); stroke: #ffffff14; stroke-width: .8; }
 
 /* Botões de vidro: gradiente colorido + reflexo branco por cima. */
+.pad { transform-box: fill-box; transform-origin: center; transition: transform .12s ease-out; }
 .pad .face {
-    fill: var(--base); stroke: #00000099; stroke-width: 1.2; stroke-linejoin: round;
+    fill: var(--base); stroke: #000000b0; stroke-width: 1.2; stroke-linejoin: round;
+    filter: drop-shadow(0 2.5px 1.5px #000c); /* o botão "levanta" do corpo */
     transition: filter .18s ease-out;
 }
+.pad .shade { fill: url(#g-shade); pointer-events: none; transition: opacity .18s; }
+.pad .bevel { fill: none; stroke: url(#g-bevel); stroke-width: 5; pointer-events: none; }
 .pad .gloss { fill: url(#g-gloss); pointer-events: none; transition: opacity .18s; }
 .pad-label { font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: inherit; }
-.pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow)); transition: none; }
-.pad.lit .gloss { opacity: .85; }
+
+/* Aceso: a luz vem de dentro do vidro, o botão afunda um pouquinho e brilha em volta. */
+.pad.lit { transform: scale(.975); transition: none; }
+.pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 16px var(--glow)); transition: none; }
+.pad.lit .shade { opacity: .45; }
+.pad.lit .gloss { opacity: .9; }
+
 /* Errou: o botão balança de leve, sem piscar forte. */
-.pad.wrong { animation: balanca .45s ease-in-out; transform-box: fill-box; transform-origin: center; }
+.pad.wrong { animation: balanca .45s ease-in-out; }
 .pad.wrong .face { filter: brightness(1.25) saturate(.8); }
 @keyframes balanca { 20% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 80% { transform: rotate(-1.5deg); } }
 
 .device.can-play .pad { cursor: pointer; }
-.device.can-play .pad:hover .face { filter: brightness(1.15); }
-.device.can-play .pad.lit .face { filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 14px var(--glow)); }
+.device.can-play .pad:hover .face { filter: drop-shadow(0 2.5px 1.5px #000c) brightness(1.15); }
+.device.can-play .pad.lit .face { filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 16px var(--glow)); }
 
 .hub { cursor: pointer; outline: none; }
 .hub-disc { fill: url(#g-body); stroke: url(#g-rim); stroke-width: 1.6; transition: filter .15s; }
