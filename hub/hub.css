@@ -421,15 +421,16 @@ a {
     padding: 22px;
     border-radius: var(--radius);
     background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--accent);
+    border: 2px solid var(--border); /* borda toda cinza; ganha a cor do jogo no foco */
     transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card:hover {
+.card:hover,
+.card:focus-visible {
     transform: translateY(-3px);
     border-color: var(--accent);
     box-shadow: 0 10px 30px -12px var(--accent);
+    outline: none;
 }
 
 .card-icon {
@@ -691,7 +692,7 @@ kbd {
     gap: 14px;
     padding: 14px 18px;
     border-radius: var(--radius);
-    border: 1px solid color-mix(in srgb, #3b82f6 55%, var(--border));
+    border: 2px solid var(--border);
     background: var(--bg-elev);
     color: var(--text);
     transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
@@ -702,7 +703,9 @@ kbd {
     --glow-b: #941cff;
 }
 
-.pcf-btn:hover {
+.pcf-btn:hover,
+.pcf-btn:focus-visible {
+    outline: none;
     transform: translateY(-2px);
     border-color: #3b82f6;
     background: color-mix(in srgb, #3b82f6 8%, var(--bg-elev));

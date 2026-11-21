@@ -44,7 +44,7 @@ window.DINO_GAMES = [
         title: "Batalha Naval",
         icon: "ship",
         path: "BatalhaNaval/index.html",
-        color: "#36d1ff",
+        color: "#3b82f6",
         description: "Posicione sua frota e afunde os navios inimigos antes que eles afundem os seus. Três níveis de IA.",
         controls: [
             ["Clique", "Posicionar / atirar"],
@@ -78,7 +78,7 @@ window.DINO_GAMES = [
         title: "Labirinto do Ratinho",
         icon: "maze",
         path: "Maze/index.html",
-        color: "#5294fa",
+        color: "#22c55e",
         description: "Leve o ratinho até o queijo num labirinto cujas paredes mudam de lugar. Sozinho, contra o computador, 2 jogadores ou online.",
         controls: [
             ["Setas / WASD", "Mover"],
@@ -95,7 +95,7 @@ window.DINO_GAMES = [
         title: "Damas",
         icon: "checkers",
         path: "Damas/index.html",
-        color: "#d9ab62",
+        color: "#ef4444",
         description: "Jogo de damas com as regras oficiais da CBD: captura obrigatória, Lei da Maioria e dama voadora. Contra o computador (4 níveis) ou 2 jogadores.",
         controls: [
             ["Clique / toque", "Escolher peça e casa"],
@@ -113,7 +113,7 @@ window.DINO_GAMES = [
         title: "Dominó",
         icon: "domino",
         path: "Domino/index.html",
-        color: "#e2b866",
+        color: "#ec4899",
         description: "Dominó brasileiro: duplas contra o computador ou 1×1 e 3 jogadores com monte. Batida simples, carroça, lá-e-lô e cruzada.",
         controls: [
             ["Clique / toque", "Escolher a peça e a ponta"],
