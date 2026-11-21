@@ -27,7 +27,7 @@
 
     // Versão do app (mostrada no rodapé do menu). Para publicar uma nova versão rode
     // "npm run versao": ele atualiza este número, o cache do sw.js e os ?v= dos arquivos.
-    const APP_VERSION = "1.009";
+    const APP_VERSION = "1.010";
     // Abre os jogos com ?v= para o navegador não usar arquivos de uma versão antiga.
     const withVersion = (path) => `${path}${path.includes("?") ? "&" : "?"}v=${APP_VERSION}`;
     $("app-version").innerHTML = `<span class="app-version-label">Versão </span>${APP_VERSION}`;
@@ -446,25 +446,16 @@
     window.matchMedia("(display-mode: standalone)").addEventListener?.("change", syncInstall);
     syncInstall();
 
-    // ---------- Contador de acessos (mesmo do PCF, no Firestore do projeto pcf5432) ----------
-    // Usa a API REST do Firestore (sem carregar o SDK): soma 1 em meta/dinogames-visits
-    // e mostra o total devolvido. Sem internet ou sem permissão, o contador fica oculto.
+    // ---------- Contador de acessos ----------
+    // Usa o Abacus (abacus.jasoncameron.dev), um contador gratuito sem cadastro:
+    // cada abertura do DinoGames soma 1 e devolve o total. Sem internet ou com o
+    // serviço fora do ar, a linha do contador fica oculta e o resto funciona normal.
     const countVisit = async () => {
         if (location.protocol === "file:") return;
-        const project = "pcf5432";
-        const apiKey = "AIzaSyCjfXX8ZECLhQ56C2iggwsaBd3U3DavlQ4";
-        const doc = `projects/${project}/databases/(default)/documents/meta/dinogames-visits`;
         try {
-            const res = await fetch(`https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit?key=${apiKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    writes: [{ transform: { document: doc, fieldTransforms: [{ fieldPath: "count", increment: { integerValue: "1" } }] } }],
-                }),
-            });
+            const res = await fetch("https://abacus.jasoncameron.dev/hit/dinogames-app/visits", { cache: "no-store" });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            const count = Number(data.writeResults?.[0]?.transformResults?.[0]?.integerValue) || 1;
+            const count = Number((await res.json()).value) || 1;
             $("visit-count-label").textContent = count === 1 ? "1 acesso registrado" : `${count.toLocaleString("pt-BR")} acessos registrados`;
             $("visit-counter").hidden = false;
         } catch (err) {
