@@ -34,14 +34,16 @@
     /**
      * Timbres dos botões. Todos suaves: ataque macio, sem ondas ásperas
      * (quadrada/serra) e passando por um filtro que corta os agudos.
-     *   partials  [múltiplo da frequência, volume relativo]
+     *   partials  [múltiplo da frequência, volume relativo, onda opcional]
      *   attack    segundos até o volume máximo
      *   decay     true = o som vai sumindo (sino); false = sustenta enquanto acende
+     *   raw       true = sai direto, sem o filtro (o som da 1ª versão do jogo)
      */
     const TIMBRES = {
         suave:    { wave: "sine",     partials: [[1, 1], [2, 0.12]],             attack: 0.03,  decay: false },
         sininho:  { wave: "sine",     partials: [[1, 1], [3, 0.1], [4.2, 0.04]], attack: 0.006, decay: true },
         classico: { wave: "triangle", partials: [[1, 1]],                        attack: 0.02,  decay: false },
+        inicial:  { wave: "triangle", partials: [[1, 1.3], [2, 0.23, "sine"]],    attack: 0.012, decay: false, raw: true },
     };
 
     const sound = {
@@ -68,7 +70,7 @@
             return this.ctx;
         },
         /** Uma nota com envelope macio (sem estalos). */
-        tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false } = {}) {
+        tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false, raw = false } = {}) {
             const ctx = this.ensure();
             if (!ctx || !this.enabled) return;
             const t = ctx.currentTime + delay;
@@ -85,15 +87,15 @@
                 g.gain.setValueAtTime(gain, Math.max(t + attack, end - 0.08));
                 g.gain.exponentialRampToValueAtTime(0.0001, end + 0.06);
             }
-            osc.connect(g).connect(this.out);
+            osc.connect(g).connect(raw ? ctx.destination : this.out);
             osc.start(t);
             osc.stop(end + 0.3);
         },
         /** Som de um botão no timbre escolhido. */
         pad(freq, seconds) {
             const tb = TIMBRES[this.timbre] || TIMBRES.suave;
-            tb.partials.forEach(([mult, vol]) =>
-                this.tone(freq * mult, seconds, { wave: tb.wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay }));
+            tb.partials.forEach(([mult, vol, wave = tb.wave]) =>
+                this.tone(freq * mult, seconds, { wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay, raw: tb.raw }));
         },
         /** "Ô-ôu": duas notas descendo, bem baixinho — avisa sem assustar. */
         error() {
@@ -133,22 +135,39 @@
     const f = (n) => +n.toFixed(2);
 
     /**
-     * Setor de anel entre os raios r1 e r2, de a0 a a1 graus, com uma fresta
-     * de largura constante (gap) dos dois lados — como as divisórias retas
-     * do modelo de anel.
+     * Setor de anel com cantos arredondados (estilo "gota"), de a0 a a1 graus
+     * entre os raios r1 e r2, com uma fresta de largura constante (gap) entre
+     * os botões. rOut = arredondamento dos cantos de fora; rIn = dos cantos
+     * de dentro (perto do cubo).
      */
-    const sectorPath = (r1, r2, a0, a1, gap) => {
+    const roundedSectorPath = (r1, r2, a0, a1, gap, rOut, rIn) => {
+        const deg = 180 / Math.PI;
         const half = gap / 2;
-        const o0 = a0 + (half / r2) * (180 / Math.PI);
-        const o1 = a1 - (half / r2) * (180 / Math.PI);
-        const i0 = a0 + (half / r1) * (180 / Math.PI);
-        const i1 = a1 - (half / r1) * (180 / Math.PI);
-        const large = o1 - o0 > 180 ? 1 : 0;
-        const [x0, y0] = polar(r2, o0);
-        const [x1, y1] = polar(r2, o1);
-        const [x2, y2] = polar(r1, i1);
-        const [x3, y3] = polar(r1, i0);
-        return `M${f(x0)} ${f(y0)} A${r2} ${r2} 0 ${large} 1 ${f(x1)} ${f(y1)} L${f(x2)} ${f(y2)} A${r1} ${r1} 0 ${large} 0 ${f(x3)} ${f(y3)}Z`;
+        const o0 = a0 + (half / r2) * deg, o1 = a1 - (half / r2) * deg;
+        const i0 = a0 + (half / r1) * deg, i1 = a1 - (half / r1) * deg;
+        // Não deixa o arredondamento passar da metade de cada lado.
+        rOut = Math.min(rOut, (r2 - r1) * 0.45, (rad(o1 - o0) * r2) * 0.45);
+        rIn = Math.min(rIn, (r2 - r1) * 0.45, (rad(i1 - i0) * r1) * 0.45);
+        const P = (r, d) => polar(r, d);
+        const toward = ([x0, y0], [x1, y1], dist) => {
+            const len = Math.hypot(x1 - x0, y1 - y0);
+            return [x0 + ((x1 - x0) * dist) / len, y0 + ((y1 - y0) * dist) / len];
+        };
+        const O0 = P(r2, o0), O1 = P(r2, o1), I1 = P(r1, i1), I0 = P(r1, i0);
+        const pt = ([x, y]) => `${f(x)} ${f(y)}`;
+        const largeOut = o1 - o0 - 2 * (rOut / r2) * deg > 180 ? 1 : 0;
+        const largeIn = i1 - i0 - 2 * (rIn / r1) * deg > 180 ? 1 : 0;
+        return [
+            `M${pt(toward(O0, I0, rOut))}`,
+            `Q${pt(O0)} ${pt(P(r2, o0 + (rOut / r2) * deg))}`,
+            `A${r2} ${r2} 0 ${largeOut} 1 ${pt(P(r2, o1 - (rOut / r2) * deg))}`,
+            `Q${pt(O1)} ${pt(toward(O1, I1, rOut))}`,
+            `L${pt(toward(I1, O1, rIn))}`,
+            `Q${pt(I1)} ${pt(P(r1, i1 - (rIn / r1) * deg))}`,
+            `A${r1} ${r1} 0 ${largeIn} 0 ${pt(P(r1, i0 + (rIn / r1) * deg))}`,
+            `Q${pt(I0)} ${pt(toward(I0, O0, rIn))}`,
+            "Z",
+        ].join("");
     };
 
     /** Ângulo (graus) do centro de cada botão, em sentido horário. */
@@ -170,17 +189,18 @@
     // 'path d="…"'), usado tanto para a cor quanto para o brilho de vidro.
     // =================================================================
     const LOOKS = {
-        // Disco preto dividido em fatias, com cubo central.
+        // Disco preto com botões em forma de gota (fatias de cantos redondos) e cubo central.
         anel(mode) {
             const n = mode.pads.length;
             const span = 360 / n;
             const hubR = n > 7 ? 30 : 27;
             const r1 = hubR + 5;
-            const gap = n > 7 ? 3.5 : 6;
+            const gap = n > 7 ? 4 : 8;
             const pads = padAngles(mode).map((mid, i) => {
                 const pad = mode.pads[i];
                 const r2 = pad.sharp ? 72 : 88;
-                const shape = `path d="${sectorPath(r1, r2, mid - span / 2, mid + span / 2, gap)}"`;
+                const round = n > 7 ? [7, 4] : [20, 9]; // cantos de fora / de dentro
+                const shape = `path d="${roundedSectorPath(r1, r2, mid - span / 2, mid + span / 2, gap, ...round)}"`;
                 const [lx, ly] = polar((r1 + r2) / 2 + 2, mid);
                 return { shape, label: mode.labels ? label(pad, lx, ly, n > 7 ? 7.5 : 10) : "" };
             });
@@ -192,9 +212,9 @@
     const defsSvg = () => {
         const padGrads = mode.pads.map((pad, i) => `
             <radialGradient id="pb${i}" cx=".5" cy=".42" r=".75">
-                <stop offset="0" stop-color="${shade(pad.color, 0.05)}"/>
-                <stop offset=".65" stop-color="${shade(pad.color, -0.2)}"/>
-                <stop offset="1" stop-color="${shade(pad.color, -0.5)}"/>
+                <stop offset="0" stop-color="${shade(pad.color, 0.1)}"/>
+                <stop offset=".7" stop-color="${shade(pad.color, -0.08)}"/>
+                <stop offset="1" stop-color="${shade(pad.color, -0.42)}"/>
             </radialGradient>
             <radialGradient id="pl${i}" cx=".5" cy=".45" r=".75">
                 <stop offset="0" stop-color="${shade(pad.color, 0.8)}"/>
