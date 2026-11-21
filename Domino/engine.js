@@ -5,8 +5,10 @@
    Regras (dominó brasileiro, 28 peças do duplo-seis):
    - Cada jogador recebe 7 peças. Em duplas (4 jogadores) não sobra monte;
      com 2 ou 3 jogadores as peças restantes formam o monte para comprar.
-   - 1ª rodada: começa quem tem a maior carroça (o duplo-seis em duplas)
-     e é obrigado a jogá-la. Nas seguintes começa quem ganhou a anterior.
+   - 1ª rodada: começa quem tem o às (carroça 1|1) e é obrigado a jogá-lo.
+     Se o 1|1 ficou no monte (2 ou 3 jogadores), vale a próxima carroça
+     (2|2, 3|3 … 6|6, 0|0). Nas seguintes começa quem ganhou a anterior
+     (em duplas, a dupla vencedora sai pelo jogador que bateu).
    - Quem não tem peça que encaixe compra do monte até poder jogar;
      sem monte, passa a vez.
    - Batida: simples 1 ponto, carroça 2, lá-e-lô 3, cruzada 4.
@@ -45,7 +47,7 @@
     // ---------------------------------------------------------------
 
     /**
-     * Cria uma rodada. starter = quem começa (null = maior carroça, obrigada).
+     * Cria uma rodada. starter = quem começa (null = quem tem o às 1|1, obrigado a jogá-lo).
      */
     function newRound(n, starter = null) {
         let hands, stock;
@@ -58,12 +60,19 @@
 
         let mustPlay = null;
         if (starter === null) {
-            // Maior carroça; sem nenhuma (2 ou 3 jogadores), a peça mais pesada.
+            // Às (1|1); se estiver no monte, a próxima carroça; sem nenhuma, a peça mais pesada.
+            const ORDER = [1, 2, 3, 4, 5, 6, 0];
             let best = null;
-            hands.forEach((hand, p) => hand.forEach((t) => {
-                const value = (isDouble(t) ? 100 : 0) + pips(t) * 2 + Math.max(t[0], t[1]) / 10;
-                if (!best || value > best.value) best = { p, t, value };
-            }));
+            for (const v of ORDER) {
+                const p = hands.findIndex((h) => h.some((t) => t[0] === v && t[1] === v));
+                if (p >= 0) { best = { p, t: hands[p].find((t) => t[0] === v && t[1] === v) }; break; }
+            }
+            if (!best) {
+                hands.forEach((hand, p) => hand.forEach((t) => {
+                    const value = pips(t) * 2 + Math.max(t[0], t[1]) / 10;
+                    if (!best || value > best.value) best = { p, t, value };
+                }));
+            }
             starter = best.p;
             mustPlay = best.t;
         }
