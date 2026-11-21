@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.017">
-    <link rel="stylesheet" href="style.css?v=1.017">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.018">
+    <link rel="stylesheet" href="style.css?v=1.018">
 </head>
 <body>
     <main class="app">
@@ -28,10 +28,17 @@
                     <select id="mode" aria-label="Modelo do aparelho"></select>
                 </label>
                 <label class="field">
+                    <span>Jogo</span>
+                    <select id="play" aria-label="Tipo de jogo">
+                        <option value="memoria">Siga a sequência</option>
+                        <option value="livre">Tocar livre</option>
+                    </select>
+                </label>
+                <label class="field">
                     <span>Som</span>
                     <select id="timbre" aria-label="Som dos botões"></select>
                 </label>
-                <label class="field">
+                <label class="field game-only">
                     <span>Velocidade</span>
                     <select id="level" aria-label="Velocidade">
                         <option value="facil">Fácil</option>
@@ -39,14 +46,14 @@
                         <option value="rapido">Rápido</option>
                     </select>
                 </label>
-                <label class="field">
+                <label class="field game-only">
                     <span>Ao errar</span>
                     <select id="strict" aria-label="O que acontece ao errar">
                         <option value="0">Ouvir de novo</option>
                         <option value="1">Fim de jogo</option>
                     </select>
                 </label>
-                <label class="field">
+                <label class="field game-only">
                     <span>Objetivo</span>
                     <select id="goal" aria-label="Tamanho da sequência para vencer">
                         <option value="8">8 passos</option>
@@ -67,15 +74,15 @@
             <aside class="panel">
                 <div class="status" id="status" aria-live="polite">Toque em Jogar (ou no centro do aparelho) para começar.</div>
 
-                <div class="progress" id="progress" aria-hidden="true"></div>
+                <div class="progress game-only" id="progress" aria-hidden="true"></div>
 
                 <div class="actions">
-                    <button class="btn primary" id="btn-start" type="button" title="Jogar (Enter)">Jogar</button>
-                    <button class="btn" id="btn-replay" type="button" title="Ouvir a sequência de novo (R)" disabled>🔁 Repetir</button>
+                    <button class="btn primary game-only" id="btn-start" type="button" title="Jogar (Enter)">Jogar</button>
+                    <button class="btn game-only" id="btn-replay" type="button" title="Ouvir a sequência de novo (R)" disabled>🔁 Repetir</button>
                     <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
                 </div>
 
-                <div class="card score">
+                <div class="card score game-only">
                     <h2>Placar</h2>
                     <div class="score-row">
                         <div><strong id="score-now">0</strong><span>Acertos</span></div>
@@ -93,6 +100,7 @@
                         <li>Esqueceu? Na sua vez, toque em <strong>🔁 Repetir</strong> para escutar a sequência mais uma vez.</li>
                         <li>Demorou demais para responder? Conta como uma tentativa.</li>
                         <li>Em <strong>Modelo</strong>, escolha o disco de 4 cores ou o <strong>teclado colorido</strong> de 7 notas (dó, ré, mi, fá, sol, lá, si).</li>
+                        <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
                 </details>
@@ -104,10 +112,10 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.017"></script>
-    <script src="sounds.js?v=1.017"></script>
-    <script src="modes.js?v=1.017"></script>
-    <script src="engine.js?v=1.017"></script>
-    <script src="game.js?v=1.017"></script>
+    <script src="../assets/combobox.js?v=1.018"></script>
+    <script src="sounds.js?v=1.018"></script>
+    <script src="modes.js?v=1.018"></script>
+    <script src="engine.js?v=1.018"></script>
+    <script src="game.js?v=1.018"></script>
 </body>
 </html>

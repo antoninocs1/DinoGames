@@ -367,7 +367,7 @@
     // Estado e interface
     // =================================================================
     const ui = {
-        mode: $("mode"), fieldMode: $("field-mode"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
+        mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
         device: $("device"), status: $("status"), progress: $("progress"),
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
@@ -378,7 +378,7 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", timbre: "suave", level: "normal", strict: "0", goal: "20" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", timbre: "suave", level: "normal", strict: "0", goal: "20" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -391,10 +391,12 @@
     let padEls = [];       // <g> de cada botão
     let hub = null;        // elementos do cubo central
     let game = null;       // partida (engine)
-    let phase = "idle";    // idle | show | input | wait | over
+    let phase = "idle";    // idle | show | input | wait | over | free (tocar livre)
     let run = 0;           // muda a cada nova partida/parada para cancelar o playback em andamento
     let answerTimer = 0;
 
+    /** "Tocar livre": sem sequência nem placar, só tocar. */
+    const isFree = () => prefs.play === "livre";
     const recordKey = () => `${prefs.mode}:${prefs.level}`;
     const levelName = () => ui.level.options[ui.level.selectedIndex]?.text || "";
 
@@ -434,12 +436,15 @@
         if (game) setCount(game.won ? "★★" : phase === "over" ? two(game.score) : two(game.length));
         renderKeys();
         renderScore();
-        setInputEnabled(phase === "input");
+        setInputEnabled(phase === "input" || phase === "free");
+        if (phase === "free") { setCount("♪"); setHubText("LIVRE"); }
     };
 
     const renderKeys = () => {
         const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${p.short || p.name}`).join(" · ");
-        ui.keys.textContent = `Toque nos botões ou use o teclado: ${list} · Enter joga · R repete · Esc para · M som`;
+        ui.keys.textContent = isFree()
+            ? `Toque à vontade ou use o teclado: ${list} · M som`
+            : `Toque nos botões ou use o teclado: ${list} · Enter joga · R repete · Esc para · M som`;
     };
 
     const setInputEnabled = (on) => {
@@ -512,6 +517,7 @@
     };
 
     const startGame = () => {
+        if (isFree()) return;
         sound.ensure();
         sound.load(prefs.timbre);
         stop();
@@ -574,6 +580,7 @@
 
     const press = (i) => {
         sound.ensure();
+        if (phase === "free") { playFree(i); return; }
         if (phase !== "input") return;
         const { on } = E.timing(prefs.level, game.length);
         const expected = game.expected();
@@ -683,9 +690,29 @@
         }
     };
 
+    /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
+    const playFree = (i) => {
+        light(i, 420);
+        const pad = mode.pads[i];
+        const text = pad.short || pad.name;
+        setCount(text.length <= 3 ? text.toUpperCase() : "♪");
+    };
+
     const resetIdle = (message) => {
         stop();
         game = null;
+        document.body.classList.toggle("free-play", isFree());
+        renderKeys();
+        if (isFree()) {
+            phase = "free";
+            setInputEnabled(true);
+            setCount("♪");
+            setHubText("LIVRE");
+            renderProgress();
+            const what = mode.look === "teclado" ? "as teclas" : "os botões";
+            setStatus(`Tocar livre: toque ${what} e invente a sua música! 🎶`, "turn");
+            return;
+        }
         setCount("--");
         setHubText("JOGAR");
         ui.btnStart.textContent = "Jogar";
@@ -732,6 +759,7 @@
         else renderScore();
     };
     bindSelect(ui.mode, "mode", () => { mode = MODES[prefs.mode]; resetIdle(); build(); });
+    bindSelect(ui.play, "play", () => resetIdle());
     ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;
@@ -771,4 +799,5 @@
 
     updateSoundButton();
     build();
+    if (isFree()) resetIdle();
 })();

@@ -116,6 +116,12 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 }
 .hub-text { fill: #f4f1f2; font-weight: 800; text-anchor: middle; dominant-baseline: central; letter-spacing: .12em; pointer-events: none; }
 
+/* ---------- Tocar livre: some tudo o que é da partida ---------- */
+body.free-play .game-only { display: none !important; }
+body.free-play .actions { grid-template-columns: auto; justify-content: end; }
+body.free-play .hub { cursor: default; }
+body.free-play .hub:hover .hub-disc { filter: none; }
+
 /* ---------- Painel ---------- */
 .panel { display: flex; flex-direction: column; gap: 12px; }
 .status {
