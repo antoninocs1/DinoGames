@@ -54,6 +54,7 @@ class SoundEffects {
 
     playExplosionSound() {
         if (this.muted) return;
+        this.explosionSound.currentTime = 0;
         this.explosionSound.play();
     }
 

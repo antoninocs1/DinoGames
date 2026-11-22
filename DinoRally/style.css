@@ -102,6 +102,12 @@ canvas {
     font-size: 1.25rem;
 }
 
+.touch .touch-pause.is-play {
+    border-color: #8fe3ff;
+    color: #8fe3ff;
+    font-size: 1.15rem;
+}
+
 /* Mouse: a direção segue o ponteiro (botão esquerdo acelera, direito freia) */
 canvas.pointer-steer {
     cursor: crosshair;

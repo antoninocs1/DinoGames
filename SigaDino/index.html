@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.022">
-    <link rel="stylesheet" href="style.css?v=1.022">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.023">
+    <link rel="stylesheet" href="style.css?v=1.023">
 </head>
 <body>
     <main class="app">
@@ -86,6 +86,7 @@
                 <div class="actions">
                     <button class="btn primary game-only" id="btn-start" type="button" title="Jogar (Enter)">Jogar</button>
                     <button class="btn game-only" id="btn-replay" type="button" title="Ouvir a sequência de novo (R)" disabled>🔁 Repetir</button>
+                    <button class="btn icon game-only" id="btn-pause" type="button" title="Pausar (P)" aria-label="Pausar" disabled>⏸</button>
                     <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
                 </div>
 
@@ -104,6 +105,7 @@
                         <li>O aparelho acende e toca uma sequência de botões. Repita a sequência na mesma ordem.</li>
                         <li>A cada acerto a sequência ganha mais um passo — e fica mais rápida a cada 5 passos.</li>
                         <li><strong>Ao errar:</strong> “Ouvir de novo” repete a mesma sequência para você tentar outra vez; “Fim de jogo” encerra a partida.</li>
+                        <li>Precisa parar um pouco? Toque em <strong>⏸</strong> (ou P) para pausar e em <strong>▶</strong> (ou no centro do aparelho) para continuar — a sequência toca de novo.</li>
                         <li>Esqueceu? Na sua vez, toque em <strong>🔁 Repetir</strong> para escutar a sequência mais uma vez.</li>
                         <li>Demorou demais para responder? Conta como uma tentativa.</li>
                         <li>Em <strong>Modelo</strong>, escolha o disco de 4 cores ou o <strong>teclado colorido</strong> de 7 notas (dó, ré, mi, fá, sol, lá, si).</li>
@@ -120,10 +122,10 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.022"></script>
-    <script src="sounds.js?v=1.022"></script>
-    <script src="modes.js?v=1.022"></script>
-    <script src="engine.js?v=1.022"></script>
-    <script src="game.js?v=1.022"></script>
+    <script src="../assets/combobox.js?v=1.023"></script>
+    <script src="sounds.js?v=1.023"></script>
+    <script src="modes.js?v=1.023"></script>
+    <script src="engine.js?v=1.023"></script>
+    <script src="game.js?v=1.023"></script>
 </body>
 </html>

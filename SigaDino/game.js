@@ -389,7 +389,7 @@
     const ui = {
         mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), accidental: $("accidental"), fieldAccidental: $("field-accidental"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
         device: $("device"), status: $("status"), progress: $("progress"),
-        btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnSound: $("btn-sound"),
+        btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
     };
@@ -416,7 +416,7 @@
     let padEls = [];       // <g> de cada botão
     let hub = null;        // elementos do cubo central
     let game = null;       // partida (engine)
-    let phase = "idle";    // idle | show | input | wait | over | free (tocar livre)
+    let phase = "idle";    // idle | show | input | wait | paused | over | free (tocar livre)
     let run = 0;           // muda a cada nova partida/parada para cancelar o playback em andamento
     let answerTimer = 0;
 
@@ -460,8 +460,9 @@
         ui.device.querySelectorAll(".pad").forEach((el) => { padEls[Number(el.dataset.i)] = el; });
         hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text"), size: r * 0.48 };
         ui.fieldAccidental.hidden = !mode.pads.some((p) => p.flat);
-        hub.el.addEventListener("click", startGame);
-        hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startGame(); } });
+        hub.el.addEventListener("click", hubAction);
+        hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hubAction(); } });
+        if (phase === "paused") setHubText("PAUSA");
         if (game) setCount(game.won ? "★★" : phase === "over" ? two(game.score) : two(game.length));
         renderKeys();
         renderScore();
@@ -473,12 +474,26 @@
         const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${noteName(p)}`).join(" · ");
         ui.keys.textContent = isFree()
             ? `Toque à vontade ou use o teclado: ${list} · M som`
-            : `Toque nos botões ou use o teclado: ${list} · Enter joga · R repete · Esc para · M som`;
+            : `Toque nos botões ou use o teclado: ${list} · Enter joga · P pausa · R repete · Esc para · M som`;
     };
 
     const setInputEnabled = (on) => {
         ui.device.classList.toggle("can-play", on);
         ui.btnReplay.disabled = !on;
+        updatePauseButton();
+    };
+
+    /** Pode pausar enquanto a partida está em andamento (mostrando, esperando ou na vez do jogador). */
+    const canPause = () => ["show", "input", "wait"].includes(phase);
+
+    const updatePauseButton = () => {
+        const paused = phase === "paused";
+        ui.btnPause.disabled = !paused && !canPause();
+        ui.btnPause.textContent = paused ? "▶" : "⏸";
+        ui.btnPause.title = paused ? "Continuar (P)" : "Pausar (P)";
+        ui.btnPause.setAttribute("aria-label", paused ? "Continuar" : "Pausar");
+        ui.btnPause.classList.toggle("is-play", paused);
+        document.body.classList.toggle("paused", paused);
     };
 
     /** Texto do visor; scale < 1 diminui a letra (nomes de 4 letras, como SOL♯). */
@@ -564,6 +579,38 @@
         nextRound(id, 650);
     };
 
+    /** Pausa: cancela a sequência e o tempo de resposta; ao continuar, a sequência toca de novo. */
+    const pause = () => {
+        if (!canPause()) return;
+        run++;
+        clearAnswerTimer();
+        phase = "paused";
+        padEls.forEach((el) => el.classList.remove("lit"));
+        setInputEnabled(false);
+        setHubText("PAUSA");
+        hub?.el.setAttribute("aria-label", "Continuar");
+        setStatus("Jogo pausado. Toque em ▶ (ou no centro do aparelho) para continuar.", "soft");
+    };
+
+    const resume = async () => {
+        if (phase !== "paused") return;
+        sound.ensure();
+        const id = run;
+        phase = "wait";
+        setHubText("PASSO");
+        hub?.el.setAttribute("aria-label", "Recomeçar");
+        setInputEnabled(false);
+        setStatus("Continuando… preste atenção!");
+        await sleep(600);
+        if (id !== run) return;
+        playback(id);
+    };
+
+    const togglePause = () => (phase === "paused" ? resume() : pause());
+
+    /** Centro do aparelho: continua se estiver pausado; senão, joga/recomeça. */
+    const hubAction = () => (phase === "paused" ? resume() : startGame());
+
     /** Interrompe tudo (troca de opção, Esc ou nova partida). */
     const stop = () => {
         run++;
@@ -576,6 +623,7 @@
     const nextRound = async (id, delay) => {
         game.addStep();
         phase = "wait";
+        updatePauseButton();
         setCount(two(game.length));
         setHubText("PASSO");
         renderScore();
@@ -660,6 +708,7 @@
 
         // Fim de jogo: mostra qual era o botão certo.
         phase = "over";
+        updatePauseButton();
         const score = game.score;
         const best = saveRecord(score);
         const name = mode.pads[expected] ? noteName(mode.pads[expected]) : "";
@@ -685,6 +734,7 @@
     const win = async () => {
         const id = run;
         phase = "over";
+        updatePauseButton();
         game.won = true;
         const best = saveRecord(game.length);
         setCount("★★");
@@ -766,6 +816,7 @@
     });
 
     ui.btnStart.addEventListener("click", startGame);
+    ui.btnPause.addEventListener("click", togglePause);
 
     const updateSoundButton = () => {
         ui.btnSound.textContent = sound.enabled ? "🔊" : "🔇";
@@ -820,16 +871,17 @@
         if (k === "enter" || k === "n") {
             if (event.target.closest?.("button, [role=button]")) return; // o próprio botão já trata
             event.preventDefault();
-            startGame();
+            if (phase === "paused") resume(); else startGame();
         } else if (k === "escape") {
             if (game) resetIdle("Partida interrompida. Toque em Jogar para começar.");
         } else if (k === "r") replay();
         else if (k === "m") toggleSound();
+        else if (k === "p") togglePause();
     });
 
-    // Ao trocar de aba ou minimizar, a partida para (evita perder por tempo).
+    // Ao trocar de aba ou minimizar, a partida pausa (evita perder por tempo).
     document.addEventListener("visibilitychange", () => {
-        if (document.hidden && game && phase !== "over") resetIdle("Partida interrompida. Toque em Jogar para começar.");
+        if (document.hidden) pause();
     });
 
     updateSoundButton();

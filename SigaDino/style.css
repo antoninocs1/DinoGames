@@ -139,7 +139,9 @@ body.free-play .hub:hover .hub-disc { filter: none; }
 .progress span { width: 12px; height: 12px; border-radius: 50%; background: #ffffff14; border: 1px solid #ffffff22; transition: background .15s; }
 .progress span.done { background: var(--c); border-color: transparent; box-shadow: 0 0 6px var(--c); }
 
-.actions { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; }
+.btn#btn-pause.is-play { color: var(--accent); border-color: var(--accent); }
+body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .2s, filter .2s; }
 .btn:disabled, .btn:disabled:hover { opacity: .45; cursor: default; background: #ffffff0d; transform: none; }
 .btn {
     padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text);

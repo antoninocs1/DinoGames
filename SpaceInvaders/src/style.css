@@ -119,6 +119,36 @@ canvas {
 
 .pause-overlay.show {
     display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.pause-overlay small {
+    font-size: 0.65rem;
+    opacity: 0.75;
+}
+
+.button-resume {
+    width: 120px;
+    height: 120px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.button-resume svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.button-resume:hover,
+.button-resume:focus-visible {
+    transform: scale(1.08);
+    color: #ffd23c;
 }
 
 .game-over {

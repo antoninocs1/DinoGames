@@ -1427,6 +1427,18 @@ touch.querySelectorAll("button[data-key]").forEach((btn) => {
     btn.addEventListener("contextmenu", (e) => e.preventDefault());
 });
 
+// O botão de pausa mostra ▶ (continuar) quando pausado e ❚❚ (pausar) durante o jogo.
+const pauseBtn = touch.querySelector(".touch-pause");
+let pauseBtnPhase = "";
+const syncPauseButton = () => {
+    if (pauseBtnPhase === state.phase) return;
+    pauseBtnPhase = state.phase;
+    const playing = state.phase === "playing";
+    pauseBtn.textContent = playing ? "❚❚" : "▶";
+    pauseBtn.setAttribute("aria-label", playing ? "Pausar" : "Continuar");
+    pauseBtn.classList.toggle("is-play", !playing);
+};
+
 window.addEventListener("resize", fitCanvas);
 
 // =====================================================================
@@ -1439,6 +1451,7 @@ const loop = (now) => {
     last = now;
     update(dt);
     render();
+    syncPauseButton();
     requestAnimationFrame(loop);
 };
 

@@ -24,6 +24,7 @@ const buttonExit = document.querySelector(".button-exit");
 const buttonMute = document.querySelector(".toggle-mute");
 const buttonPause = document.querySelector(".toggle-pause");
 const pauseOverlay = document.querySelector(".pause-overlay");
+const buttonResume = document.querySelector(".button-resume");
 const exitModal = document.querySelector(".exit-modal");
 const exitBtnYes = document.querySelector(".exit-btn-yes");
 const exitBtnNo = document.querySelector(".exit-btn-no");
@@ -317,6 +318,7 @@ const checkShootInvaders = () => {
                 audioEngine.hit();
 
                 if (bossLevel.boss.health <= 0) {
+                    soundEffects.playExplosionSound();
                     createExplosion({ x: bossLevel.boss.position.x + bossLevel.boss.width / 2, y: bossLevel.boss.position.y + bossLevel.boss.height / 2 }, 30, "#FF7B00");
                     incrementScore(200);
                     bossLevel.active = false;
@@ -1032,6 +1034,10 @@ buttonMute.addEventListener("click", () => {
     blurFocusedElement();
 });
 buttonPause.addEventListener("click", () => {
+    togglePause();
+    blurFocusedElement();
+});
+buttonResume.addEventListener("click", () => {
     togglePause();
     blurFocusedElement();
 });

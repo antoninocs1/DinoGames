@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="src/style.css?v=1.022">
+    <link rel="stylesheet" href="src/style.css?v=1.023">
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Defenda a Terra neste jogo arcade inspirado em Space Invaders.">
     <title>Space Invaders</title>
@@ -34,7 +34,16 @@
         <span>Pressione Esc durante o jogo para sair</span>
     </section>
 
-    <div class="pause-overlay" aria-live="polite">Jogo pausado</div>
+    <div class="pause-overlay" aria-live="polite">
+        <button class="button-resume" type="button" aria-label="Continuar jogo">
+            <svg viewBox="0 0 512 512" aria-hidden="true">
+                <circle cx="256" cy="256" r="236" fill="none" stroke="currentColor" stroke-width="40"/>
+                <path d="M214 186c0-14 15-22 27-15l99 70c10 7 10 23 0 30l-99 70c-12 8-27 0-27-15z" fill="currentColor"/>
+            </svg>
+        </button>
+        <span>Jogo pausado</span>
+        <small>Toque no Play para continuar</small>
+    </div>
 
     <section class="game-over screen">
         <div>
@@ -56,6 +65,6 @@
 
     <canvas></canvas>
 
-    <script type="module" src="src/index.js?v=1.022"></script>
+    <script type="module" src="src/index.js?v=1.023"></script>
 </body>
 </html>
