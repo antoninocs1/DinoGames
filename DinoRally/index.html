@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#0b0d26">
     <title>Dino Rally</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.027">
-    <link rel="stylesheet" href="style.css?v=1.027">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.028">
+    <link rel="stylesheet" href="style.css?v=1.028">
 </head>
 <body>
     <main class="stage">
@@ -19,7 +19,27 @@
                     <span>Modo de jogo</span>
                     <select id="mode" aria-label="Modo de jogo">
                         <option value="endurance">Resistência (7 dias)</option>
-                        <option value="race">Corrida (largada e chegada)</option>
+                        <option value="race">Corrida</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Voltas</span>
+                    <select id="laps" aria-label="Voltas">
+                        <option value="0">Por distância (4 km +1)</option>
+                        <option value="1">1 volta (3,5 km)</option>
+                        <option value="2">2 voltas (7 km)</option>
+                        <option value="3">3 voltas (10,6 km)</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Seu carro</span>
+                    <select id="car" aria-label="Seu carro"></select>
+                </label>
+                <label class="field">
+                    <span>Minimapa</span>
+                    <select id="minimap" aria-label="Minimapa">
+                        <option value="1">Ligado</option>
+                        <option value="0">Desligado</option>
                     </select>
                 </label>
                 <label class="field">
@@ -48,11 +68,12 @@
             <div class="touch-group">
                 <button type="button" data-key="brake" class="brake" aria-label="Freio"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 13l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 <button type="button" data-key="gas" class="gas" aria-label="Acelerar"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V5M5 11l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button type="button" class="touch-nitro" data-key="nitro" aria-label="Nitro">🔥</button>
             </div>
         </div>
     </main>
 
-    <script src="../assets/combobox.js?v=1.027"></script>
-    <script src="rally.js?v=1.027"></script>
+    <script src="../assets/combobox.js?v=1.028"></script>
+    <script src="rally.js?v=1.028"></script>
 </body>
 </html>

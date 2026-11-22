@@ -53,6 +53,31 @@ const BEST_KEY = "dinogames-rally-best";
 const SOUND_KEY = "dinogames-rally-sound";
 const MODE_KEY = "dinogames-rally-mode";
 const NUMBERS_KEY = "dinogames-rally-numbers";
+const LAPS_KEY = "dinogames-rally-laps";
+const CAR_KEY = "dinogames-rally-car";
+const MINIMAP_KEY = "dinogames-rally-minimap";
+
+// ---------- Nitro ----------
+const NITRO_MAX_SPEED = MAX_SPEED * 1.3; // com nitro passa da velocidade máxima
+const NITRO_DURATION = 3; // segundos com a barra cheia
+const NITRO_MIN = 0.25; // carga mínima para acionar
+const NITRO_PASS = { endurance: 0.08, race: 0.15 }; // carga por ultrapassagem
+const NITRO_IDLE = 0.015; // carga por segundo, devagar
+
+// ---------- Carro do jogador (cor e número escolhidos no menu) ----------
+const PLAYER_CARS = [
+    { id: "verde", name: "Verde-água", rgb: [47, 191, 149], number: 1 },
+    { id: "vermelho", name: "Vermelho", rgb: [214, 48, 49], number: 7 },
+    { id: "azul", name: "Azul", rgb: [40, 110, 225], number: 3 },
+    { id: "amarelo", name: "Amarelo", rgb: [245, 200, 40], number: 5 },
+    { id: "laranja", name: "Laranja", rgb: [245, 130, 30], number: 9 },
+    { id: "roxo", name: "Roxo", rgb: [135, 75, 205], number: 8 },
+    { id: "branco", name: "Branco", rgb: [236, 236, 240], number: 10 },
+    { id: "preto", name: "Preto", rgb: [42, 42, 50], number: 13 },
+];
+
+// Medalhas por posição de chegada
+const MEDALS = { 1: { icon: "🥇", name: "ouro" }, 2: { icon: "🥈", name: "prata" }, 3: { icon: "🥉", name: "bronze" } };
 
 // Fases do dia: cores do céu, chão, estrada, neblina e luz.
 const PHASES = [
@@ -320,6 +345,10 @@ const sound = {
     newDay() {
         [392, 523, 659].forEach((f, i) => this.tone(f, 0.35, 0.1, i * 0.14));
     },
+    nitro() {
+        this.noise(0.9, 700, 0.35, 2.5, "bandpass");
+        this.tone(160, 0.5, 0.08, 0, "sawtooth");
+    },
     beep(go) {
         this.tone(go ? 880 : 440, go ? 0.5 : 0.22, 0.14, 0, "square");
     },
@@ -339,8 +368,12 @@ const sound = {
 // =====================================================================
 
 const best = (() => {
-    const empty = { km: 0, day: 0, race: 0 };
-    try { return { ...empty, ...JSON.parse(storage.get(BEST_KEY)) }; } catch { return empty; }
+    const empty = { km: 0, day: 0, race: 0, medals: {} }; // medals: { corrida: melhor posição }
+    try {
+        const saved = { ...empty, ...JSON.parse(storage.get(BEST_KEY)) };
+        saved.medals = saved.medals || {};
+        return saved;
+    } catch { return empty; }
 })();
 
 const state = {
@@ -367,6 +400,12 @@ const state = {
     countdown: 0,
     raceTime: 0,
     finishPos: 0,
+    lapsTotal: 0, // 0 = corrida por distância
+    lap: 1,
+    lines: [], // linhas da corrida: largada, voltas e chegada
+    newMedal: false,
+    nitro: 0, // carga do nitro (0 a 1)
+    nitroOn: false,
     needle: 0, // ponteiro do velocímetro analógico (km/h, suavizado)
     bgOffset: 0,
     shake: 0,
@@ -385,6 +424,12 @@ const input = { left: false, right: false, gas: false, brake: false };
 const pointer = { x: null, gas: false, brake: false };
 const braking = () => input.brake || pointer.brake;
 
+// Número do i-ésimo carro adversário (1, 2, 3... pulando o número do jogador)
+const rivalNumber = (i) => {
+    const n = i + 1;
+    return n >= playerCar().number ? n + 1 : n;
+};
+
 const createCars = () => {
     state.cars = [];
     for (let i = 0; i < N_CARS; i++) {
@@ -392,7 +437,7 @@ const createCars = () => {
         const hue = rand(0, 360);
         state.cars.push({
             rgb: hslToRgb(hue, rand(0.55, 0.85), rand(0.42, 0.58)),
-            number: i + 2, // o jogador é o carro 1
+            number: rivalNumber(i),
             z: wrapZ(z),
             dist: z,
             accel: 0.15,
@@ -427,7 +472,7 @@ const createRivals = (level) => {
         const hue = (i * 360) / N_RIVALS + rand(-10, 10);
         state.cars.push({
             rgb: hslToRgb(hue, rand(0.6, 0.85), rand(0.42, 0.56)),
-            number: i + 2,
+            number: rivalNumber(i),
             z: wrapZ(z),
             dist: z,
             offset: lane,
@@ -457,20 +502,26 @@ const resetCommon = () => {
         particles: [],
         popups: [],
         dayResult: null,
+        nitro: 0,
+        nitroOn: false,
     });
 };
 
 const startRace = (level) => {
     resetCommon();
-    const raceKm = raceKmFor(level);
+    const laps = settings.laps; // 0 = por distância
+    const raceUnits = laps ? laps * TRACK_LEN : raceKmFor(level) / KM_PER_UNIT;
     Object.assign(state, {
         mode: "race",
         phase: "countdown",
         level,
         day: level, // nas corridas pares o meio-dia tem neve
         dayTime: RACE_START_PHASE[(level - 1) % RACE_START_PHASE.length] * PHASE_LEN,
-        raceKm,
-        raceUnits: raceKm / KM_PER_UNIT,
+        raceKm: Math.round(raceUnits * KM_PER_UNIT * 10) / 10,
+        raceUnits,
+        lapsTotal: laps,
+        lap: 1,
+        newMedal: false,
         countdown: COUNTDOWN,
         raceTime: 0,
         finishPos: 0,
@@ -479,6 +530,12 @@ const startRace = (level) => {
     });
     createRivals(level);
     state.finishZ = state.startZ + state.raceUnits;
+    // Linhas pintadas na pista: largada, uma por volta e chegada (todas no mesmo ponto no modo voltas)
+    state.lines = [{ z: state.startZ, kind: "start" }];
+    for (let k = 1; k < laps; k++) {
+        state.lines.push({ z: state.startZ + k * TRACK_LEN, kind: "lap", label: k + 1 === laps ? "ÚLTIMA VOLTA" : `VOLTA ${k + 1}` });
+    }
+    state.lines.push({ z: state.finishZ, kind: "finish" });
     state.cars.forEach((car) => (car.lastRel = relZ(car.z - (state.position + PLAYER_Z))));
     sound.startEngine();
     sound.beep(false);
@@ -579,14 +636,26 @@ const update = (dt) => {
     state.playerX -= dx * speedRatio * playerSeg.curve * CENTRIFUGAL;
 
     // Aceleração
+    const prevSpeed = state.speed;
+    if (crashed) state.nitroOn = false;
+    if (state.nitroOn) {
+        state.nitro = Math.max(0, state.nitro - dt / NITRO_DURATION);
+        if (state.nitro <= 0) state.nitroOn = false;
+    } else {
+        state.nitro = Math.min(1, state.nitro + NITRO_IDLE * dt);
+    }
+
     if (crashed) state.speed += DECEL * dt;
+    else if (state.nitroOn) state.speed += ACCEL * 1.8 * dt; // o nitro empurra mesmo sem acelerar
     else if (input.gas || pointer.gas) state.speed += ACCEL * dt;
     else if (braking()) state.speed += BRAKE * dt;
     else state.speed += DECEL * dt;
 
     const offroad = Math.abs(state.playerX) > 1;
     if (offroad && state.speed > OFFROAD_LIMIT) state.speed += OFFROAD_DECEL * dt;
-    state.speed = clamp(state.speed, 0, MAX_SPEED);
+    // Acabando o nitro, a velocidade volta ao normal aos poucos
+    const cap = state.nitroOn ? NITRO_MAX_SPEED : Math.max(MAX_SPEED, prevSpeed - MAX_SPEED * 0.4 * dt);
+    state.speed = clamp(state.speed, 0, cap);
     state.playerX = clamp(state.playerX, -2.4, 2.4);
 
     // Fundo acompanha as curvas
@@ -608,6 +677,15 @@ const update = (dt) => {
         }
         state.shake = Math.max(state.shake, 3 * speedRatio);
     }
+    if (state.nitroOn) {
+        for (let i = 0; i < 3; i++) {
+            addParticle({
+                kind: "spark", x: carScreen.x + carScreen.w * (Math.random() < 0.5 ? -0.28 : 0.28) + rand(-3, 3),
+                y: carScreen.y - carScreen.h * 0.12, vx: rand(-40, 40), vy: rand(40, 140), life: rand(0.12, 0.3),
+                size: rand(2, 5), color: Math.random() < 0.5 ? [120, 190, 255] : [255, 170, 60],
+            });
+        }
+    }
     if (state.speed > 300 && Math.random() < 0.5) {
         addParticle({
             kind: "smoke", x: carScreen.x + carScreen.w * (Math.random() < 0.5 ? -0.28 : 0.28), y: carScreen.y - carScreen.h * 0.15,
@@ -622,6 +700,14 @@ const update = (dt) => {
         // Na corrida o dia passa devagar (só para mudar o cenário)
         state.dayTime = (state.dayTime + dt * 0.35) % DAY_LEN;
         state.raceTime += dt;
+        if (state.lapsTotal) {
+            const lap = Math.min(state.lapsTotal, Math.floor(Math.max(0, raceProgress()) / TRACK_LEN) + 1);
+            if (lap > state.lap) {
+                state.lap = lap;
+                popup(lap === state.lapsTotal ? "ÚLTIMA VOLTA!" : `VOLTA ${lap}`, "#8fe3ff");
+                sound.newDay();
+            }
+        }
         if (raceProgress() >= state.raceUnits) finishRace();
         return;
     }
@@ -645,6 +731,13 @@ const update = (dt) => {
             sound.goal();
         }
     }
+};
+
+const activateNitro = () => {
+    if (state.phase !== "playing" || state.nitroOn || state.nitro < NITRO_MIN || state.crashTimer > 0) return;
+    state.nitroOn = true;
+    state.shake = Math.max(state.shake, 5);
+    sound.nitro();
 };
 
 const nextDay = () => {
@@ -672,10 +765,11 @@ const finishRace = () => {
     state.phase = "finished";
     Object.keys(input).forEach((k) => (input[k] = false));
     pointer.gas = pointer.brake = false;
-    if (state.level > best.race) {
-        best.race = state.level;
-        saveBest();
-    }
+    if (state.level > best.race) best.race = state.level;
+    const prev = best.medals[state.level] || 99;
+    state.newMedal = state.finishPos <= 3 && state.finishPos < prev;
+    if (state.finishPos < prev) best.medals[state.level] = state.finishPos;
+    saveBest();
     sound.goal();
 };
 
@@ -774,6 +868,7 @@ const updateCars = (dt) => {
         if (Math.abs(rel - car.lastRel) < TRACK_LEN / 4) {
             if (car.lastRel > 0 && rel <= 0) {
                 if (state.mode === "endurance") state.passed++;
+                state.nitro = Math.min(1, state.nitro + NITRO_PASS[state.mode]);
                 sound.pass();
             } else if (car.lastRel <= 0 && rel > 0 && state.mode === "endurance" && !state.goalReached) {
                 // Fui ultrapassado: a conta de carros que faltam volta a subir.
@@ -795,6 +890,7 @@ const crash = (car) => {
     state.speed = car.speed * 0.55;
     state.crashTimer = 0.8;
     state.shake = 14;
+    state.nitroOn = false;
     state.playerX += state.playerX < car.offset ? -0.18 : 0.18;
     // recua para trás do carro atingido (sem contar ultrapassagem)
     const before = state.position;
@@ -1035,7 +1131,7 @@ const drawRoad = (pal) => {
         if (state.mode === "race") {
             const abs = state.dist + z1; // z do mundo do começo deste segmento
             const inSeg = (lineZ) => lineZ >= abs && lineZ < abs + SEG_LEN;
-            if (inSeg(state.startZ) || inSeg(state.finishZ)) drawChecker(p1, p2, f);
+            if (state.lines.some((line) => inSeg(line.z))) drawChecker(p1, p2, f);
         }
         maxY = p2.y;
     }
@@ -1241,7 +1337,8 @@ const drawFlag = (px, py, dir, u) => {
 };
 
 // Pórtico sobre a pista: LARGADA (com o farol) ou CHEGADA (quadriculado com bandeiras)
-const drawGantry = (x, y, scale, kind, pal, alpha) => {
+const drawGantry = (x, y, scale, line, pal, alpha) => {
+    const kind = line.kind;
     const u = scale * (view.w / 2);
     const half = ROAD_W * 1.14 * u;
     const poleW = Math.max(1, 70 * u);
@@ -1274,7 +1371,7 @@ const drawGantry = (x, y, scale, kind, pal, alpha) => {
 
     const size = bannerH * 0.6;
     if (size >= 5) {
-        const label = kind === "finish" ? "CHEGADA" : "LARGADA";
+        const label = kind === "finish" ? "CHEGADA" : kind === "lap" ? line.label : "LARGADA";
         ctx.font = `900 ${size}px ui-monospace, Consolas, monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -1325,12 +1422,12 @@ const drawSprites = (visible, pal) => {
 
     // Pórticos de largada e chegada (só quando estão logo à frente)
     if (state.mode === "race") {
-        [["start", state.startZ], ["finish", state.finishZ]].forEach(([kind, z]) => {
-            const ahead = z - state.dist;
+        state.lines.forEach((line) => {
+            const ahead = line.z - state.dist;
             if (ahead <= 0 || ahead >= (DRAW_DIST - 2) * SEG_LEN) return;
-            const seg = segments[Math.floor(wrapZ(z) / SEG_LEN) % TRACK_SEGS];
+            const seg = segments[Math.floor(wrapZ(line.z) / SEG_LEN) % TRACK_SEGS];
             if (!seg.view || seg.view.frame !== frameId) return;
-            items.push({ seg, offset: 0, gantry: kind, percent: 0 });
+            items.push({ seg, offset: 0, gantry: line, percent: 0 });
         });
     }
 
@@ -1385,6 +1482,29 @@ const drawHeadlights = (pal) => {
     ctx.restore();
 };
 
+// Chamas azuis e laranja saindo do escapamento durante o nitro
+const drawNitroFlames = (p) => {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    [-0.28, 0.28].forEach((side) => {
+        const fx = p.x + p.w * side;
+        const fy = p.y - p.h * 0.12;
+        const len = p.h * (0.35 + Math.random() * 0.25);
+        const g = ctx.createLinearGradient(fx, fy, fx, fy + len);
+        g.addColorStop(0, "rgba(160, 220, 255, 0.95)");
+        g.addColorStop(0.4, "rgba(80, 140, 255, 0.8)");
+        g.addColorStop(1, "rgba(255, 140, 40, 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.moveTo(fx - p.w * 0.05, fy);
+        ctx.lineTo(fx + p.w * 0.05, fy);
+        ctx.lineTo(fx + rand(-3, 3), fy + len);
+        ctx.closePath();
+        ctx.fill();
+    });
+    ctx.restore();
+};
+
 const drawParticles = () => {
     state.particles.forEach((p) => {
         const a = clamp(p.life * 2, 0, 1);
@@ -1407,7 +1527,7 @@ const drawParticles = () => {
 const drawSpeedLines = () => {
     const ratio = state.speed / MAX_SPEED;
     if (ratio < 0.65 || state.phase !== "playing") return;
-    const k = (ratio - 0.65) / 0.35;
+    const k = Math.min(1.8, (ratio - 0.65) / 0.35 + (state.nitroOn ? 0.6 : 0));
     ctx.save();
     ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 * k})`;
     ctx.lineWidth = 1.5;
@@ -1520,7 +1640,8 @@ const drawDayBar = (bx, by, barW, pal) => {
 
 // Barra de progresso da corrida: largada -> chegada, rivais como pontinhos
 const drawRaceBar = (bx, by, barW) => {
-    panel(bx - 8, by, barW + 16, 36);
+    panel(bx - 8, by, barW + 16, state.lapsTotal ? 50 : 36);
+    if (state.lapsTotal) text(`Volta ${state.lap} de ${state.lapsTotal}`, bx + barW / 2, by + 36, 11, "#ffd36b", "center");
     const t = clamp(raceProgress() / state.raceUnits, 0, 1);
     ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
     ctx.fillRect(bx, by + 9, barW, 6);
@@ -1588,11 +1709,109 @@ const drawStartLight = () => {
     }
 };
 
+// Minimapa: o trecho da pista que vem pela frente, sempre com o carro apontando para cima
+const MAP_K = 0.0025; // quanto cada unidade de curva gira o desenho
+const MAP_AHEAD = 640; // segmentos à frente (~0,7 km)
+const MAP_BEHIND = 40;
+const drawMinimap = (x0, y0, size) => {
+    panel(x0, y0, size, size);
+    const playerZ = state.position + PLAYER_Z;
+    const bi = Math.floor(playerZ / SEG_LEN);
+    const ahead = [{ x: 0, y: 0 }];
+    let h = 0, x = 0, y = 0;
+    for (let i = 1; i <= MAP_AHEAD; i++) {
+        h += segments[(bi + i) % TRACK_SEGS].curve * MAP_K;
+        x += Math.sin(h);
+        y -= Math.cos(h);
+        ahead.push({ x, y });
+    }
+    const behind = [{ x: 0, y: 0 }];
+    h = 0; x = 0; y = 0;
+    for (let i = 1; i <= MAP_BEHIND; i++) {
+        x -= Math.sin(h);
+        y += Math.cos(h);
+        h -= segments[(((bi - i) % TRACK_SEGS) + TRACK_SEGS) % TRACK_SEGS].curve * MAP_K;
+        behind.push({ x, y });
+    }
+    const sc = (size * 0.7) / MAP_AHEAD;
+    const ox = x0 + size / 2, oy = y0 + size * 0.84;
+    const at = (pt) => [ox + pt.x * sc, oy + pt.y * sc];
+    const pointAt = (segs) => (segs >= 0 ? ahead[Math.min(MAP_AHEAD, Math.round(segs))] : behind[Math.min(MAP_BEHIND, Math.round(-segs))]);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0 + 2, y0 + 2, size - 4, size - 4);
+    ctx.clip();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = MAP_BEHIND; i >= 0; i--) ctx.lineTo(...at(behind[i]));
+    for (let i = 1; i <= MAP_AHEAD; i += 2) ctx.lineTo(...at(ahead[i]));
+    ctx.strokeStyle = "rgba(20, 30, 50, 0.9)";
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(200, 215, 235, 0.9)";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // linhas da corrida (largada, voltas, chegada)
+    if (state.mode === "race") {
+        state.lines.forEach((line) => {
+            const segs = (line.z - (state.dist + PLAYER_Z)) / SEG_LEN;
+            if (segs < -MAP_BEHIND || segs > MAP_AHEAD) return;
+            const [lx, ly] = at(pointAt(segs));
+            for (let c = 0; c < 3; c++) {
+                for (let r = 0; r < 2; r++) {
+                    ctx.fillStyle = (c + r) % 2 ? "#16161a" : "#f5f5f5";
+                    ctx.fillRect(lx - 4.5 + c * 3, ly - 3 + r * 3, 3, 3);
+                }
+            }
+        });
+    }
+    // outros carros
+    state.cars.forEach((car) => {
+        const segs = relZ(car.z - playerZ) / SEG_LEN;
+        if (segs < -MAP_BEHIND || segs > MAP_AHEAD) return;
+        const [cx, cy] = at(pointAt(segs));
+        ctx.fillStyle = rgb(car.rgb);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    // jogador
+    ctx.fillStyle = rgb(playerCar().rgb);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy - 6);
+    ctx.lineTo(ox - 4.5, oy + 4);
+    ctx.lineTo(ox + 4.5, oy + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+};
+
+// Barra do nitro (no painel do velocímetro digital)
+const drawNitroBar = (x, y, w) => {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+    ctx.fillRect(x, y, w, 7);
+    const ready = state.nitro >= NITRO_MIN;
+    const flash = state.nitroOn && Math.sin(state.time * 30) > 0;
+    ctx.fillStyle = state.nitroOn ? (flash ? "#8fe3ff" : "#4aa8ff") : ready ? "#ff9a2e" : "#8a5a2a";
+    ctx.fillRect(x, y, w * state.nitro, 7);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.fillRect(x + w * NITRO_MIN, y - 1, 1, 9);
+    const label = isTouch ? "NITRO" : "NITRO (N)";
+    text(label, x, y + 10, 9, ready || state.nitroOn ? "#ffc27a" : "#8fb3cc", "left", "normal");
+};
+
 const drawHud = (pal) => {
     const narrow = view.w < 560;
     const race = state.mode === "race";
     const kmh = Math.round((state.speed / MAX_SPEED) * KMH_AT_MAX);
     const pw = narrow ? Math.min(170, (view.w - 30) / 2) : 170;
+    const wide = view.w >= 760;
     const big = narrow ? 15 : 18;
     const small = narrow ? 13 : 15;
 
@@ -1615,12 +1834,12 @@ const drawHud = (pal) => {
     // Painel direito: velocímetro digital e odômetro
     const rw = pw;
     panel(view.w - rw - 10, 10, rw, 64);
-    text(`${kmh}`, view.w - 22, 14, narrow ? 24 : 28, "#ffffff", "right");
+    text(`${kmh}`, view.w - 22, 14, narrow ? 24 : 28, state.nitroOn ? "#8fe3ff" : "#ffffff", "right");
     text("km/h", view.w - 22, 46, 11, "#8fb3cc", "right", "normal");
     text(`${state.km.toFixed(1)} km`, view.w - rw + 2, 48, 13, "#8fe3ff", "left");
+    drawNitroBar(view.w - rw + 2, 17, Math.max(30, rw - 92));
 
     // Velocímetro de ponteiro: ao lado do digital (tela larga) ou logo abaixo dele (tela estreita)
-    const wide = view.w >= 760;
     const gr = wide ? 34 : 32;
     const gx = wide ? view.w - rw - 10 - 8 - gr : view.w - 10 - gr;
     const gy = wide ? 10 + 32 : 10 + 64 + 8 + gr;
@@ -1640,6 +1859,12 @@ const drawHud = (pal) => {
     }
     if (race) drawRaceBar(bx, by, barW);
     else drawDayBar(bx, by, barW, pal);
+
+    // Minimapa (opção do menu): abaixo do painel esquerdo
+    if (settings.minimap && !MENU_PHASES.has(state.phase)) {
+        if (wide) drawMinimap(10, 84, 120);
+        else drawMinimap(10, 154, 96);
+    }
 
     drawStartLight();
 };
@@ -1721,9 +1946,11 @@ const render = () => {
     const p = playerScreen();
     const tilt = -state.steer * 0.08 * (state.speed / MAX_SPEED);
     const wobble = state.crashTimer > 0 ? Math.sin(state.time * 50) * 0.12 : 0;
-    drawCar(p.x, p.y, p.w, [47, 191, 149], pal, {
-        player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0, number: settings.numbers ? 1 : 0,
+    const me = playerCar();
+    drawCar(p.x, p.y, p.w, me.rgb, pal, {
+        player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0, number: settings.numbers ? me.number : 0,
     });
+    if (state.nitroOn) drawNitroFlames(p);
 
     drawParticles();
     drawSpeedLines();
@@ -1751,7 +1978,7 @@ const render = () => {
         drawOverlay("DINO RALLY", [
             race ? "Corrida: largue no verde e cruze a chegada em 1º lugar."
                 : `Resistência: bata a meta de carros de cada dia, por ${MAX_DAYS} dias.`,
-            isTouch ? "Arraste o dedo sobre o carro para dirigir · ⇄ troca o lado dos botões" : "←→ dirigir · ↑ acelerar · ↓ frear · P pausa · M som",
+            isTouch ? "Arraste o dedo sobre o carro para dirigir · 🔥 nitro · ⇄ troca o lado dos botões" : "←→ dirigir · ↑ acelerar · ↓ frear · N nitro · P pausa · M som",
             isTouch ? "" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
             race ? (best.race > 0 ? `Recorde: corrida ${best.race} concluída` : "")
                 : (best.km > 0 ? `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}` : ""),
@@ -1782,10 +2009,12 @@ const render = () => {
         ], "#ff6b5a", oy);
     } else if (state.phase === "finished") {
         const pos = state.finishPos;
+        const medal = MEDALS[pos];
+        const laps = state.lapsTotal;
         drawOverlay(pos === 1 ? "VITÓRIA! 1º LUGAR" : `${pos}º LUGAR`, [
-            `Corrida ${state.level}: ${state.raceKm} km em ${fmtTime(state.raceTime)}.`,
-            pos === 1 ? "Você cruzou a bandeira quadriculada na frente de todos!" : `Você chegou em ${pos}º de ${N_RIVALS + 1} carros.`,
-            `Próxima: corrida ${state.level + 1} · ${raceKmFor(state.level + 1)} km · rivais mais rápidos.`,
+            `Corrida ${state.level}: ${laps ? `${laps} ${laps > 1 ? "voltas" : "volta"} · ` : ""}${state.raceKm} km em ${fmtTime(state.raceTime)}.`,
+            medal ? `${medal.icon} Medalha de ${medal.name}!${state.newMedal ? " (nova)" : ""}` : "Sem medalha: chegue entre os 3 primeiros.",
+            `Próxima: corrida ${state.level + 1} · ${laps ? `${laps} ${laps > 1 ? "voltas" : "volta"}` : `${raceKmFor(state.level + 1)} km`} · rivais mais rápidos.`,
         ], pos <= 3 ? "#ffd36b" : "#8fe3ff", oy);
     }
 };
@@ -1806,14 +2035,43 @@ const MENU_PHASES = new Set(["start", "over", "victory", "finished"]);
 const menu = document.getElementById("menu");
 const modeSel = document.getElementById("mode");
 const numbersSel = document.getElementById("numbers");
+const lapsSel = document.getElementById("laps");
+const carSel = document.getElementById("car");
+const minimapSel = document.getElementById("minimap");
 const btnStart = document.getElementById("btn-start");
 const btnRetry = document.getElementById("btn-retry");
 const settings = {
     mode: storage.get(MODE_KEY) === "race" ? "race" : "endurance",
     numbers: storage.get(NUMBERS_KEY) !== "0",
+    laps: clamp(Number(storage.get(LAPS_KEY)) || 0, 0, 3),
+    car: PLAYER_CARS.some((c) => c.id === storage.get(CAR_KEY)) ? storage.get(CAR_KEY) : PLAYER_CARS[0].id,
+    minimap: storage.get(MINIMAP_KEY) !== "0",
 };
+function playerCar() {
+    return PLAYER_CARS.find((c) => c.id === settings.car) || PLAYER_CARS[0];
+}
+PLAYER_CARS.forEach((c) => carSel.add(new Option(`${c.name} · nº ${c.number}`, c.id)));
 modeSel.value = settings.mode;
 numbersSel.value = settings.numbers ? "1" : "0";
+lapsSel.value = String(settings.laps);
+carSel.value = settings.car;
+minimapSel.value = settings.minimap ? "1" : "0";
+lapsSel.addEventListener("change", () => {
+    settings.laps = clamp(Number(lapsSel.value) || 0, 0, 3);
+    storage.set(LAPS_KEY, String(settings.laps));
+});
+carSel.addEventListener("change", () => {
+    settings.car = carSel.value;
+    storage.set(CAR_KEY, settings.car);
+    // renumera os outros carros para nenhum ficar com o mesmo número do jogador
+    state.cars.forEach((car, i) => (car.number = rivalNumber(i)));
+});
+minimapSel.addEventListener("change", () => {
+    settings.minimap = minimapSel.value !== "0";
+    storage.set(MINIMAP_KEY, settings.minimap ? "1" : "0");
+});
+
+// (medalhas aparecem só na tela de chegada)
 modeSel.addEventListener("change", () => {
     settings.mode = modeSel.value === "race" ? "race" : "endurance";
     storage.set(MODE_KEY, settings.mode);
@@ -1847,6 +2105,8 @@ const syncMenu = () => {
     menuKey = key;
     const open = MENU_PHASES.has(state.phase);
     menu.hidden = !open;
+    const race = settings.mode === "race";
+    lapsSel.closest(".field").hidden = !race;
     touch.classList.toggle("menu-open", open);
     btnStart.textContent = nextIsHarder() ? `Próxima corrida (${state.level + 1}) ▶`
         : state.phase === "start" ? "Correr ▶" : "Correr de novo ▶";
@@ -1883,6 +2143,7 @@ window.addEventListener("keydown", (event) => {
     if (event.code === "Enter" || event.code === "NumpadEnter") confirm();
     else if (event.code === "KeyP" || event.code === "Escape") togglePause();
     else if (event.code === "KeyM") sound.toggle();
+    else if (event.code === "KeyN" || event.code === "ShiftLeft" || event.code === "ShiftRight") activateNitro();
 });
 
 window.addEventListener("keyup", (event) => {
@@ -1997,6 +2258,8 @@ touch.querySelectorAll("button[data-key]").forEach((btn) => {
         if (key === "pause") {
             if (state.phase === "playing" || state.phase === "countdown") togglePause();
             else confirm();
+        } else if (key === "nitro") {
+            activateNitro();
         } else {
             if (state.phase !== "playing") confirm();
             input[key] = true;
@@ -2005,7 +2268,7 @@ touch.querySelectorAll("button[data-key]").forEach((btn) => {
     };
     const up = () => {
         btn.classList.remove("active");
-        if (key !== "pause") input[key] = false;
+        if (key !== "pause" && key !== "nitro") input[key] = false;
     };
     btn.addEventListener("pointerdown", down);
     btn.addEventListener("pointerup", up);
@@ -2025,6 +2288,19 @@ const syncPauseButton = () => {
     pauseBtn.classList.toggle("is-play", !playing);
 };
 
+// O botão 🔥 mostra a carga do nitro e acende quando dá para usar
+const nitroBtn = touch.querySelector(".touch-nitro");
+let nitroShown = "";
+const syncNitroButton = () => {
+    const pct = Math.round(state.nitro * 20) * 5;
+    const key = `${pct}|${state.nitroOn}|${state.nitro >= NITRO_MIN}`;
+    if (key === nitroShown) return;
+    nitroShown = key;
+    nitroBtn.style.setProperty("--fill", `${pct}%`);
+    nitroBtn.classList.toggle("ready", state.nitro >= NITRO_MIN && !state.nitroOn);
+    nitroBtn.classList.toggle("on", state.nitroOn);
+};
+
 window.addEventListener("resize", fitCanvas);
 
 // =====================================================================
@@ -2038,6 +2314,7 @@ const loop = (now) => {
     update(dt);
     render();
     syncPauseButton();
+    syncNitroButton();
     syncMenu();
     requestAnimationFrame(loop);
 };

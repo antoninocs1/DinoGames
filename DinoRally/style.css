@@ -125,9 +125,11 @@ canvas.pointer-steer {
 .menu {
     position: absolute;
     left: 50%;
-    top: 60%;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    max-height: 62%;
+    overflow-y: auto;
     transform: translateX(-50%);
-    width: min(92vw, 520px);
+    width: min(94vw, 560px);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -144,15 +146,24 @@ canvas.pointer-steer {
     display: none;
 }
 
-.menu-fields,
+.menu-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
 .menu-actions {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
 
+.menu .field[hidden] {
+    display: none;
+}
+
 .menu .field {
-    flex: 1 1 200px;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -201,4 +212,34 @@ canvas.pointer-steer {
 /* Com o menu aberto, os botões de toque somem para não ficar por cima */
 .touch.show.menu-open {
     display: none;
+}
+
+/* Nitro: o fundo enche conforme a carga (--fill) e acende quando dá para usar */
+/* fica logo acima do botão de acelerar */
+.touch-group {
+    position: relative;
+}
+
+.touch .touch-nitro {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 13px;
+    width: 52px;
+    height: 52px;
+    height: 46px;
+    font-size: 1.15rem;
+    background:
+        linear-gradient(to top, rgba(255, 140, 40, 0.55) var(--fill, 0%), rgba(10, 14, 30, 0.45) var(--fill, 0%));
+    filter: grayscale(0.7);
+}
+
+.touch .touch-nitro.ready {
+    border-color: #ff9a2e;
+    filter: none;
+}
+
+.touch .touch-nitro.on {
+    border-color: #8fe3ff;
+    background: rgba(80, 160, 255, 0.6);
+    filter: none;
 }
