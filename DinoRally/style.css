@@ -243,3 +243,27 @@ canvas.pointer-steer {
     background: rgba(80, 160, 255, 0.6);
     filter: none;
 }
+
+/* PC: menu mais largo e baixo (campos numa fileira só), posicionado pelo jogo acima do carro */
+@media (pointer: fine) and (min-width: 860px) {
+    .menu {
+        width: min(94vw, 900px);
+    }
+}
+
+.menu.tight {
+    padding: 9px 12px;
+    gap: 7px;
+}
+
+.menu.tight .field {
+    gap: 2px;
+}
+
+.menu.tight select {
+    padding: 5px 8px;
+}
+
+.menu.tight .menu-actions button {
+    padding: 7px 12px;
+}

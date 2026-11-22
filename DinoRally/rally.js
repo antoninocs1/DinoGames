@@ -1088,11 +1088,18 @@ const drawClouds = (pal) => {
             });
             ctx.fill();
         };
+        // Degradê: topo quase branco, base puxando para a cor do céu
+        const top = cy + Math.min(...c.puffs.map((p) => p.dy - p.r * 0.82)) * unit;
+        const bottom = cy + Math.max(...c.puffs.map((p) => p.dy + p.r * 0.82)) * unit;
+        const grad = ctx.createLinearGradient(0, top, 0, bottom);
+        grad.addColorStop(0, rgb(mixRgb(body, [255, 255, 255], 0.6)));
+        grad.addColorStop(0.55, rgb(body));
+        grad.addColorStop(1, rgb(mixRgb(body, shade, 0.7)));
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = rgb(shade);
+        ctx.fillStyle = rgb(mixRgb(shade, pal.skyTop, 0.2));
         puffs(unit * 0.1); // sombra embaixo
-        ctx.fillStyle = rgb(body);
+        ctx.fillStyle = grad;
         puffs(0);
         ctx.restore();
     });
@@ -1963,10 +1970,12 @@ const drawPopups = () => {
 
 const isTouch = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
 
+let overlayBottom = 0; // onde o texto da tela termina (para o menu ficar logo abaixo)
 const drawOverlay = (title, lines, color, top = 0.36) => {
+    const compact = MENU_PHASES.has(state.phase); // com o menu aberto o texto fica menor
     ctx.fillStyle = "rgba(4, 6, 16, 0.62)";
     ctx.fillRect(0, 0, view.w, view.h);
-    const size = Math.min(64, view.w / 8, (view.w - 24) / (title.length * 0.62));
+    const size = Math.min(compact ? 48 : 64, view.w / 8, (view.w - 24) / (title.length * 0.62));
     ctx.font = `900 ${size}px ui-monospace, Consolas, monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1979,7 +1988,8 @@ const drawOverlay = (title, lines, color, top = 0.36) => {
     ctx.fillText(title, view.w / 2, ty);
     ctx.shadowBlur = 0;
     // Linhas compridas quebram em várias para caber em telas estreitas
-    const fs = view.w < 560 ? 14 : 16;
+    const fs = view.w < 560 || compact ? 14 : 16;
+    const lineH = compact ? 1.45 : 1.55;
     ctx.font = `normal ${fs}px ui-monospace, Consolas, monospace`;
     const maxW = view.w - 24;
     const wrapped = [];
@@ -1994,7 +2004,8 @@ const drawOverlay = (title, lines, color, top = 0.36) => {
         });
         if (cur) wrapped.push(cur);
     });
-    wrapped.forEach((line, i) => text(line.replace(/ ·$/, ""), view.w / 2, ty + size * 0.75 + i * fs * 1.55, fs, "#d6e6f5", "center", "normal"));
+    wrapped.forEach((line, i) => text(line.replace(/ ·$/, ""), view.w / 2, ty + size * 0.75 + i * fs * lineH, fs, "#d6e6f5", "center", "normal"));
+    overlayBottom = ty + size * 0.75 + wrapped.length * fs * lineH;
 };
 
 const fmtTime = (t) => {
@@ -2185,6 +2196,29 @@ const syncMenu = () => {
     btnStart.textContent = nextIsHarder() ? `Próxima corrida (${state.level + 1}) ▶`
         : state.phase === "start" ? "Correr ▶" : "Correr de novo ▶";
     btnRetry.hidden = !nextIsHarder();
+};
+
+// No PC o menu sobe para ficar entre o texto e o carro; no celular fica embaixo (CSS)
+const desktopMenu = window.matchMedia("(pointer: fine)");
+let menuTop = "";
+const positionMenu = () => {
+    let top = "";
+    if (!menu.hidden && desktopMenu.matches && canvas.clientWidth >= 760) {
+        const k = canvas.clientHeight / view.h; // unidades do jogo -> pixels da página
+        const p = playerScreen();
+        const carTop = (p.y - p.h * 1.12) * k;
+        const textBottom = overlayBottom * k + 8;
+        // pouco espaço: menu compacto (menos respiro nos campos e no botão)
+        if (!menu.classList.contains("tight") && carTop - menu.offsetHeight - 14 < textBottom) menu.classList.add("tight");
+        const wanted = carTop - menu.offsetHeight - 14;
+        top = `${Math.round(Math.max(textBottom, wanted))}px`;
+    } else {
+        menu.classList.remove("tight");
+    }
+    if (top === menuTop) return;
+    menuTop = top;
+    menu.style.top = top;
+    menu.style.bottom = top ? "auto" : "";
 };
 
 const confirm = () => {
@@ -2390,6 +2424,7 @@ const loop = (now) => {
     syncPauseButton();
     syncNitroButton();
     syncMenu();
+    positionMenu();
     requestAnimationFrame(loop);
 };
 
