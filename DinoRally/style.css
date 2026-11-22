@@ -76,6 +76,14 @@ canvas {
     touch-action: none;
 }
 
+.touch button .arrow {
+    width: 30px;
+    height: 30px;
+    display: block;
+    margin: auto;
+    pointer-events: none;
+}
+
 .touch button.active {
     background: rgba(52, 204, 163, 0.55);
     border-color: #34cca3;
