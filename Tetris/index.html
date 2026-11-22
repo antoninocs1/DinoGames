@@ -6,25 +6,25 @@
     <meta name="theme-color" content="#0d0f15">
     <title>Tetris</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link href="tetris.css?v=1.025" rel="stylesheet">
+    <link href="tetris.css?v=1.026" rel="stylesheet">
 </head>
 <body>
     <main class="stage">
         <canvas id="game" tabindex="0" aria-label="Tabuleiro do Tetris"></canvas>
 
         <div class="touch-controls" aria-label="Controles de toque">
-            <button type="button" data-action="moveLeft" aria-label="Esquerda">◀</button>
-            <button type="button" data-action="softDrop" aria-label="Descer">▼</button>
-            <button type="button" data-action="moveRight" aria-label="Direita">▶</button>
+            <button type="button" data-action="moveLeft" aria-label="Esquerda"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" data-action="softDrop" aria-label="Descer"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M5 13l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" data-action="moveRight" aria-label="Direita"><svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <button type="button" data-action="rotateCW" aria-label="Girar">⟳</button>
             <button type="button" data-action="hardDrop" aria-label="Queda instantânea">⤓</button>
             <button type="button" data-action="hold" aria-label="Guardar peça">H</button>
-            <button type="button" data-action="pause" aria-label="Pausar">❚❚</button>
+            <button type="button" data-action="pause" class="touch-pause" aria-label="Pausar">❚❚</button>
             <button type="button" data-action="specials" aria-label="Peças especiais">✦</button>
         </div>
     </main>
 
-    <script src="fx.js?v=1.025"></script>
-    <script src="tetris.js?v=1.025"></script>
+    <script src="fx.js?v=1.026"></script>
+    <script src="tetris.js?v=1.026"></script>
 </body>
 </html>

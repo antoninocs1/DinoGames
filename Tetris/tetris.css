@@ -63,6 +63,21 @@ canvas {
     touch-action: none;
 }
 
+.touch-controls button .arrow {
+    width: 62%;
+    height: 62%;
+    max-width: 30px;
+    max-height: 30px;
+    display: block;
+    margin: auto;
+    pointer-events: none;
+}
+
+.touch-controls .touch-pause.is-play {
+    border-color: #8fe3ff;
+    color: #8fe3ff;
+}
+
 .touch-controls button:active {
     background: rgba(0, 188, 212, 0.35);
 }

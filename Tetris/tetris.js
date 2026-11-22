@@ -1313,10 +1313,12 @@ document.addEventListener("visibilitychange", () => {
 });
 
 touchControls.querySelectorAll("button").forEach((button) => {
-    const action = button.dataset.action;
+    let action = button.dataset.action;
     button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
         button.setPointerCapture?.(event.pointerId);
+        // Fora do jogo, o botão de pausa vira ▶ e inicia/continua a partida.
+        action = button.dataset.action === "pause" && state.phase !== "playing" ? "confirm" : button.dataset.action;
         press(action);
     });
     const up = () => release(action);
@@ -1324,6 +1326,18 @@ touchControls.querySelectorAll("button").forEach((button) => {
     button.addEventListener("pointercancel", up);
     button.addEventListener("contextmenu", (e) => e.preventDefault());
 });
+
+// O botão de pausa mostra ▶ (jogar/continuar) fora do jogo e ❚❚ (pausar) durante a partida.
+const pauseBtn = touchControls.querySelector(".touch-pause");
+let pauseBtnPhase = "";
+const syncPauseButton = () => {
+    if (pauseBtnPhase === state.phase) return;
+    pauseBtnPhase = state.phase;
+    const playing = state.phase === "playing";
+    pauseBtn.textContent = playing ? "❚❚" : "▶";
+    pauseBtn.setAttribute("aria-label", playing ? "Pausar" : state.phase === "paused" ? "Continuar" : "Jogar");
+    pauseBtn.classList.toggle("is-play", !playing);
+};
 
 canvas.addEventListener("pointerdown", (event) => {
     canvas.focus();
@@ -1346,6 +1360,7 @@ const loop = (now) => {
 
     update(dt);
     render();
+    syncPauseButton();
 
     requestAnimationFrame(loop);
 };
