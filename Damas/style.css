@@ -104,6 +104,7 @@ body.modo-dois .cpu-only { display: none; }
 @keyframes tremer { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 
 .cell { position: relative; aspect-ratio: 1; cursor: pointer; }
+.cell.pode, .cell.obrigatoria, .cell.sel { cursor: grab; }
 .cell.light { background: var(--light); }
 .cell.dark {
     background:
@@ -168,6 +169,12 @@ body.modo-dois .cpu-only { display: none; }
 .piece.king .disc { outline: 2px solid #d9ab6299; outline-offset: -5px; }
 
 .piece.andando { z-index: 8; }
+/* Arrastar: a peça segue o dedo/mouse, por cima de tudo, sem atraso. */
+.piece.arrastando { transition: none; z-index: 20; }
+.piece.arrastando .disc { transform: scale(1.15); filter: drop-shadow(0 14px 12px #0008); }
+.cell.alvo.sobre::after { transform: scale(1.45); }
+/* Nas casas de onde dá para arrastar, o dedo arrasta a peça em vez de rolar a página. */
+.cell.pode, .cell.obrigatoria, .cell.sel, .cell.trilha { touch-action: none; }
 .piece.andando .disc { transform: scale(1.1) translateY(-4%); filter: drop-shadow(0 10px 10px #0007); }
 .piece.marcada .disc { opacity: .45; filter: grayscale(.6); }
 .piece.marcada .disc::after {

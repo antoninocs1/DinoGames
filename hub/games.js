@@ -99,6 +99,7 @@ window.DINO_GAMES = [
         description: "Jogo de damas com as regras oficiais da CBD: captura obrigatória, Lei da Maioria e dama voadora. Contra o computador (4 níveis) ou 2 jogadores.",
         controls: [
             ["Clique / toque", "Escolher peça e casa"],
+            ["Arrastar", "Segurar a peça e soltar na casa"],
             ["Setas + Enter", "Jogar pelo teclado"],
             ["Esc", "Cancelar seleção"],
             ["U / Ctrl+Z", "Desfazer"],

@@ -659,11 +659,80 @@
     // Eventos
     // =================================================================
     ui.board.addEventListener("click", (event) => {
+        if (performance.now() < ignoreClickUntil) return; // já tratado pelo arrastar
         const cell = event.target.closest(".cell");
         if (!cell) return;
         cursor = null;
         onSquare(Number(cell.dataset.sq));
     });
+
+    // -----------------------------------------------------------------
+    // Arrastar a peça (dedo ou botão esquerdo do mouse pressionado).
+    // Convive com o tocar/clicar: um toque sem arrastar faz o mesmo de
+    // sempre; arrastando, a peça segue o dedo e é jogada onde for solta
+    // (se a casa for válida); senão, volta para o lugar.
+    // -----------------------------------------------------------------
+    let drag = null;
+    let ignoreClickUntil = 0;
+    const cellAt = (x, y) => document.elementFromPoint(x, y)?.closest?.(".cell");
+
+    ui.board.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || drag) return;
+        const cell = event.target.closest(".cell");
+        if (!cell || !humanTurn()) return;
+        const sq = Number(cell.dataset.sq);
+        // Peça que pode andar agora: a escolhida no meio de uma captura, ou uma peça própria com jogada.
+        const at = prefix.length ? prefix[prefix.length - 1] : null;
+        const canDrag = prefix.length ? sq === at : board[sq] && E.side(board[sq]) === turn && movable().has(sq);
+        if (!canDrag) return;
+        audio.ensure();
+        cursor = null;
+        const wasSelected = selected === sq;
+        if (!prefix.length && !wasSelected) onSquare(sq); // seleciona e mostra os destinos
+        const from = prefix.length ? selected : sq;
+        drag = { sq, wasSelected, x0: event.clientX, y0: event.clientY, moved: false, el: pieceEl(ids[from]), over: null };
+        try { ui.board.setPointerCapture(event.pointerId); } catch { /* segue sem captura */ }
+        event.preventDefault();
+    });
+
+    ui.board.addEventListener("pointermove", (event) => {
+        if (!drag) return;
+        const dist = Math.hypot(event.clientX - drag.x0, event.clientY - drag.y0);
+        if (!drag.moved && dist < 6) return;
+        drag.moved = true;
+        if (!drag.el) return;
+        const rect = ui.board.getBoundingClientRect();
+        const size = rect.width / 8;
+        drag.el.classList.add("arrastando");
+        drag.el.style.transform = `translate(${event.clientX - rect.left - size / 2}px, ${event.clientY - rect.top - size / 2}px)`;
+        // Destaca a casa de destino sob o dedo.
+        const over = cellAt(event.clientX, event.clientY);
+        if (over !== drag.over) {
+            drag.over?.classList.remove("sobre");
+            drag.over = over;
+            if (over?.classList.contains("alvo")) over.classList.add("sobre");
+        }
+    });
+
+    const endDrag = (event, dropped) => {
+        if (!drag) return;
+        const d = drag;
+        drag = null;
+        ignoreClickUntil = performance.now() + 400;
+        d.over?.classList.remove("sobre");
+        d.el?.classList.remove("arrastando");
+        if (!d.moved) {
+            // Foi só um toque: mantém o comportamento de sempre (tocar de novo desmarca/cancela).
+            if (d.wasSelected || prefix.length) onSquare(d.sq);
+            return;
+        }
+        const target = dropped && cellAt(event.clientX, event.clientY);
+        const sq = target ? Number(target.dataset.sq) : -1;
+        if (selected !== null && nextTargets().includes(sq)) onSquare(sq);
+        else render(); // solto fora de uma casa válida: a peça volta para o lugar
+    };
+    ui.board.addEventListener("pointerup", (event) => endDrag(event, true));
+    ui.board.addEventListener("pointercancel", (event) => endDrag(event, false));
 
     $("btn-new").addEventListener("click", newGame);
     $("overlay-new").addEventListener("click", newGame);
