@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#141a24">
+    <title>Pontos e Quadrados</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.022">
+    <link rel="stylesheet" href="style.css?v=1.022">
+</head>
+<body data-theme="papel">
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="5" y="5" width="7" height="7" rx="1" fill="#4f8cff55"/><path d="M5 5h7v7H5zM12 5h7M19 5v7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><g fill="currentColor"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></g></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Ligue os pontos</p>
+                    <h1>Pontos e Quadrados</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field">
+                    <span>Modo</span>
+                    <select id="mode" aria-label="Modo de jogo">
+                        <option value="cpu">Contra o Dino</option>
+                        <option value="two">2 jogadores</option>
+                    </select>
+                </label>
+                <label class="field cpu-only">
+                    <span>Nível</span>
+                    <select id="level" aria-label="Nível do computador">
+                        <option value="facil">Fácil</option>
+                        <option value="medio">Médio</option>
+                        <option value="dificil">Difícil</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Tabuleiro</span>
+                    <select id="size" aria-label="Tamanho do tabuleiro">
+                        <option value="3">3 × 3 quadrados</option>
+                        <option value="4">4 × 4 quadrados</option>
+                        <option value="5">5 × 5 quadrados</option>
+                        <option value="6">6 × 6 quadrados</option>
+                        <option value="7">7 × 7 quadrados</option>
+                        <option value="8">8 × 8 quadrados</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Quem começa</span>
+                    <select id="first" aria-label="Quem começa"></select>
+                </label>
+                <label class="field">
+                    <span>Aparência</span>
+                    <select id="theme" aria-label="Aparência do tabuleiro">
+                        <option value="papel">Papel</option>
+                        <option value="caderno">Caderno</option>
+                        <option value="lousa">Lousa</option>
+                        <option value="noite">Noite</option>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="board-area">
+                <div class="players" id="players"></div>
+                <div class="board-frame">
+                    <svg class="board" id="board" role="application" aria-label="Tabuleiro de pontos e quadrados"></svg>
+                    <div class="overlay" id="overlay" hidden>
+                        <div class="overlay-card">
+                            <div class="overlay-icon" id="overlay-icon"></div>
+                            <h2 id="overlay-title">Fim de jogo</h2>
+                            <p id="overlay-text"></p>
+                            <div class="overlay-actions">
+                                <button class="btn primary" id="overlay-new" type="button">Nova partida</button>
+                                <button class="btn" id="overlay-close" type="button">Ver tabuleiro</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite"></div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-new" type="button" title="Nova partida (N)">Nova partida</button>
+                    <button class="btn" id="btn-undo" type="button" title="Desfazer (U / Ctrl+Z)">↶ Desfazer</button>
+                    <button class="btn" id="btn-hint" type="button" title="Dica (H)">💡 Dica</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card score">
+                    <h2>Partidas</h2>
+                    <div class="score-row" id="score"></div>
+                    <p class="score-info" id="score-info"></p>
+                </div>
+
+                <div class="card names">
+                    <h2>Jogadores</h2>
+                    <label class="name-field p0">
+                        <span class="swatch"></span>
+                        <input id="name0" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Nome do jogador 1">
+                    </label>
+                    <label class="name-field p1">
+                        <span class="swatch"></span>
+                        <input id="name1" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Nome do jogador 2">
+                    </label>
+                    <p class="hint-text">A inicial do nome aparece nos quadrados conquistados.</p>
+                </div>
+
+                <details class="card rules">
+                    <summary>Como jogar</summary>
+                    <ul>
+                        <li>Na sua vez, ligue dois pontos vizinhos com um traço (na horizontal ou na vertical).</li>
+                        <li>Toque perto do espaço entre dois pontos, ou arraste o dedo/mouse de um ponto até o vizinho.</li>
+                        <li>Quem fizer o <strong>4º lado</strong> de um quadrado ganha o quadrado (fica com a sua inicial) e <strong>joga de novo</strong>.</li>
+                        <li>Quando todos os quadrados estiverem fechados, vence quem tiver mais.</li>
+                        <li><strong>Dica de estratégia:</strong> cuidado com o 3º lado — ele entrega o quadrado ao adversário. No fim, tente entregar as correntes menores.</li>
+                    </ul>
+                </details>
+
+                <p class="keys" id="keys">Toque entre dois pontos ou arraste de um ponto ao outro · Setas + Enter · N nova · U desfaz · H dica · M som</p>
+            </aside>
+        </section>
+    </main>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+    <script src="../assets/combobox.js?v=1.022"></script>
+    <script src="engine.js?v=1.022"></script>
+    <script src="game.js?v=1.022"></script>
+</body>
+</html>

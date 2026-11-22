@@ -145,4 +145,21 @@ window.DINO_GAMES = [
             ["M", "Som liga/desliga"],
         ],
     },
+    {
+        id: "pontos-quadrados",
+        title: "Pontos e Quadrados",
+        icon: "dotsboxes",
+        path: "PontosQuadrados/index.html",
+        color: "#4f8cff",
+        description: "Ligue os pontos e feche quadrados: quem faz o 4º lado ganha o quadrado e joga de novo. Contra o Dino (3 níveis) ou 2 jogadores, tabuleiro de 3×3 a 8×8.",
+        controls: [
+            ["Toque / clique", "Fazer o traço entre dois pontos"],
+            ["Arrastar", "De um ponto até o vizinho"],
+            ["Setas + Enter", "Jogar pelo teclado"],
+            ["U / Ctrl+Z", "Desfazer"],
+            ["H", "Dica"],
+            ["N", "Nova partida"],
+            ["M", "Som liga/desliga"],
+        ],
+    },
 ];
