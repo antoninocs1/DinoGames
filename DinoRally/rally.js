@@ -211,13 +211,13 @@ const STARS = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.ran
 const CLOUD_FADE = 6; // segundos para aparecer e para sumir
 const makeCloud = (first = false) => {
     const puffs = [];
-    const n = 4 + Math.floor(Math.random() * 4);
+    const n = 5 + Math.floor(Math.random() * 4);
     for (let i = 0; i < n; i++) {
         const t = n === 1 ? 0 : i / (n - 1);
         puffs.push({
-            dx: (t - 0.5) * 2.2 + rand(-0.15, 0.15),
-            dy: -Math.sin(t * Math.PI) * rand(0.25, 0.55),
-            r: rand(0.45, 0.75) * (0.75 + Math.sin(t * Math.PI) * 0.45),
+            dx: (t - 0.5) * 3 + rand(-0.15, 0.15),
+            dy: -Math.sin(t * Math.PI) * rand(0.08, 0.2),
+            r: rand(0.32, 0.48) * (0.8 + Math.sin(t * Math.PI) * 0.3),
         });
     }
     return {
@@ -1082,15 +1082,16 @@ const drawClouds = (pal) => {
         const puffs = (dy) => {
             ctx.beginPath();
             c.puffs.forEach((p) => {
-                ctx.moveTo(cx + p.dx * unit + p.r * unit, cy + p.dy * unit + dy);
-                ctx.arc(cx + p.dx * unit, cy + p.dy * unit + dy, p.r * unit, 0, Math.PI * 2);
+                // bolinhas achatadas: nuvens compridas e finas
+                ctx.moveTo(cx + p.dx * unit + p.r * unit * 1.4, cy + p.dy * unit + dy);
+                ctx.ellipse(cx + p.dx * unit, cy + p.dy * unit + dy, p.r * unit * 1.4, p.r * unit * 0.6, 0, 0, Math.PI * 2);
             });
             ctx.fill();
         };
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = rgb(shade);
-        puffs(unit * 0.12); // sombra embaixo
+        puffs(unit * 0.07); // sombra embaixo
         ctx.fillStyle = rgb(body);
         puffs(0);
         ctx.restore();
@@ -1502,7 +1503,9 @@ const drawSprites = (visible, pal) => {
         });
     }
 
-    items.sort((a, b) => b.seg.view.n - a.seg.view.n || a.percent - b.percent);
+    // De trás para frente: segmento mais distante primeiro e, dentro do mesmo segmento, o mais longe antes.
+    // (Antes o mais longe era pintado por cima do mais perto e o carro parecia trocar de cor.)
+    items.sort((a, b) => b.seg.view.n - a.seg.view.n || b.percent - a.percent);
 
     items.forEach((item) => {
         const { p1, p2, clip, fog, n } = item.seg.view;
