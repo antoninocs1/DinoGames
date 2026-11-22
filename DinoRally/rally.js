@@ -52,7 +52,6 @@ const RACE_START_PHASE = [1, 2, 3, 4, 5, 6, 7, 0];
 const BEST_KEY = "dinogames-rally-best";
 const SOUND_KEY = "dinogames-rally-sound";
 const MODE_KEY = "dinogames-rally-mode";
-const NUMBERS_KEY = "dinogames-rally-numbers";
 const LAPS_KEY = "dinogames-rally-laps";
 const CAR_KEY = "dinogames-rally-car";
 const MINIMAP_KEY = "dinogames-rally-minimap";
@@ -1367,7 +1366,7 @@ const drawCar = (x, y, w, color, pal, { alpha = 1, player = false, tilt = 0, bra
     ctx.fillStyle = `rgba(230, 230, 230, ${0.4 + 0.5 * light})`;
     ctx.fillRect(-w * 0.1, -h * 0.36, w * 0.2, h * 0.1);
 
-    // número do carro na traseira (opção do menu)
+    // número do carro na traseira
     if (number && w > 24) {
         const bw = w * 0.24, bh = h * 0.21, by = -h * 0.62;
         ctx.fillStyle = `rgba(248, 248, 248, ${0.5 + 0.5 * light})`;
@@ -1529,7 +1528,7 @@ const drawSprites = (visible, pal) => {
         if (item.car) {
             const w = CAR_W * scale * (view.w / 2);
             const tilt = item.car.bump > 0 ? Math.sin(state.time * 40) * 0.1 * (item.car.bump / 0.6) : 0;
-            drawCar(x, y, w, item.car.rgb, pal, { alpha, tilt, number: settings.numbers ? item.car.number : 0 });
+            drawCar(x, y, w, item.car.rgb, pal, { alpha, tilt, number: item.car.number });
         } else if (item.gantry) {
             drawGantry(roadX, y, scale, item.gantry, pal, alpha);
         } else {
@@ -2033,7 +2032,7 @@ const render = () => {
     const wobble = state.crashTimer > 0 ? Math.sin(state.time * 50) * 0.12 : 0;
     const me = playerCar();
     drawCar(p.x, p.y, p.w, me.rgb, pal, {
-        player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0, number: settings.numbers ? me.number : 0,
+        player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0, number: me.number,
     });
     if (state.nitroOn) drawNitroFlames(p);
 
@@ -2115,11 +2114,10 @@ const KEYS = {
     ArrowDown: "brake", KeyS: "brake",
 };
 
-// ---------- Menu (modo e numeração dos carros) ----------
+// ---------- Menu (modo, voltas, carro e minimapa) ----------
 const MENU_PHASES = new Set(["start", "over", "victory", "finished"]);
 const menu = document.getElementById("menu");
 const modeSel = document.getElementById("mode");
-const numbersSel = document.getElementById("numbers");
 const lapsSel = document.getElementById("laps");
 const carSel = document.getElementById("car");
 const minimapSel = document.getElementById("minimap");
@@ -2127,7 +2125,6 @@ const btnStart = document.getElementById("btn-start");
 const btnRetry = document.getElementById("btn-retry");
 const settings = {
     mode: storage.get(MODE_KEY) === "race" ? "race" : "endurance",
-    numbers: storage.get(NUMBERS_KEY) !== "0",
     laps: clamp(Number(storage.get(LAPS_KEY)) || 0, 0, 3),
     car: PLAYER_CARS.some((c) => c.id === storage.get(CAR_KEY)) ? storage.get(CAR_KEY) : PLAYER_CARS[0].id,
     minimap: storage.get(MINIMAP_KEY) !== "0",
@@ -2137,7 +2134,6 @@ function playerCar() {
 }
 PLAYER_CARS.forEach((c) => carSel.add(new Option(`${c.name} · nº ${c.number}`, c.id)));
 modeSel.value = settings.mode;
-numbersSel.value = settings.numbers ? "1" : "0";
 lapsSel.value = String(settings.laps);
 carSel.value = settings.car;
 minimapSel.value = settings.minimap ? "1" : "0";
@@ -2160,10 +2156,6 @@ minimapSel.addEventListener("change", () => {
 modeSel.addEventListener("change", () => {
     settings.mode = modeSel.value === "race" ? "race" : "endurance";
     storage.set(MODE_KEY, settings.mode);
-});
-numbersSel.addEventListener("change", () => {
-    settings.numbers = numbersSel.value !== "0";
-    storage.set(NUMBERS_KEY, settings.numbers ? "1" : "0");
 });
 
 // Depois de terminar uma corrida, o botão principal leva para a próxima (mais difícil)
