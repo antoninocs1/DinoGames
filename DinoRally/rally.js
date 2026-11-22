@@ -2,7 +2,8 @@
 
 // =====================================================================
 // Dino Rally — corrida de resistência em pseudo-3D (DinoGames)
-// Ultrapasse a cota de carros de cada dia antes que ele termine.
+// Resistência: ultrapasse a meta de carros de cada dia, por 7 dias.
+// Corrida: largada no farol, chegada com bandeira quadriculada.
 // =====================================================================
 
 // ---------- Mundo / estrada ----------
@@ -36,10 +37,22 @@ const N_CARS = 70;
 const PHASE_LEN = 22; // segundos por fase do dia
 const BLEND = 4; // segundos de transição entre fases
 const BASE_QUOTA = 40;
-const QUOTA_STEP = 20;
+const QUOTA_STEP = 10;
+const MAX_DAYS = 7; // completar o 7º dia vence o modo resistência
+
+// ---------- Corrida ----------
+const KM_PER_UNIT = 0.0055 / 1000; // unidades da pista -> km (mesma conta do odômetro)
+const N_RIVALS = 11;
+const COUNTDOWN = 3; // segundos no vermelho antes do verde
+const GRID_ROW_GAP = 3; // segmentos entre as filas do grid
+const raceKmFor = (level) => 3 + level; // corrida 1 = 4 km, corrida 2 = 5 km...
+// Fase do dia em que cada corrida começa (corrida 2 cai no meio-dia com neve)
+const RACE_START_PHASE = [1, 2, 3, 4, 5, 6, 7, 0];
 
 const BEST_KEY = "dinogames-rally-best";
 const SOUND_KEY = "dinogames-rally-sound";
+const MODE_KEY = "dinogames-rally-mode";
+const NUMBERS_KEY = "dinogames-rally-numbers";
 
 // Fases do dia: cores do céu, chão, estrada, neblina e luz.
 const PHASES = [
@@ -307,6 +320,9 @@ const sound = {
     newDay() {
         [392, 523, 659].forEach((f, i) => this.tone(f, 0.35, 0.1, i * 0.14));
     },
+    beep(go) {
+        this.tone(go ? 880 : 440, go ? 0.5 : 0.22, 0.14, 0, "square");
+    },
     gameOver() {
         [392, 330, 262, 196].forEach((f, i) => this.tone(f, 0.45, 0.12, i * 0.2));
     },
@@ -323,12 +339,16 @@ const sound = {
 // =====================================================================
 
 const best = (() => {
-    try { return JSON.parse(storage.get(BEST_KEY)) || { km: 0, day: 0 }; } catch { return { km: 0, day: 0 }; }
+    const empty = { km: 0, day: 0, race: 0 };
+    try { return { ...empty, ...JSON.parse(storage.get(BEST_KEY)) }; } catch { return empty; }
 })();
 
 const state = {
-    phase: "start", // start | playing | paused | over
+    phase: "start", // start | countdown | playing | paused | dayDone | over | victory | finished
+    resumePhase: "playing", // fase para onde a pausa volta
+    mode: "endurance", // endurance | race
     position: 0,
+    dist: 0, // distância total da câmera (sem dar a volta na pista)
     playerX: 0,
     speed: 0,
     day: 1,
@@ -337,6 +357,17 @@ const state = {
     quota: BASE_QUOTA,
     goalReached: false,
     km: 0,
+    dayResult: null, // resumo do dia que acabou de terminar
+    // Corrida
+    level: 1,
+    startZ: 0, // linha de largada (z do mundo, sem dar a volta)
+    finishZ: 0, // linha de chegada
+    raceUnits: 0,
+    raceKm: 0,
+    countdown: 0,
+    raceTime: 0,
+    finishPos: 0,
+    needle: 0, // ponteiro do velocímetro analógico (km/h, suavizado)
     bgOffset: 0,
     shake: 0,
     crashTimer: 0,
@@ -361,7 +392,10 @@ const createCars = () => {
         const hue = rand(0, 360);
         state.cars.push({
             rgb: hslToRgb(hue, rand(0.55, 0.85), rand(0.42, 0.58)),
+            number: i + 2, // o jogador é o carro 1
             z: wrapZ(z),
+            dist: z,
+            accel: 0.15,
             offset: LANES[Math.floor(Math.random() * 3)] + rand(-0.08, 0.08),
             speed: 0,
             cruise: MAX_SPEED * rand(0.22, 0.5), // velocidade que o carro gosta de andar
@@ -376,10 +410,84 @@ const createCars = () => {
     });
 };
 
+// Corrida: rivais no grid atrás da linha de largada, todos parados. O jogador larga na última fila.
+const createRivals = (level) => {
+    state.cars = [];
+    const rows = Math.ceil((N_RIVALS + 1) / 3);
+    state.startZ = PLAYER_Z + SEG_LEN * (1 + GRID_ROW_GAP * (rows - 1));
+    const base = Math.min(0.9, 0.6 + 0.035 * (level - 1));
+    let slot = 0;
+    for (let i = 0; i < N_RIVALS; i++) {
+        // a última fila tem o jogador no meio
+        if (Math.floor(slot / 3) === rows - 1 && slot % 3 === 1) slot++;
+        const row = Math.floor(slot / 3);
+        const lane = LANES[slot % 3];
+        slot++;
+        const z = state.startZ - SEG_LEN * (1 + GRID_ROW_GAP * row);
+        const hue = (i * 360) / N_RIVALS + rand(-10, 10);
+        state.cars.push({
+            rgb: hslToRgb(hue, rand(0.6, 0.85), rand(0.42, 0.56)),
+            number: i + 2,
+            z: wrapZ(z),
+            dist: z,
+            offset: lane,
+            target: lane,
+            speed: 0,
+            cruise: MAX_SPEED * Math.min(0.98, base + rand(0, 0.22)),
+            accel: 0.2,
+            bump: 0,
+            lastRel: 0,
+        });
+    }
+};
+
 const quotaFor = (day) => BASE_QUOTA + QUOTA_STEP * (day - 1);
 
-const resetGame = () => {
+const resetCommon = () => {
     Object.assign(state, {
+        position: 0,
+        dist: 0,
+        playerX: 0,
+        speed: 0,
+        dayTime: 0,
+        km: 0,
+        shake: 0,
+        crashTimer: 0,
+        steer: 0,
+        particles: [],
+        popups: [],
+        dayResult: null,
+    });
+};
+
+const startRace = (level) => {
+    resetCommon();
+    const raceKm = raceKmFor(level);
+    Object.assign(state, {
+        mode: "race",
+        phase: "countdown",
+        level,
+        day: level, // nas corridas pares o meio-dia tem neve
+        dayTime: RACE_START_PHASE[(level - 1) % RACE_START_PHASE.length] * PHASE_LEN,
+        raceKm,
+        raceUnits: raceKm / KM_PER_UNIT,
+        countdown: COUNTDOWN,
+        raceTime: 0,
+        finishPos: 0,
+        passed: 0,
+        goalReached: false,
+    });
+    createRivals(level);
+    state.finishZ = state.startZ + state.raceUnits;
+    state.cars.forEach((car) => (car.lastRel = relZ(car.z - (state.position + PLAYER_Z))));
+    sound.startEngine();
+    sound.beep(false);
+};
+
+const resetGame = () => {
+    resetCommon();
+    Object.assign(state, {
+        mode: "endurance",
         phase: "playing",
         position: 0,
         playerX: 0,
@@ -409,8 +517,9 @@ const popup = (text, color = "#ffffff") => state.popups.push({ text, color, t: 0
 // =====================================================================
 
 const currentPalette = () => {
-    const phaseIdx = Math.floor(state.dayTime / PHASE_LEN) % PHASES.length;
-    const within = state.dayTime - phaseIdx * PHASE_LEN;
+    const time = state.dayTime % DAY_LEN; // no resumo do fim do dia o relógio fica parado no fim
+    const phaseIdx = Math.floor(time / PHASE_LEN) % PHASES.length;
+    const within = time - phaseIdx * PHASE_LEN;
     const isSnowDay = state.day % 2 === 0;
     const pal = (i) => (i === 2 && isSnowDay ? SNOW_PALETTE : PALETTES[i]);
     const a = pal(phaseIdx);
@@ -430,8 +539,27 @@ const update = (dt) => {
     updateParticles(dt);
     state.palette = currentPalette();
 
+    // Ponteiro do velocímetro: segue a velocidade com um pouco de atraso
+    const kmhNow = (state.speed / MAX_SPEED) * KMH_AT_MAX;
+    state.needle = lerp(state.needle, kmhNow, Math.min(1, dt * 8));
+
     const running = state.phase === "playing";
-    sound.updateEngine(state.speed / MAX_SPEED, Math.abs(state.playerX) > 1, running);
+    const countdown = state.phase === "countdown";
+    sound.updateEngine(state.speed / MAX_SPEED, Math.abs(state.playerX) > 1, running || countdown);
+    if (countdown) {
+        // Farol vermelho: ninguém sai do lugar. Um bipe por segundo; no zero, verde.
+        const before = Math.ceil(state.countdown);
+        state.countdown -= dt;
+        if (state.countdown <= 0) {
+            state.countdown = 0;
+            state.phase = "playing";
+            popup("VAI!", "#5dff8a");
+            sound.beep(true);
+        } else if (Math.ceil(state.countdown) !== before) {
+            sound.beep(false);
+        }
+        return;
+    }
     if (!running) return;
 
     const pal = state.palette;
@@ -465,7 +593,8 @@ const update = (dt) => {
     state.bgOffset += playerSeg.curve * speedRatio * dt * 0.05;
 
     state.position = wrapZ(state.position + state.speed * dt);
-    state.km += (state.speed * dt * 0.0055) / 1000;
+    state.dist += state.speed * dt;
+    state.km += state.speed * dt * KM_PER_UNIT;
 
     // Partículas do carro
     const carScreen = playerScreen();
@@ -487,6 +616,15 @@ const update = (dt) => {
     }
 
     updateCars(dt);
+    state.shake = Math.max(0, state.shake - dt * 30);
+
+    if (state.mode === "race") {
+        // Na corrida o dia passa devagar (só para mudar o cenário)
+        state.dayTime = (state.dayTime + dt * 0.35) % DAY_LEN;
+        state.raceTime += dt;
+        if (raceProgress() >= state.raceUnits) finishRace();
+        return;
+    }
 
     // Relógio do dia
     state.dayTime += dt;
@@ -496,21 +634,57 @@ const update = (dt) => {
         sound.goal();
     }
     if (state.dayTime >= DAY_LEN) {
-        if (state.goalReached) {
-            state.day++;
-            state.dayTime = 0;
-            state.passed = 0;
-            state.quota = quotaFor(state.day);
-            state.goalReached = false;
-            state.cars.forEach((car) => (car.cruise = Math.min(MAX_SPEED * 0.7, car.cruise * 1.06)));
-            popup(`DIA ${state.day}`, "#ffd36b");
-            sound.newDay();
-        } else {
-            endGame();
+        if (!state.goalReached) endGame();
+        else if (state.day >= MAX_DAYS) winEndurance();
+        else {
+            // Dia completo: pausa com o resumo e o que vem no próximo dia
+            state.dayResult = { day: state.day, passed: state.passed, quota: state.quota };
+            state.phase = "dayDone";
+            Object.keys(input).forEach((k) => (input[k] = false));
+            pointer.gas = pointer.brake = false;
+            sound.goal();
         }
     }
+};
 
-    state.shake = Math.max(0, state.shake - dt * 30);
+const nextDay = () => {
+    state.day++;
+    state.dayTime = 0;
+    state.passed = 0;
+    state.quota = quotaFor(state.day);
+    state.goalReached = false;
+    state.dayResult = null;
+    state.cars.forEach((car) => (car.cruise = Math.min(MAX_SPEED * 0.7, car.cruise * 1.06)));
+    state.phase = "playing";
+    popup(`DIA ${state.day}`, "#ffd36b");
+    sound.newDay();
+};
+
+// ---------- Corrida ----------
+const playerWorldZ = () => state.dist + PLAYER_Z;
+const raceProgress = () => playerWorldZ() - state.startZ;
+const racePosition = () => 1 + state.cars.filter((car) => car.dist > playerWorldZ()).length;
+
+const saveBest = () => storage.set(BEST_KEY, JSON.stringify(best));
+
+const finishRace = () => {
+    state.finishPos = racePosition();
+    state.phase = "finished";
+    Object.keys(input).forEach((k) => (input[k] = false));
+    pointer.gas = pointer.brake = false;
+    if (state.level > best.race) {
+        best.race = state.level;
+        saveBest();
+    }
+    sound.goal();
+};
+
+const winEndurance = () => {
+    state.phase = "victory";
+    best.day = MAX_DAYS;
+    best.km = Math.max(best.km, state.km);
+    saveBest();
+    sound.goal();
 };
 
 // ---------- Tráfego: os carros não se atravessam ----------
@@ -562,7 +736,7 @@ const updateTraffic = (dt, playerZ) => {
             }
             if (gap < CAR_LEN * 5) want = Math.min(want, ahead.speed * (gap < CAR_LEN * 2 ? 0.9 : 1));
         }
-        const rate = want < car.speed ? MAX_SPEED * 0.9 : MAX_SPEED * 0.15; // freia forte, acelera devagar
+        const rate = want < car.speed ? MAX_SPEED * 0.9 : MAX_SPEED * car.accel; // freia forte, acelera devagar
         car.speed += clamp(want - car.speed, -rate * dt, rate * dt);
         car.offset += clamp(car.target - car.offset, -0.7 * dt, 0.7 * dt);
 
@@ -592,16 +766,18 @@ const updateCars = (dt) => {
     const playerZ = state.position + PLAYER_Z;
     updateTraffic(dt, playerZ);
     state.cars.forEach((car) => {
-        car.z = wrapZ(car.z + car.speed * dt);
+        car.dist += car.speed * dt;
+        car.z = wrapZ(car.dist);
         const rel = relZ(car.z - playerZ);
 
         // Ultrapassagens: o carro passou de "à frente" para "atrás" (ou o contrário)
         if (Math.abs(rel - car.lastRel) < TRACK_LEN / 4) {
             if (car.lastRel > 0 && rel <= 0) {
-                state.passed++;
+                if (state.mode === "endurance") state.passed++;
                 sound.pass();
-            } else if (car.lastRel <= 0 && rel > 0) {
-                // Fui ultrapassado: a conta volta a subir, mas nunca passa da cota do dia
+            } else if (car.lastRel <= 0 && rel > 0 && state.mode === "endurance" && !state.goalReached) {
+                // Fui ultrapassado: a conta de carros que faltam volta a subir.
+                // Depois que a meta do dia foi batida ela fica garantida e o contador não diminui mais.
                 state.passed = Math.max(0, state.passed - 1);
             }
         }
@@ -621,7 +797,9 @@ const crash = (car) => {
     state.shake = 14;
     state.playerX += state.playerX < car.offset ? -0.18 : 0.18;
     // recua para trás do carro atingido (sem contar ultrapassagem)
+    const before = state.position;
     state.position = wrapZ(car.z - PLAYER_Z - SEG_LEN);
+    state.dist += relZ(state.position - before);
     car.lastRel = relZ(car.z - (state.position + PLAYER_Z));
     sound.crash();
     const p = playerScreen();
@@ -639,7 +817,7 @@ const endGame = () => {
     if (state.km > best.km || state.day > best.day) {
         best.km = Math.max(best.km, state.km);
         best.day = Math.max(best.day, state.day);
-        storage.set(BEST_KEY, JSON.stringify(best));
+        saveBest();
     }
 };
 
@@ -853,9 +1031,32 @@ const drawRoad = (pal) => {
                 poly(lx1 - l1 / 2, p1.y, lx1 + l1 / 2, p1.y, lx2 + l2 / 2, p2.y, lx2 - l2 / 2, p2.y, laneColor);
             });
         }
+        // Corrida: faixas quadriculadas de largada e chegada pintadas na pista
+        if (state.mode === "race") {
+            const abs = state.dist + z1; // z do mundo do começo deste segmento
+            const inSeg = (lineZ) => lineZ >= abs && lineZ < abs + SEG_LEN;
+            if (inSeg(state.startZ) || inSeg(state.finishZ)) drawChecker(p1, p2, f);
+        }
         maxY = p2.y;
     }
     return visible;
+};
+
+const CHECK_LIGHT = [245, 245, 245];
+const CHECK_DARK = [22, 22, 26];
+
+const drawChecker = (p1, p2, f) => {
+    const rows = 2, cols = 14;
+    for (let r = 0; r < rows; r++) {
+        const t1 = r / rows, t2 = (r + 1) / rows;
+        const ax = lerp(p1.x, p2.x, t1), aw = lerp(p1.w, p2.w, t1), ay = lerp(p1.y, p2.y, t1);
+        const bx = lerp(p1.x, p2.x, t2), bw = lerp(p1.w, p2.w, t2), by = lerp(p1.y, p2.y, t2);
+        for (let c = 0; c < cols; c++) {
+            const u1 = -1 + (2 * c) / cols, u2 = -1 + (2 * (c + 1)) / cols;
+            poly(ax + aw * u1, ay, ax + aw * u2, ay, bx + bw * u2, by, bx + bw * u1, by,
+                f((r + c) % 2 ? CHECK_DARK : CHECK_LIGHT));
+        }
+    }
 };
 
 // ---------- Objetos (vetoriais) ----------
@@ -924,7 +1125,7 @@ const drawSign = (x, y, w, dir, pal, alpha) => {
 };
 
 // Carro visto de trás. Na noite só as lanternas aparecem com força.
-const drawCar = (x, y, w, color, pal, { alpha = 1, player = false, tilt = 0, braking = false } = {}) => {
+const drawCar = (x, y, w, color, pal, { alpha = 1, player = false, tilt = 0, braking = false, number = 0 } = {}) => {
     const h = w * 0.55;
     const light = player ? Math.max(pal.light, 0.55) : pal.light;
     const shade = darken(light);
@@ -991,6 +1192,21 @@ const drawCar = (x, y, w, color, pal, { alpha = 1, player = false, tilt = 0, bra
     ctx.fillStyle = `rgba(230, 230, 230, ${0.4 + 0.5 * light})`;
     ctx.fillRect(-w * 0.1, -h * 0.36, w * 0.2, h * 0.1);
 
+    // número do carro na traseira (opção do menu)
+    if (number && w > 24) {
+        const bw = w * 0.24, bh = h * 0.21, by = -h * 0.62;
+        ctx.fillStyle = `rgba(248, 248, 248, ${0.5 + 0.5 * light})`;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-bw / 2, by, bw, bh, bh * 0.25);
+        else ctx.rect(-bw / 2, by, bw, bh);
+        ctx.fill();
+        ctx.fillStyle = "#111";
+        ctx.font = `900 ${bh * 0.86}px system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(number), 0, by + bh * 0.54, bw * 0.92);
+    }
+
     // lanternas (acendem mais à noite e na frenagem)
     const lampOn = light < 0.5 || braking;
     ctx.fillStyle = lampOn ? "#ff3b30" : "#a3241d";
@@ -1005,6 +1221,86 @@ const drawCar = (x, y, w, color, pal, { alpha = 1, player = false, tilt = 0, bra
             ctx.fillStyle = g;
             ctx.fillRect(lx * w - w * 0.3, -h * 0.51 - w * 0.3, w * 0.6, w * 0.6);
         });
+    }
+    ctx.restore();
+};
+
+// Bandeira quadriculada tremulando presa no topo de um poste
+const drawFlag = (px, py, dir, u) => {
+    const cols = 5, rows = 4;
+    const fw = 380 * u, fh = 260 * u;
+    const cw = fw / cols, ch = fh / rows;
+    for (let c = 0; c < cols; c++) {
+        const wave = Math.sin(state.time * 7 + c * 0.9) * 26 * u * (c / cols);
+        for (let r = 0; r < rows; r++) {
+            ctx.fillStyle = (r + c) % 2 ? "#16161a" : "#f5f5f5";
+            const x = dir > 0 ? px + c * cw : px - (c + 1) * cw;
+            ctx.fillRect(x, py + r * ch + wave, cw + 0.5, ch + 0.5);
+        }
+    }
+};
+
+// Pórtico sobre a pista: LARGADA (com o farol) ou CHEGADA (quadriculado com bandeiras)
+const drawGantry = (x, y, scale, kind, pal, alpha) => {
+    const u = scale * (view.w / 2);
+    const half = ROAD_W * 1.14 * u;
+    const poleW = Math.max(1, 70 * u);
+    const top = y - 2300 * u;
+    const bannerH = 420 * u;
+    const shade = darken(Math.max(pal.light, 0.45));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = rgb([200 * shade, 205 * shade, 214 * shade]);
+    ctx.fillRect(x - half - poleW / 2, top, poleW, y - top);
+    ctx.fillRect(x + half - poleW / 2, top, poleW, y - top);
+
+    if (kind === "finish") {
+        const cols = 20, rows = 2;
+        const cw = (half * 2) / cols, ch = bannerH / rows;
+        for (let c = 0; c < cols; c++) {
+            for (let r = 0; r < rows; r++) {
+                ctx.fillStyle = (r + c) % 2 ? "#16161a" : "#f5f5f5";
+                ctx.fillRect(x - half + c * cw, top + r * ch, cw + 0.5, ch + 0.5);
+            }
+        }
+        drawFlag(x - half, top - 300 * u, -1, u);
+        drawFlag(x + half, top - 300 * u, 1, u);
+    } else {
+        ctx.fillStyle = "#1b2133";
+        ctx.fillRect(x - half, top, half * 2, bannerH);
+        ctx.fillStyle = "#34cca3";
+        ctx.fillRect(x - half, top + bannerH - 40 * u, half * 2, 40 * u);
+    }
+
+    const size = bannerH * 0.6;
+    if (size >= 5) {
+        const label = kind === "finish" ? "CHEGADA" : "LARGADA";
+        ctx.font = `900 ${size}px ui-monospace, Consolas, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if (kind === "finish") {
+            const tw = ctx.measureText(label).width + size * 0.6;
+            ctx.fillStyle = "#c0392b";
+            ctx.fillRect(x - tw / 2, top + bannerH * 0.12, tw, bannerH * 0.76);
+        }
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, x - (kind === "start" ? half * 0.35 : 0), top + bannerH / 2);
+    }
+
+    // Farol da largada (vermelho na contagem, verde depois)
+    if (kind === "start") {
+        const lr = 70 * u;
+        const bw = lr * 7, bh = lr * 2.6;
+        const bx = x + half * 0.35 - bw / 2, by = top + (bannerH - bh) / 2;
+        ctx.fillStyle = "#07090f";
+        ctx.fillRect(bx, by, bw, bh);
+        const green = state.phase !== "countdown" && !(state.phase === "paused" && state.resumePhase === "countdown");
+        for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = green ? "#38ff6a" : "#ff2d2d";
+            ctx.beginPath();
+            ctx.arc(bx + lr * 1.3 + i * lr * 2.2, by + bh / 2, lr * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
     ctx.restore();
 };
@@ -1027,6 +1323,17 @@ const drawSprites = (visible, pal) => {
         items.push({ seg, offset: car.offset, car, percent: (car.z % SEG_LEN) / SEG_LEN });
     });
 
+    // Pórticos de largada e chegada (só quando estão logo à frente)
+    if (state.mode === "race") {
+        [["start", state.startZ], ["finish", state.finishZ]].forEach(([kind, z]) => {
+            const ahead = z - state.dist;
+            if (ahead <= 0 || ahead >= (DRAW_DIST - 2) * SEG_LEN) return;
+            const seg = segments[Math.floor(wrapZ(z) / SEG_LEN) % TRACK_SEGS];
+            if (!seg.view || seg.view.frame !== frameId) return;
+            items.push({ seg, offset: 0, gantry: kind, percent: 0 });
+        });
+    }
+
     items.sort((a, b) => b.seg.view.n - a.seg.view.n || a.percent - b.percent);
 
     items.forEach((item) => {
@@ -1044,7 +1351,9 @@ const drawSprites = (visible, pal) => {
         if (item.car) {
             const w = CAR_W * scale * (view.w / 2);
             const tilt = item.car.bump > 0 ? Math.sin(state.time * 40) * 0.1 * (item.car.bump / 0.6) : 0;
-            drawCar(x, y, w, item.car.rgb, pal, { alpha, tilt });
+            drawCar(x, y, w, item.car.rgb, pal, { alpha, tilt, number: settings.numbers ? item.car.number : 0 });
+        } else if (item.gantry) {
+            drawGantry(roadX, y, scale, item.gantry, pal, alpha);
         } else {
             const s = item.sprite;
             if (s.type === "tree") drawTree(x, y, 700 * (s.scale || 1) * scale * (view.w / 2), pal, alpha);
@@ -1136,41 +1445,203 @@ const text = (value, x, y, size, color = "#fff", align = "left", weight = "bold"
     ctx.fillText(value, x, y);
 };
 
+// Velocímetro de ponteiro (0 a 240 km/h, faixa vermelha a partir de 200)
+const drawGauge = (cx, cy, r) => {
+    const start = Math.PI * 0.75;
+    const sweep = Math.PI * 1.5;
+    const ang = (v) => start + (clamp(v, 0, KMH_AT_MAX) / KMH_AT_MAX) * sweep;
+    ctx.save();
+    ctx.fillStyle = "rgba(6, 10, 24, 0.72)";
+    ctx.strokeStyle = "rgba(120, 220, 255, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 70, 50, 0.85)";
+    ctx.lineWidth = r * 0.09;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.84, ang(200), ang(KMH_AT_MAX));
+    ctx.stroke();
+
+    ctx.lineCap = "round";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold ${Math.max(6, r * 0.2)}px ui-monospace, Consolas, monospace`;
+    for (let v = 0; v <= KMH_AT_MAX; v += 10) {
+        const major = v % 40 === 0;
+        const a = ang(v);
+        const r1 = r * (major ? 0.7 : v % 20 === 0 ? 0.77 : 0.82);
+        ctx.strokeStyle = v >= 200 ? "#ff8a7a" : "#cfe6ff";
+        ctx.lineWidth = major ? 1.6 : 0.8;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+        ctx.lineTo(cx + Math.cos(a) * r * 0.9, cy + Math.sin(a) * r * 0.9);
+        ctx.stroke();
+        if (major) {
+            ctx.fillStyle = v >= 200 ? "#ff8a7a" : "#d6e6f5";
+            ctx.fillText(String(v), cx + Math.cos(a) * r * 0.52, cy + Math.sin(a) * r * 0.52);
+        }
+    }
+    ctx.fillStyle = "#8fb3cc";
+    ctx.font = `normal ${Math.max(6, r * 0.18)}px ui-monospace, Consolas, monospace`;
+    ctx.fillText("km/h", cx, cy + r * 0.62);
+
+    // ponteiro (treme um pouco perto da velocidade máxima)
+    const jitter = state.speed > MAX_SPEED * 0.92 ? Math.sin(state.time * 45) * 0.8 : 0;
+    const a = ang(state.needle + jitter);
+    ctx.strokeStyle = "#ff4d3a";
+    ctx.lineWidth = Math.max(1.5, r * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(cx - Math.cos(a) * r * 0.14, cy - Math.sin(a) * r * 0.14);
+    ctx.lineTo(cx + Math.cos(a) * r * 0.8, cy + Math.sin(a) * r * 0.8);
+    ctx.stroke();
+    ctx.fillStyle = "#e8eef5";
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.09, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+};
+
+// Barra das fases do dia (resistência)
+const drawDayBar = (bx, by, barW, pal) => {
+    panel(bx - 8, by, barW + 16, 34);
+    PHASES.forEach((_, i) => {
+        const pal2 = i === 2 && state.day % 2 === 0 ? SNOW_PALETTE : PALETTES[i];
+        ctx.fillStyle = rgb(mixRgb(pal2.skyTop, pal2.skyBot, 0.5));
+        ctx.fillRect(bx + (i / PHASES.length) * barW, by + 8, barW / PHASES.length - 1, 8);
+    });
+    const mark = bx + Math.min(1, state.dayTime / DAY_LEN) * barW;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(mark - 1, by + 5, 3, 14);
+    text(pal.name || "", bx + barW / 2, by + 19, 10, "#cfe6ff", "center", "normal");
+};
+
+// Barra de progresso da corrida: largada -> chegada, rivais como pontinhos
+const drawRaceBar = (bx, by, barW) => {
+    panel(bx - 8, by, barW + 16, 36);
+    const t = clamp(raceProgress() / state.raceUnits, 0, 1);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+    ctx.fillRect(bx, by + 9, barW, 6);
+    ctx.fillStyle = "#34cca3";
+    ctx.fillRect(bx, by + 9, barW * t, 6);
+    // bandeirinha quadriculada no fim
+    for (let c = 0; c < 2; c++) {
+        for (let r = 0; r < 3; r++) {
+            ctx.fillStyle = (c + r) % 2 ? "#16161a" : "#f5f5f5";
+            ctx.fillRect(bx + barW - 6 + c * 3, by + 6 + r * 4, 3, 4);
+        }
+    }
+    state.cars.forEach((car) => {
+        const ct = clamp((car.dist - state.startZ) / state.raceUnits, 0, 1);
+        ctx.fillStyle = rgb(car.rgb);
+        ctx.fillRect(bx + barW * ct - 1.5, by + 10, 3, 4);
+    });
+    ctx.fillStyle = "#ffd36b";
+    ctx.beginPath();
+    ctx.moveTo(bx + barW * t, by + 16);
+    ctx.lineTo(bx + barW * t - 5, by + 22);
+    ctx.lineTo(bx + barW * t + 5, by + 22);
+    ctx.closePath();
+    ctx.fill();
+    const done = clamp(raceProgress(), 0, state.raceUnits) * KM_PER_UNIT;
+    const left = Math.max(0, state.raceKm - done);
+    text(`${done.toFixed(1)} km · faltam ${left.toFixed(1)} km`, bx + barW / 2, by + 23, 10, "#cfe6ff", "center", "normal");
+};
+
+// Farol grande da largada no centro da tela
+const drawStartLight = () => {
+    const counting = state.phase === "countdown" || (state.phase === "paused" && state.resumePhase === "countdown");
+    if (!counting && !(state.mode === "race" && state.phase === "playing" && state.raceTime < 1.2)) return;
+    const lr = Math.min(22, view.w / 22);
+    const bw = lr * 7.4, bh = lr * 2.8;
+    const bx = view.w / 2 - bw / 2, by = view.h * 0.2;
+    ctx.fillStyle = "rgba(7, 9, 15, 0.9)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, lr * 0.6);
+    else ctx.rect(bx, by, bw, bh);
+    ctx.fill();
+    ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+        const lx = bx + lr * 1.5 + i * lr * 2.2, ly = by + bh / 2;
+        ctx.fillStyle = counting ? "#ff2d2d" : "#38ff6a";
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.arc(lx, ly, lr * 0.85, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    if (counting) {
+        const n = String(Math.max(1, Math.ceil(state.countdown)));
+        ctx.font = `900 ${lr * 2.4}px ui-monospace, Consolas, monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.strokeText(n, view.w / 2, by + bh + 8);
+        ctx.fillStyle = "#ff6b5a";
+        ctx.fillText(n, view.w / 2, by + bh + 8);
+    }
+};
+
 const drawHud = (pal) => {
     const narrow = view.w < 560;
-    const remaining = Math.max(0, state.quota - state.passed);
+    const race = state.mode === "race";
     const kmh = Math.round((state.speed / MAX_SPEED) * KMH_AT_MAX);
-
     const pw = narrow ? Math.min(170, (view.w - 30) / 2) : 170;
+    const big = narrow ? 15 : 18;
+    const small = narrow ? 13 : 15;
 
-    // Painel esquerdo: dia e carros restantes
+    // Painel esquerdo: dia e carros que faltam (resistência) ou corrida e posição
     panel(10, 10, pw, 64);
-    text(`DIA ${state.day}`, 22, 18, narrow ? 15 : 18, "#ffd36b");
-    if (state.goalReached) text("🏁 META OK", 22, 44, narrow ? 13 : 15, "#7dffb0");
-    else text(`🚗 ${remaining} carros`, 22, 44, narrow ? 13 : 15, "#ffffff");
+    if (race) {
+        text(`CORRIDA ${state.level}`, 22, 18, big, "#ffd36b");
+        const pos = state.phase === "finished" ? state.finishPos : racePosition();
+        text(`🏆 ${pos}º de ${N_RIVALS + 1}`, 22, 44, small, "#ffffff");
+    } else {
+        text(`DIA ${state.day}/${MAX_DAYS}`, 22, 18, big, "#ffd36b");
+        if (state.goalReached) {
+            const extra = state.passed - state.quota;
+            text(extra > 0 ? `🏁 META OK +${extra}` : "🏁 META OK", 22, 44, small, "#7dffb0");
+        } else {
+            text(`🚗 ${Math.max(0, state.quota - state.passed)} carros`, 22, 44, small, "#ffffff");
+        }
+    }
 
-    // Painel direito: velocímetro e odômetro
+    // Painel direito: velocímetro digital e odômetro
     const rw = pw;
     panel(view.w - rw - 10, 10, rw, 64);
     text(`${kmh}`, view.w - 22, 14, narrow ? 24 : 28, "#ffffff", "right");
     text("km/h", view.w - 22, 46, 11, "#8fb3cc", "right", "normal");
     text(`${state.km.toFixed(1)} km`, view.w - rw + 2, 48, 13, "#8fe3ff", "left");
 
-    // Barra do dia (fase atual)
-    const barW = Math.min(view.w * 0.42, 340);
-    const bx = view.w / 2 - barW / 2;
-    if (!narrow || view.w > 380) {
-        panel(bx - 8, 10, barW + 16, 34);
-        PHASES.forEach((_, i) => {
-            const pal2 = i === 2 && state.day % 2 === 0 ? SNOW_PALETTE : PALETTES[i];
-            ctx.fillStyle = rgb(mixRgb(pal2.skyTop, pal2.skyBot, 0.5));
-            ctx.fillRect(bx + (i / PHASES.length) * barW, 18, barW / PHASES.length - 1, 8);
-        });
-        const mark = bx + (state.dayTime / DAY_LEN) * barW;
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(mark - 1, 15, 3, 14);
-        text(pal.name || "", view.w / 2, 29, 10, "#cfe6ff", "center", "normal");
+    // Velocímetro de ponteiro: ao lado do digital (tela larga) ou logo abaixo dele (tela estreita)
+    const wide = view.w >= 760;
+    const gr = wide ? 34 : 32;
+    const gx = wide ? view.w - rw - 10 - 8 - gr : view.w - 10 - gr;
+    const gy = wide ? 10 + 32 : 10 + 64 + 8 + gr;
+    drawGauge(gx, gy, gr);
+
+    // Barra central (fases do dia ou progresso da corrida)
+    let bx, by, barW;
+    if (wide) {
+        const side = 10 + rw + 8 + gr * 2 + 12;
+        barW = Math.min(340, view.w - side * 2 - 16);
+        bx = view.w / 2 - barW / 2;
+        by = 10;
+    } else {
+        bx = 18;
+        by = 10 + 64 + 8;
+        barW = gx - gr - 10 - 8 - bx;
     }
+    if (race) drawRaceBar(bx, by, barW);
+    else drawDayBar(bx, by, barW, pal);
+
+    drawStartLight();
 };
 
 const drawPopups = () => {
@@ -1193,19 +1664,44 @@ const drawPopups = () => {
 
 const isTouch = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window;
 
-const drawOverlay = (title, lines, color) => {
+const drawOverlay = (title, lines, color, top = 0.36) => {
     ctx.fillStyle = "rgba(4, 6, 16, 0.62)";
     ctx.fillRect(0, 0, view.w, view.h);
-    const size = Math.min(64, view.w / 8);
+    const size = Math.min(64, view.w / 8, (view.w - 24) / (title.length * 0.62));
     ctx.font = `900 ${size}px ui-monospace, Consolas, monospace`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.shadowColor = color;
     ctx.shadowBlur = 24;
     ctx.fillStyle = color;
-    ctx.fillText(title, view.w / 2, view.h * 0.36);
+    // O título fica abaixo do HUD (que em tela estreita tem duas fileiras)
+    const hudBottom = view.w >= 760 ? 74 : 146;
+    const ty = Math.max(view.h * top, hudBottom + size * 0.6);
+    ctx.fillText(title, view.w / 2, ty);
     ctx.shadowBlur = 0;
-    lines.forEach((line, i) => text(line, view.w / 2, view.h * 0.36 + size * 0.75 + i * 26, 16, "#d6e6f5", "center", "normal"));
+    // Linhas compridas quebram em várias para caber em telas estreitas
+    const fs = view.w < 560 ? 14 : 16;
+    ctx.font = `normal ${fs}px ui-monospace, Consolas, monospace`;
+    const maxW = view.w - 24;
+    const wrapped = [];
+    lines.forEach((line) => {
+        let cur = "";
+        line.split(" ").forEach((word) => {
+            const next = cur ? `${cur} ${word}` : word;
+            if (cur && ctx.measureText(next).width > maxW) {
+                wrapped.push(cur);
+                cur = word === "·" ? "" : word;
+            } else cur = next;
+        });
+        if (cur) wrapped.push(cur);
+    });
+    wrapped.forEach((line, i) => text(line.replace(/ ·$/, ""), view.w / 2, ty + size * 0.75 + i * fs * 1.55, fs, "#d6e6f5", "center", "normal"));
+};
+
+const fmtTime = (t) => {
+    const m = Math.floor(t / 60);
+    const sec = t - m * 60;
+    return `${m}:${sec < 10 ? "0" : ""}${sec.toFixed(1)}`;
 };
 
 const render = () => {
@@ -1225,7 +1721,9 @@ const render = () => {
     const p = playerScreen();
     const tilt = -state.steer * 0.08 * (state.speed / MAX_SPEED);
     const wobble = state.crashTimer > 0 ? Math.sin(state.time * 50) * 0.12 : 0;
-    drawCar(p.x, p.y, p.w, [47, 191, 149], pal, { player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0 });
+    drawCar(p.x, p.y, p.w, [47, 191, 149], pal, {
+        player: true, tilt: tilt + wobble, braking: braking() && state.speed > 0, number: settings.numbers ? 1 : 0,
+    });
 
     drawParticles();
     drawSpeedLines();
@@ -1244,23 +1742,51 @@ const render = () => {
     ctx.fillRect(0, 0, view.w, view.h);
 
     drawHud(pal);
-    drawPopups();
+    if (state.phase === "playing" || state.phase === "countdown") drawPopups();
 
+    const oy = MENU_PHASES.has(state.phase) ? 0.2 : 0.36;
+    const cont = isTouch ? "Toque para continuar" : "Enter para continuar";
     if (state.phase === "start") {
+        const race = settings.mode === "race";
         drawOverlay("DINO RALLY", [
-            "Ultrapasse a cota de carros antes que o dia acabe.",
-            isTouch ? "Toque para começar · arraste o dedo sobre o carro para dirigir" : "Enter para começar · ←→ dirigir · ↑ acelerar · ↓ frear",
-            isTouch ? "Botão ⇄ troca o lado dos controles" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
-            best.km > 0 ? `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}` : "",
-        ], "#34cca3");
+            race ? "Corrida: largue no verde e cruze a chegada em 1º lugar."
+                : `Resistência: bata a meta de carros de cada dia, por ${MAX_DAYS} dias.`,
+            isTouch ? "Arraste o dedo sobre o carro para dirigir · ⇄ troca o lado dos botões" : "←→ dirigir · ↑ acelerar · ↓ frear · P pausa · M som",
+            isTouch ? "" : "Mouse: mova para dirigir · botão esquerdo acelera · direito freia",
+            race ? (best.race > 0 ? `Recorde: corrida ${best.race} concluída` : "")
+                : (best.km > 0 ? `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}` : ""),
+        ].filter(Boolean), "#34cca3", oy);
     } else if (state.phase === "paused") {
-        drawOverlay("PAUSA", [isTouch ? "Toque para continuar" : "P ou Enter para continuar", "M liga/desliga o som"], "#8fe3ff");
+        drawOverlay("PAUSA", [isTouch ? "Toque para continuar" : "P ou Enter para continuar", "M liga/desliga o som"], "#8fe3ff", oy);
+    } else if (state.phase === "dayDone") {
+        const r = state.dayResult;
+        const next = r.day + 1;
+        drawOverlay(`DIA ${r.day} COMPLETO!`, [
+            `Você ultrapassou ${r.passed} carros (meta: ${r.quota}).`,
+            `Próximo: dia ${next} de ${MAX_DAYS} · meta de ${quotaFor(next)} carros.`,
+            next % 2 === 0 ? "Atenção: neve no meio-dia, a pista fica escorregadia."
+                : "Os outros carros ficam um pouco mais rápidos.",
+            next === MAX_DAYS ? "É o último dia: complete e vença o Dino Rally!" : `Faltam ${MAX_DAYS - r.day} dias para terminar.`,
+            cont,
+        ], "#7dffb0", oy);
+    } else if (state.phase === "victory") {
+        drawOverlay("CAMPEÃO!", [
+            `Você completou os ${MAX_DAYS} dias e percorreu ${state.km.toFixed(1)} km.`,
+            `Recorde: ${best.km.toFixed(1)} km`,
+        ], "#ffd36b", oy);
     } else if (state.phase === "over") {
         drawOverlay("FIM DA CORRIDA", [
-            `Você chegou ao dia ${state.day} e percorreu ${state.km.toFixed(1)} km.`,
+            `Faltaram ${Math.max(0, state.quota - state.passed)} carros no dia ${state.day} de ${MAX_DAYS}.`,
+            `Você percorreu ${state.km.toFixed(1)} km.`,
             `Recorde: ${best.km.toFixed(1)} km · dia ${best.day}`,
-            isTouch ? "Toque para correr de novo" : "Enter para correr de novo",
-        ], "#ff6b5a");
+        ], "#ff6b5a", oy);
+    } else if (state.phase === "finished") {
+        const pos = state.finishPos;
+        drawOverlay(pos === 1 ? "VITÓRIA! 1º LUGAR" : `${pos}º LUGAR`, [
+            `Corrida ${state.level}: ${state.raceKm} km em ${fmtTime(state.raceTime)}.`,
+            pos === 1 ? "Você cruzou a bandeira quadriculada na frente de todos!" : `Você chegou em ${pos}º de ${N_RIVALS + 1} carros.`,
+            `Próxima: corrida ${state.level + 1} · ${raceKmFor(state.level + 1)} km · rivais mais rápidos.`,
+        ], pos <= 3 ? "#ffd36b" : "#8fe3ff", oy);
     }
 };
 
@@ -1275,19 +1801,78 @@ const KEYS = {
     ArrowDown: "brake", KeyS: "brake",
 };
 
-const confirm = () => {
+// ---------- Menu (modo e numeração dos carros) ----------
+const MENU_PHASES = new Set(["start", "over", "victory", "finished"]);
+const menu = document.getElementById("menu");
+const modeSel = document.getElementById("mode");
+const numbersSel = document.getElementById("numbers");
+const btnStart = document.getElementById("btn-start");
+const btnRetry = document.getElementById("btn-retry");
+const settings = {
+    mode: storage.get(MODE_KEY) === "race" ? "race" : "endurance",
+    numbers: storage.get(NUMBERS_KEY) !== "0",
+};
+modeSel.value = settings.mode;
+numbersSel.value = settings.numbers ? "1" : "0";
+modeSel.addEventListener("change", () => {
+    settings.mode = modeSel.value === "race" ? "race" : "endurance";
+    storage.set(MODE_KEY, settings.mode);
+});
+numbersSel.addEventListener("change", () => {
+    settings.numbers = numbersSel.value !== "0";
+    storage.set(NUMBERS_KEY, settings.numbers ? "1" : "0");
+});
+
+// Depois de terminar uma corrida, o botão principal leva para a próxima (mais difícil)
+const nextIsHarder = () => state.phase === "finished" && settings.mode === "race";
+const primaryAction = () => {
+    if (settings.mode === "race") startRace(nextIsHarder() ? state.level + 1 : 1);
+    else resetGame();
+    canvas.focus();
+};
+btnStart.addEventListener("click", () => {
     sound.ensure();
-    if (state.phase === "start" || state.phase === "over") resetGame();
-    else if (state.phase === "paused") state.phase = "playing";
+    primaryAction();
+});
+btnRetry.addEventListener("click", () => {
+    sound.ensure();
+    startRace(state.level);
+    canvas.focus();
+});
+
+let menuKey = "";
+const syncMenu = () => {
+    const key = `${state.phase}|${settings.mode}|${state.level}`;
+    if (key === menuKey) return;
+    menuKey = key;
+    const open = MENU_PHASES.has(state.phase);
+    menu.hidden = !open;
+    touch.classList.toggle("menu-open", open);
+    btnStart.textContent = nextIsHarder() ? `Próxima corrida (${state.level + 1}) ▶`
+        : state.phase === "start" ? "Correr ▶" : "Correr de novo ▶";
+    btnRetry.hidden = !nextIsHarder();
 };
 
+const confirm = () => {
+    sound.ensure();
+    if (MENU_PHASES.has(state.phase)) primaryAction();
+    else if (state.phase === "paused") state.phase = state.resumePhase;
+    else if (state.phase === "dayDone") nextDay();
+};
+
+const pause = () => {
+    state.resumePhase = state.phase;
+    state.phase = "paused";
+};
 const togglePause = () => {
-    if (state.phase === "playing") state.phase = "paused";
-    else if (state.phase === "paused") state.phase = "playing";
+    if (state.phase === "playing" || state.phase === "countdown") pause();
+    else if (state.phase === "paused") state.phase = state.resumePhase;
 };
 
 window.addEventListener("keydown", (event) => {
     sound.ensure();
+    // No menu, as teclas ficam com o seletor/botão que está em foco
+    if (menu.contains(event.target)) return;
     const action = KEYS[event.code];
     if (action) {
         event.preventDefault();
@@ -1308,7 +1893,7 @@ window.addEventListener("keyup", (event) => {
 const autoPause = () => {
     Object.keys(input).forEach((k) => (input[k] = false));
     pointer.gas = pointer.brake = false;
-    if (state.phase === "playing") state.phase = "paused";
+    if (state.phase === "playing" || state.phase === "countdown") pause();
 };
 window.addEventListener("blur", autoPause);
 document.addEventListener("visibilitychange", () => document.hidden && autoPause());
@@ -1348,7 +1933,8 @@ const readButtons = (event) => {
 canvas.addEventListener("pointerdown", (event) => {
     canvas.focus();
     sound.ensure();
-    if (state.phase !== "playing") {
+    if (MENU_PHASES.has(state.phase)) return; // no menu, usa os botões
+    if (state.phase !== "playing" && state.phase !== "countdown") {
         confirm();
         return;
     }
@@ -1409,7 +1995,7 @@ touch.querySelectorAll("button[data-key]").forEach((btn) => {
         capture(btn, event);
         btn.classList.add("active");
         if (key === "pause") {
-            if (state.phase === "playing") togglePause();
+            if (state.phase === "playing" || state.phase === "countdown") togglePause();
             else confirm();
         } else {
             if (state.phase !== "playing") confirm();
@@ -1433,7 +2019,7 @@ let pauseBtnPhase = "";
 const syncPauseButton = () => {
     if (pauseBtnPhase === state.phase) return;
     pauseBtnPhase = state.phase;
-    const playing = state.phase === "playing";
+    const playing = state.phase === "playing" || state.phase === "countdown";
     pauseBtn.textContent = playing ? "❚❚" : "▶";
     pauseBtn.setAttribute("aria-label", playing ? "Pausar" : "Continuar");
     pauseBtn.classList.toggle("is-play", !playing);
@@ -1452,6 +2038,7 @@ const loop = (now) => {
     update(dt);
     render();
     syncPauseButton();
+    syncMenu();
     requestAnimationFrame(loop);
 };
 

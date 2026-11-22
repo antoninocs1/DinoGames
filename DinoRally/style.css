@@ -120,3 +120,85 @@ canvas {
 canvas.pointer-steer {
     cursor: crosshair;
 }
+
+/* Menu: modo de jogo, numeração dos carros e botões (início / fim de corrida) */
+.menu {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    transform: translateX(-50%);
+    width: min(92vw, 520px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(120, 220, 255, 0.35);
+    background: rgba(6, 10, 24, 0.8);
+    backdrop-filter: blur(4px);
+    font-family: system-ui, sans-serif;
+    color: #d6e6f5;
+}
+
+.menu[hidden] {
+    display: none;
+}
+
+.menu-fields,
+.menu-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.menu .field {
+    flex: 1 1 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #8fb3cc;
+}
+
+.menu select {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(120, 220, 255, 0.4);
+    background: #0d1330;
+    color: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+}
+
+.menu-actions button {
+    flex: 1 1 160px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.menu-actions button.primary {
+    background: #34cca3;
+    border-color: #34cca3;
+    color: #05221a;
+}
+
+.menu-actions button:hover {
+    filter: brightness(1.1);
+}
+
+.menu-actions button[hidden] {
+    display: none;
+}
+
+/* Com o menu aberto, os botões de toque somem para não ficar por cima */
+.touch.show.menu-open {
+    display: none;
+}
