@@ -211,13 +211,13 @@ const STARS = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.ran
 const CLOUD_FADE = 6; // segundos para aparecer e para sumir
 const makeCloud = (first = false) => {
     const puffs = [];
-    const n = 5 + Math.floor(Math.random() * 4);
+    const n = 4 + Math.floor(Math.random() * 4);
     for (let i = 0; i < n; i++) {
         const t = n === 1 ? 0 : i / (n - 1);
         puffs.push({
-            dx: (t - 0.5) * 3 + rand(-0.15, 0.15),
-            dy: -Math.sin(t * Math.PI) * rand(0.08, 0.2),
-            r: rand(0.32, 0.48) * (0.8 + Math.sin(t * Math.PI) * 0.3),
+            dx: (t - 0.5) * 2.6 + rand(-0.15, 0.15),
+            dy: -Math.sin(t * Math.PI) * rand(0.16, 0.36),
+            r: rand(0.38, 0.6) * (0.78 + Math.sin(t * Math.PI) * 0.38),
         });
     }
     return {
@@ -1082,16 +1082,16 @@ const drawClouds = (pal) => {
         const puffs = (dy) => {
             ctx.beginPath();
             c.puffs.forEach((p) => {
-                // bolinhas achatadas: nuvens compridas e finas
-                ctx.moveTo(cx + p.dx * unit + p.r * unit * 1.4, cy + p.dy * unit + dy);
-                ctx.ellipse(cx + p.dx * unit, cy + p.dy * unit + dy, p.r * unit * 1.4, p.r * unit * 0.6, 0, 0, Math.PI * 2);
+                // bolinhas um pouco achatadas
+                ctx.moveTo(cx + p.dx * unit + p.r * unit * 1.2, cy + p.dy * unit + dy);
+                ctx.ellipse(cx + p.dx * unit, cy + p.dy * unit + dy, p.r * unit * 1.2, p.r * unit * 0.82, 0, 0, Math.PI * 2);
             });
             ctx.fill();
         };
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = rgb(shade);
-        puffs(unit * 0.07); // sombra embaixo
+        puffs(unit * 0.1); // sombra embaixo
         ctx.fillStyle = rgb(body);
         puffs(0);
         ctx.restore();
