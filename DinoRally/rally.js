@@ -206,6 +206,40 @@ const RIDGE_FAR = makeRidge(24, 0.25, 1);
 const RIDGE_NEAR = makeRidge(16, 0.15, 0.7);
 const STARS = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random() * 0.9, r: rand(0.4, 1.4), tw: rand(0, 6) }));
 
+// Nuvens: de vez em quando uma nuvem surge, fica um tempo andando com o vento e some suavemente.
+// age < 0 é o tempo de espera (céu sem aquela nuvem); depois de "life" segundos ela some e volta a esperar.
+const CLOUD_FADE = 6; // segundos para aparecer e para sumir
+const makeCloud = (first = false) => {
+    const puffs = [];
+    const n = 4 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0 : i / (n - 1);
+        puffs.push({
+            dx: (t - 0.5) * 2.2 + rand(-0.15, 0.15),
+            dy: -Math.sin(t * Math.PI) * rand(0.25, 0.55),
+            r: rand(0.45, 0.75) * (0.75 + Math.sin(t * Math.PI) * 0.45),
+        });
+    }
+    return {
+        x: Math.random(),
+        y: rand(0.15, 0.62),
+        size: rand(0.7, 1.35),
+        drift: rand(0.004, 0.012) * (Math.random() < 0.5 ? -1 : 1),
+        life: rand(22, 45),
+        age: first ? rand(-25, 30) : -rand(8, 35),
+        puffs,
+    };
+};
+const CLOUDS = Array.from({ length: 6 }, () => makeCloud(true));
+
+const updateClouds = (dt) => {
+    CLOUDS.forEach((c, i) => {
+        c.age += dt;
+        c.x += c.drift * dt * 0.1;
+        if (c.age > c.life) CLOUDS[i] = makeCloud();
+    });
+};
+
 // =====================================================================
 // Som (motor grave e suave, sem o "zumbido" estridente)
 // =====================================================================
@@ -591,6 +625,7 @@ const addParticle = (p) => state.particles.push(p);
 
 const update = (dt) => {
     state.time += dt;
+    if (state.phase !== "paused") updateClouds(dt);
     state.popups.forEach((p) => (p.t += dt));
     state.popups = state.popups.filter((p) => p.t < 2);
     updateParticles(dt);
@@ -1024,6 +1059,42 @@ const drawSky = (pal) => {
         ctx.arc(wx + 7, view.horizon * 0.25 - 4, 14, 0, Math.PI * 2);
         ctx.fill();
     }
+
+    drawClouds(pal);
+};
+
+const drawClouds = (pal) => {
+    // Cor acompanha a luz do dia: brancas de dia, alaranjadas no pôr do sol, cinzentas e apagadas à noite
+    const light = clamp(pal.light, 0, 1);
+    const body = mixRgb(pal.skyBot, [255, 255, 255], 0.3 + 0.6 * light);
+    const shade = mixRgb(body, pal.skyTop, 0.35);
+    const strength = 0.3 + 0.6 * light;
+    const wrapW = view.w * 1.6;
+    CLOUDS.forEach((c) => {
+        if (c.age <= 0) return;
+        const fade = clamp(Math.min(c.age, c.life - c.age) / CLOUD_FADE, 0, 1);
+        const alpha = fade * fade * (3 - 2 * fade) * strength; // entrada e saída suaves
+        if (alpha < 0.01) return;
+        const unit = view.w * 0.045 * c.size;
+        const cx = ((((c.x * wrapW - state.bgOffset * wrapW * 0.15) % wrapW) + wrapW) % wrapW) - view.w * 0.3;
+        const cy = view.horizon * c.y;
+        if (cx < -unit * 3 || cx > view.w + unit * 3) return;
+        const puffs = (dy) => {
+            ctx.beginPath();
+            c.puffs.forEach((p) => {
+                ctx.moveTo(cx + p.dx * unit + p.r * unit, cy + p.dy * unit + dy);
+                ctx.arc(cx + p.dx * unit, cy + p.dy * unit + dy, p.r * unit, 0, Math.PI * 2);
+            });
+            ctx.fill();
+        };
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = rgb(shade);
+        puffs(unit * 0.12); // sombra embaixo
+        ctx.fillStyle = rgb(body);
+        puffs(0);
+        ctx.restore();
+    });
 };
 
 const drawRidge = (ridge, color, height, parallax, snowCaps) => {
