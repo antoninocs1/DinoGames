@@ -9,6 +9,10 @@
      attack    segundos até o volume máximo
      decay     true = o som vai sumindo (sino); false = sustenta enquanto acende
      raw       true = sai direto, sem o filtro que suaviza os agudos
+     gain      volume geral do som (1 = normal)
+     ring      com decay: segundos até a nota sumir (os harmônicos agudos somem antes)
+     release   sem decay: segundos para apagar depois que a luz apaga
+     reverb    eco de igreja (0 a 1)
 
    type: "sample"  arquivo de som (WAV, MP3, OGG… o que o navegador tocar)
      file      caminho do arquivo (lembre de incluí-lo no sw.js)
@@ -30,6 +34,11 @@
         suave:      { title: "Suave",      type: "synth", wave: "sine", partials: [[1, 1], [2, 0.12]], attack: 0.03, decay: false },
         sininho:    { title: "Sininho",    type: "synth", wave: "sine", partials: [[1, 1], [3, 0.1], [4.2, 0.04]], attack: 0.006, decay: true },
         classico:   { title: "Clássico",   type: "synth", wave: "triangle", partials: [[1, 1]], attack: 0.02, decay: false },
+        // Piano: martelo rápido e corda que vai sumindo; harmônicos agudos somem antes.
+        piano:      { title: "Piano",      type: "synth", wave: "sine", partials: [[1, 1], [2, 0.5], [3, 0.24], [4, 0.13], [5, 0.07], [6, 0.04]], attack: 0.004, decay: true, ring: 1.6, gain: 0.9, reverb: 0.12 },
+        // Órgão de igreja: tubos de várias alturas (oitava abaixo, quinta, oitavas acima)
+        // soando juntos, entrada macia e eco longo de igreja.
+        orgao:      { title: "Órgão de igreja", type: "synth", wave: "sine", partials: [[0.5, 0.5], [1, 1], [1.5, 0.22], [2, 0.6], [3, 0.26], [4, 0.32], [8, 0.08]], attack: 0.07, decay: false, release: 0.3, gain: 0.5, reverb: 0.55 },
         inicial:    { title: "Inicial",    type: "synth", wave: "triangle", partials: [[1, 1.3], [2, 0.23, "sine"]], attack: 0.012, decay: false, raw: true },
 
         // Mesmo tipo de som e mesmos tons dos MP3 do projeto de referência

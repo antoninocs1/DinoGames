@@ -13,11 +13,11 @@
     const SP = 12;               // distância entre as linhas da pauta
     const BOTTOM = 48;           // y da 1ª linha (Mi)
     const X0 = 62, DX = 32;      // x da 1ª nota e espaço entre notas
-    const W = 420;               // largura do desenho
-    const VIEW = `0 -20 ${W} 96`;
+    const W_NORMAL = 420;        // largura do desenho (7 e 12 notas)
+    const W_WIDE = 640;          // 2 oitavas: teclado mais largo, pauta mais comprida
     const STEM = 34;
     const MAX_NOTES = 40;        // no tocar livre, guarda só as últimas
-    const SLOTS = Math.floor((W - X0 - 8) / DX) + 1; // notas que cabem sem rolar
+    const slotsFor = (w) => Math.floor((w - X0 - 8) / DX) + 1; // notas que cabem sem rolar
 
     const FIGURES = {
         semibreve: { title: "Semibreve", rx: 12.5, ry: 9.4, hollow: true, stem: false },
@@ -60,11 +60,11 @@
         let notes = [];          // { el, pad }
         let shift = 0;           // quantas notas já rolaram para a esquerda
 
-        svg.setAttribute("viewBox", VIEW);
+        let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
-            <defs><clipPath id="staff-clip"><rect x="${X0 - 19}" y="-30" width="${W}" height="120"/></clipPath></defs>
+            <defs><clipPath id="staff-clip"><rect x="${X0 - 19}" y="-60" width="${W_WIDE}" height="160"/></clipPath></defs>
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
-                `<line x1="2" x2="${W - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
+                `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
@@ -90,7 +90,9 @@
             const naturals = mode.pads.filter((p) => !p.sharp);
             const name = acc ? nameOf(naturals[step] || pad) : nameOf(pad);
             const parts = [];
-            if (step <= 0) parts.push(`<line class="ledger" x1="${x - 17}" x2="${x + 17}" y1="${yOf(0)}" y2="${yOf(0)}"/>`);
+            // Linhas suplementares: Dó de baixo (0) e Lá/Si/… de cima (12, 14).
+            for (let l = 0; l >= step; l -= 2) parts.push(`<line class="ledger" x1="${x - 17}" x2="${x + 17}" y1="${yOf(l)}" y2="${yOf(l)}"/>`);
+            for (let l = 12; l <= step; l += 2) parts.push(`<line class="ledger" x1="${x - 17}" x2="${x + 17}" y1="${yOf(l)}" y2="${yOf(l)}"/>`);
             if (fig.stem) {
                 const up = step < 6; // do Si (3ª linha) para cima, haste para baixo
                 const sx = up ? x + fig.rx - 1 : x - fig.rx + 1;
@@ -134,6 +136,16 @@
                 mode = newMode;
                 nameOf = nameFn;
                 flats = useFlats;
+                // Altura do desenho: com 2 oitavas sobe para caber as notas agudas.
+                const wide = mode.pads.some((p) => p.octave);
+                W = wide ? W_WIDE : W_NORMAL;
+                SLOTS = slotsFor(W);
+                svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
+                const top = wide ? -34 : -20;
+                const height = 76 - top;
+                svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
+                svg.style.aspectRatio = `${W} / ${height}`;
+                document.body.style.setProperty("--sh", String(height / W));
                 this.clear();
             },
             clear() {

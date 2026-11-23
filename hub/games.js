@@ -133,7 +133,7 @@ window.DINO_GAMES = [
         icon: "simon",
         path: "SigaDino/index.html",
         color: "#f97316",
-        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Disco de 4 cores ou teclado colorido de 7 ou 12 notas (♯/♭) com pentagrama na clave de sol, e opção de tocar livre.",
+        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Disco de 4 cores ou teclado colorido de 7, 12 ou 24 notas (♯/♭) com pentagrama, sons de piano e órgão na clave de sol, e opção de tocar livre.",
         controls: [
             ["Clique / toque", "Tocar o botão"],
             ["1–4 / Q W S A", "Disco: verde, vermelho, azul, amarelo"],

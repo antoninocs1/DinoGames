@@ -90,7 +90,8 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 @keyframes balanca { 20% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 80% { transform: rotate(-1.5deg); } }
 
 /* Teclado: aparelho largo, teclas pretas de enfeite (o toque passa para a tecla colorida). */
-.device[data-look="teclado"] { width: min(100%, 760px, calc((100vh - 130px) * 1.55)); aspect-ratio: 218 / 140; }
+/* --ar = largura/altura do aparelho e --sh = altura/largura da pauta (o jogo define; 2 oitavas é mais largo). */
+.device[data-look="teclado"] { width: min(100%, calc(490px * var(--ar, 1.557)), calc((100vh - 130px) * var(--ar, 1.557))); aspect-ratio: var(--ar, 1.557); }
 .device .black-key { fill: url(#g-black); stroke: #000; stroke-width: .8; filter: drop-shadow(0 2px 1.5px #000c); }
 .device .black-key-shine { fill: #ffffff14; }
 .pad.sharp:not(.lit) .gloss { opacity: .35; } /* tecla preta tocável: vidro escuro, brilho discreto */
@@ -119,9 +120,9 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 
 /* ---------- Pentagrama (clave de sol) ---------- */
 .stage { gap: 10px; }
-.staff-box { margin: 0; width: min(100%, 760px); display: flex; flex-direction: column; gap: 4px; }
+.staff-box { margin: 0; width: 100%; display: flex; flex-direction: column; gap: 4px; }
 .staff {
-    display: block; width: 100%; aspect-ratio: 420 / 96; border-radius: 14px;
+    display: block; width: 100%; aspect-ratio: 420 / 96; height: auto; border-radius: 14px;
     background: linear-gradient(180deg, #f6f8ff, #dde6fa); border: 1px solid #ffffff55;
     box-shadow: 0 10px 24px #0008, inset 0 1px 0 #fff;
 }
@@ -145,7 +146,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 
 /* Com pentagrama: pauta + teclado precisam caber juntos na altura da tela. */
 body.with-staff .device[data-look="teclado"],
-body.with-staff .staff-box { width: min(100%, 760px, calc((100vh - 170px) / .9)); }
+body.with-staff .staff-box { width: min(100%, calc(490px * var(--ar, 1.557)), calc((100vh - 170px) / (1 / var(--ar, 1.557) + var(--sh, .229)))); }
 
 /* ---------- Tocar livre: some tudo o que é da partida ---------- */
 body.free-play .game-only { display: none !important; }
@@ -243,9 +244,9 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
     .card { padding: 8px 10px; }
     .score-row strong { font-size: 22px; }
     .device { width: min(100%, calc(100dvh - 24px)); }
-    .device[data-look="teclado"] { width: min(100%, calc((100dvh - 24px) * 1.55)); }
+    .device[data-look="teclado"] { width: min(100%, calc((100dvh - 24px) * var(--ar, 1.557))); }
     body.with-staff .device[data-look="teclado"],
-    body.with-staff .staff-box { width: min(100%, calc((100dvh - 44px) / .9)); }
+    body.with-staff .staff-box { width: min(100%, calc((100dvh - 44px) / (1 / var(--ar, 1.557) + var(--sh, .229)))); }
     .staff-figure { display: none; }
 }
 

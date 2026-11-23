@@ -61,7 +61,32 @@
             return this.ctx;
         },
         /** Uma nota com envelope macio (sem estalos). */
-        tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false, raw = false } = {}) {
+        /**
+         * Eco de igreja: um "convolver" com uma resposta gerada (ruído que vai
+         * sumindo, ~2,8 s). Criado só quando algum som pede reverb.
+         */
+        reverbIn() {
+            if (this.verb) return this.verb;
+            const ctx = this.ctx;
+            const len = Math.round(ctx.sampleRate * 2.8);
+            const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+            for (let ch = 0; ch < 2; ch++) {
+                const d = ir.getChannelData(ch);
+                for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+            }
+            const conv = ctx.createConvolver();
+            conv.buffer = ir;
+            conv.connect(this.out);
+            this.verb = conv;
+            return conv;
+        },
+        /**
+         * Uma nota com envelope macio (sem estalos).
+         * ring    com decay: segundos até sumir (piano soa mais que um sininho)
+         * release sem decay: segundos para apagar depois que a luz apaga
+         * reverb  quanto do som vai para o eco (0 a 1)
+         */
+        tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false, raw = false, ring = 0, release = 0.06, reverb = 0 } = {}) {
             const ctx = this.ensure();
             if (!ctx || !this.enabled) return;
             const t = ctx.currentTime + delay;
@@ -72,15 +97,23 @@
             osc.frequency.setValueAtTime(freq, t);
             g.gain.setValueAtTime(0.0001, t);
             g.gain.exponentialRampToValueAtTime(gain, t + attack);
+            let stopAt;
             if (decay) {
-                g.gain.exponentialRampToValueAtTime(0.0001, end + 0.25);
+                stopAt = ring ? t + ring : end + 0.25;
+                g.gain.exponentialRampToValueAtTime(0.0001, stopAt);
             } else {
                 g.gain.setValueAtTime(gain, Math.max(t + attack, end - 0.08));
-                g.gain.exponentialRampToValueAtTime(0.0001, end + 0.06);
+                g.gain.exponentialRampToValueAtTime(0.0001, end + release);
+                stopAt = end + release;
+            }
+            if (reverb && !raw) {
+                const send = ctx.createGain();
+                send.gain.value = reverb;
+                g.connect(send).connect(this.reverbIn());
             }
             osc.connect(g).connect(raw ? ctx.destination : this.out);
             osc.start(t);
-            osc.stop(end + 0.3);
+            osc.stop(stopAt + 0.3);
         },
         /** Baixa e decodifica o arquivo de uma opção de som (uma vez só). */
         load(name) {
@@ -127,7 +160,12 @@
         },
         synth(tb, freq, seconds) {
             tb.partials.forEach(([mult, vol, wave = tb.wave]) =>
-                this.tone(freq * mult, seconds, { wave, gain: 0.13 * vol, attack: tb.attack, decay: tb.decay, raw: tb.raw }));
+                this.tone(freq * mult, seconds, {
+                    wave, gain: 0.13 * vol * (tb.gain ?? 1), attack: tb.attack, decay: tb.decay, raw: tb.raw,
+                    // Harmônicos agudos somem antes (como numa corda de piano).
+                    ring: tb.ring ? tb.ring / Math.sqrt(mult) : 0,
+                    release: tb.release, reverb: tb.reverb,
+                }));
         },
         /** Notas em sequência no som escolhido (o mesmo dos botões). */
         melody(freqs, stepMs, noteSeconds) {
@@ -275,8 +313,11 @@
         teclado(mode) {
             const whites = mode.pads.filter((p) => !p.sharp).length;
             const hasSharps = whites < mode.pads.length;
-            const W = 210, keyW = 27, gap = 2.6, bw = 15, bh = 47;
+            // Até 7 brancas: teclas de 27; com 2 oitavas (14 brancas) ficam mais finas e o corpo alarga.
+            const keyW = whites > 7 ? 23 : 27, gap = keyW * 0.096, bw = keyW * 0.56, bh = 47;
             const keysW = whites * keyW;
+            const W = Math.max(210, keysW + 32);
+            const k = keyW / 27; // escala dos rótulos
             const x0 = -keysW / 2;
             const top = -20, keyH = 80;
             let white = 0;
@@ -284,12 +325,12 @@
                 if (pad.sharp) {
                     const cx = x0 + white * keyW; // entre a tecla anterior e a próxima
                     const shape = `path d="${keyPath(cx - bw / 2, top - 1, bw, bh, 1.5, 4)}"`;
-                    return { shape, label: mode.labels ? label(pad, cx, top + bh - 7, noteName(pad).length > 3 ? 4.6 : 5.4) : "" };
+                    return { shape, label: mode.labels ? label(pad, cx, top + bh - 7, (noteName(pad).length > 3 ? 4.6 : 5.4) * k) : "" };
                 }
                 const x = x0 + white++ * keyW + gap / 2;
                 const w = keyW - gap;
                 const shape = `path d="${keyPath(x, top, w, keyH, 2.5, 8)}"`;
-                return { shape, label: mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5) : "" };
+                return { shape, label: mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5 * k) : "" };
             });
             // Teclas pretas de enfeite entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
             const blacks = hasSharps ? "" : [0, 1, 3, 4, 5].filter((i) => i < whites - 1).map((i) => {
@@ -305,7 +346,7 @@
                 viewBox: `${-W / 2 - 4} ${bodyTop - 4} ${W + 8} ${bodyH + 8}`,
                 body: `<rect class="body" x="${-W / 2}" y="${bodyTop}" width="${W}" height="${bodyH}" rx="16"/>` +
                     `<rect class="body-well" x="${x0 - 4}" y="${top - 4}" width="${keysW + 8}" height="${keyH + 8}" rx="9"/>` +
-                    grill(-62) + grill(62),
+                    grill(-W / 2 + 43) + grill(W / 2 - 43),
                 over: blacks,
                 hub: { x: 0, y: -45, r: 18 },
                 pads,
@@ -447,6 +488,8 @@
         const r = look.hub.r;
         ui.device.dataset.look = lookName;
         ui.device.setAttribute("viewBox", look.viewBox);
+        const [, , vw, vh] = look.viewBox.split(" ").map(Number);
+        document.body.style.setProperty("--ar", String(vw / vh)); // proporção do aparelho (o CSS usa para caber na tela)
         ui.device.innerHTML = `
             ${defsSvg()}
             ${look.body}

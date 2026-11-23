@@ -59,15 +59,25 @@
         { after: 4, name: "Sol♯", flat: "Lá♭",  key: "y" },
         { after: 5, name: "Lá♯",  flat: "Si♭",  key: "u" },
     ];
-    const CHROMATIC = RAINBOW_NOTES.flatMap((pad, i) => {
+    /** Uma oitava cromática a partir de uma lista de 7 notas e das teclas das pretas. */
+    const chromatic = (naturals, sharpKeys) => naturals.flatMap((pad, i) => {
         const s = SHARPS.find((x) => x.after === i);
         if (!s) return [pad];
         return [pad, {
-            name: s.name, flat: s.flat, sharp: true, keys: [s.key],
-            color: mix(pad.color, RAINBOW_NOTES[i + 1].color),
+            name: s.name, flat: s.flat, sharp: true, keys: [sharpKeys[SHARPS.indexOf(s)]],
+            color: mix(pad.color, naturals[i + 1].color),
             freq: +(pad.freq * Math.pow(2, 1 / 12)).toFixed(2),
         }];
     });
+    const CHROMATIC = chromatic(RAINBOW_NOTES, SHARPS.map((s) => s.key));
+
+    // 2ª oitava (Dó5 a Si5): mesmas cores, uma oitava acima.
+    // Teclas do computador: 8 9 0 I O K L nas brancas e S X H J V nas pretas.
+    const UPPER_KEYS = ["8", "9", "0", "i", "o", "k", "l"];
+    const UPPER_NOTES = RAINBOW_NOTES.map((pad, i) => ({
+        ...pad, freq: +(pad.freq * 2).toFixed(2), keys: [UPPER_KEYS[i]], octave: 1,
+    }));
+    const CHROMATIC_24 = [...CHROMATIC, ...chromatic(UPPER_NOTES, ["s", "x", "h", "j", "v"]).map((p) => ({ ...p, octave: 1 }))];
 
     window.SIGA_DINO_MODES = {
         // Modelo clássico de 4 cores. Os tons formam um acorde de Dó maior
@@ -100,6 +110,15 @@
             look: "teclado",
             labels: true,
             pads: CHROMATIC,
+        },
+
+        // Duas oitavas de piano (Dó central até o Si de cima), com as pretas.
+        teclado24: {
+            title: "Teclado (24 notas, 2 oitavas)",
+            enabled: true,
+            look: "teclado",
+            labels: true,
+            pads: CHROMATIC_24,
         },
 
         // As mesmas 7 notas no disco. Para liberar, troque enabled para true.
