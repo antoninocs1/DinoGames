@@ -16,7 +16,7 @@
     const W_NORMAL = 420;        // largura do desenho (7 e 12 notas)
     const W_WIDE = 640;          // 2 oitavas: teclado mais largo, pauta mais comprida
     const STEM = 34;
-    const MAX_NOTES = 40;        // no tocar livre, guarda só as últimas
+    const MAX_NOTES = 120;       // guarda só as últimas (as mais antigas já saíram de vista)
     const slotsFor = (w) => Math.floor((w - X0 - 8) / DX) + 1; // notas que cabem sem rolar
 
     const FIGURES = {
@@ -59,6 +59,7 @@
         let flats = false;
         let notes = [];          // { el, pad }
         let shift = 0;           // quantas notas já rolaram para a esquerda
+        let first = 0;           // posição da 1ª nota ainda guardada (as anteriores já foram apagadas)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
@@ -117,17 +118,6 @@
             layer.style.transform = `translateX(${-shift * DX}px)`;
         };
 
-        const relayout = () => {
-            // Recalcula as posições (usado quando as notas antigas saem no tocar livre).
-            layer.innerHTML = "";
-            notes.forEach((n, slot) => {
-                layer.insertAdjacentHTML("beforeend", noteSvg(n.pad, slot, n.figure));
-                const el = layer.lastElementChild;
-                el.className.baseVal = n.el.className.baseVal.replace(/\b(pop|lit)\b/g, "").trim();
-                n.el = el;
-            });
-        };
-
         return {
             figureFor,
             FIGURES,
@@ -150,6 +140,7 @@
             },
             clear() {
                 notes = [];
+                first = 0;
                 shift = 0;
                 layer.style.transition = "none";
                 layer.style.transform = "";
@@ -157,31 +148,32 @@
                 void layer.getBoundingClientRect();
                 layer.style.transition = "";
             },
-            /** Acrescenta uma nota (índice do botão) e acende por ms. Devolve a posição dela. */
+            /**
+             * Acrescenta uma nota (índice do botão) e acende por ms. Devolve a posição dela.
+             * A pauta só anda para a esquerda; as notas que já saíram de vista são
+             * apagadas de verdade (sem redesenhar as outras), então rolar é sempre suave.
+             */
             push(index, figureName, ms = 0) {
                 if (!mode) return -1;
-                if (notes.length >= MAX_NOTES) {
-                    notes.splice(0, notes.length - MAX_NOTES + 1);
-                    shift = 0;
-                    layer.style.transition = "none";
-                    layer.style.transform = "";
-                    relayout();
-                    void layer.getBoundingClientRect();
-                    layer.style.transition = "";
-                    scrollTo(notes.length);
-                }
-                const slot = notes.length;
+                const slot = first + notes.length;
                 layer.insertAdjacentHTML("beforeend", noteSvg(index, slot, figureName));
                 const el = layer.lastElementChild;
                 el.classList.add("pop");
                 notes.push({ el, pad: index, figure: figureName });
                 scrollTo(slot);
+                // Guarda no máximo MAX_NOTES; só apaga as que já estão fora da pauta.
+                while (notes.length > MAX_NOTES && first < shift - 1) {
+                    const old = notes.shift();
+                    clearTimeout(old.off);
+                    old.el.remove();
+                    first++;
+                }
                 if (ms) this.light(slot, ms);
                 return slot;
             },
             /** Acende a nota na posição i por ms. */
             light(i, ms) {
-                const n = notes[i];
+                const n = notes[i - first];
                 if (!n) return;
                 scrollTo(i);
                 n.el.classList.add("lit");
@@ -189,9 +181,9 @@
                 n.off = setTimeout(() => n.el.classList.remove("lit"), ms);
             },
             /** Marca a nota i como acertada (fica forte). */
-            done(i) { notes[i]?.el.classList.add("done"); },
+            done(i) { notes[i - first]?.el.classList.add("done"); },
             allDone() { notes.forEach((n) => n.el.classList.add("done")); },
-            get length() { return notes.length; },
+            get length() { return first + notes.length; },
         };
     };
 
