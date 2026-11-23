@@ -518,7 +518,7 @@
     };
 
     // ---------- Pentagrama (só nos modelos de teclado) ----------
-    const staffOn = () => mode.look === "teclado" && prefs.staff === "1";
+    const staffOn = () => mode.look === "teclado" && prefs.staff !== "0"; // "1" colorido, "2" só preto
 
     const setFigure = (name) => {
         const fig = window.SigaDinoStaff.FIGURES[name];
@@ -533,7 +533,7 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
-        staff.setMode(mode, noteName, prefs.accidental === "bemol");
+        staff.setMode(mode, noteName, prefs.accidental === "bemol", prefs.staff === "2");
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
         if (!game || phase === "show" || phase === "wait") return;
@@ -900,12 +900,32 @@
     // =================================================================
     // Eventos
     // =================================================================
+    // Arrastar o dedo (ou o mouse apertado) sobre as teclas toca cada uma por onde passa,
+    // como uma escala (glissando). Guarda a última tecla de cada dedo.
+    const sliding = new Map(); // pointerId → índice da última tecla
+    const padAt = (x, y) => document.elementFromPoint(x, y)?.closest?.(".pad");
     ui.device.addEventListener("pointerdown", (event) => {
         const el = event.target.closest(".pad");
         if (!el) return;
         event.preventDefault();
-        press(Number(el.dataset.i));
+        // No toque o navegador prende o dedo na 1ª tecla; solta para saber onde ele passa.
+        if (ui.device.hasPointerCapture?.(event.pointerId)) ui.device.releasePointerCapture(event.pointerId);
+        event.target.releasePointerCapture?.(event.pointerId);
+        const i = Number(el.dataset.i);
+        if (mode.look === "teclado") sliding.set(event.pointerId, i); // glissando só no teclado
+        press(i);
     });
+    window.addEventListener("pointermove", (event) => {
+        if (!sliding.has(event.pointerId)) return;
+        const el = padAt(event.clientX, event.clientY);
+        if (!el || !ui.device.contains(el)) { sliding.set(event.pointerId, -1); return; }
+        const i = Number(el.dataset.i);
+        if (i === sliding.get(event.pointerId)) return;
+        sliding.set(event.pointerId, i);
+        press(i);
+    });
+    ["pointerup", "pointercancel"].forEach((type) =>
+        window.addEventListener(type, (event) => sliding.delete(event.pointerId)));
 
     ui.btnStart.addEventListener("click", startGame);
     ui.btnPause.addEventListener("click", togglePause);

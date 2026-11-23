@@ -61,8 +61,10 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .device {
     width: min(100%, calc(100vh - 130px), 640px); min-width: 240px; aspect-ratio: 1; display: block;
     overflow: visible; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+
     filter: drop-shadow(0 22px 34px #000b);
 }
+.device[data-look="teclado"] { touch-action: none; } /* arrastar o dedo toca as teclas */
 .device .body { fill: url(#g-body); stroke: url(#g-rim); stroke-width: 2.2; }
 .device .body-well { fill: url(#g-well); stroke: #ffffff14; stroke-width: .8; }
 
