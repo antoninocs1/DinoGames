@@ -86,7 +86,9 @@
             const { step, acc } = placeOf(index);
             const x = X0 + slot * DX, y = yOf(step);
             const color = pad.color;
-            const name = nameOf(pad);
+            // ♯/♭ já aparece fora da figura: dentro vai só o nome da nota natural (Dó♯ → Dó).
+            const naturals = mode.pads.filter((p) => !p.sharp);
+            const name = acc ? nameOf(naturals[step] || pad) : nameOf(pad);
             const parts = [];
             if (step <= 0) parts.push(`<line class="ledger" x1="${x - 17}" x2="${x + 17}" y1="${yOf(0)}" y2="${yOf(0)}"/>`);
             if (fig.stem) {
