@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.033">
-    <link rel="stylesheet" href="style.css?v=1.033">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.034">
+    <link rel="stylesheet" href="style.css?v=1.034">
 </head>
 <body>
     <main class="app">
@@ -39,6 +39,13 @@
                     <select id="accidental" aria-label="Mostrar sustenido ou bemol">
                         <option value="sustenido">Sustenido (♯)</option>
                         <option value="bemol">Bemol (♭)</option>
+                    </select>
+                </label>
+                <label class="field" id="field-staff" hidden>
+                    <span>Pentagrama</span>
+                    <select id="staff-opt" aria-label="Mostrar as notas na partitura">
+                        <option value="1">Mostrar</option>
+                        <option value="0">Esconder</option>
                     </select>
                 </label>
                 <label class="field">
@@ -75,6 +82,10 @@
 
         <section class="layout">
             <div class="stage">
+                <figure class="staff-box" id="staff-box" hidden>
+                    <svg class="staff" id="staff" role="img" aria-label="Pentagrama na clave de sol com as notas tocadas"></svg>
+                    <figcaption class="staff-figure" id="staff-figure"></figcaption>
+                </figure>
                 <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
             </div>
 
@@ -111,6 +122,7 @@
                         <li>Em <strong>Modelo</strong>, escolha o disco de 4 cores ou o <strong>teclado colorido</strong> de 7 notas (dó, ré, mi, fá, sol, lá, si).</li>
                         <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
+                        <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
                 </details>
@@ -122,10 +134,11 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.033"></script>
-    <script src="sounds.js?v=1.033"></script>
-    <script src="modes.js?v=1.033"></script>
-    <script src="engine.js?v=1.033"></script>
-    <script src="game.js?v=1.033"></script>
+    <script src="../assets/combobox.js?v=1.034"></script>
+    <script src="sounds.js?v=1.034"></script>
+    <script src="modes.js?v=1.034"></script>
+    <script src="engine.js?v=1.034"></script>
+    <script src="staff.js?v=1.034"></script>
+    <script src="game.js?v=1.034"></script>
 </body>
 </html>

@@ -117,6 +117,36 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 }
 .hub-text { fill: #f4f1f2; font-weight: 800; text-anchor: middle; dominant-baseline: central; letter-spacing: .12em; pointer-events: none; }
 
+/* ---------- Pentagrama (clave de sol) ---------- */
+.stage { gap: 10px; }
+.staff-box { margin: 0; width: min(100%, 760px); display: flex; flex-direction: column; gap: 4px; }
+.staff {
+    display: block; width: 100%; aspect-ratio: 420 / 96; border-radius: 14px;
+    background: linear-gradient(180deg, #f6f8ff, #dde6fa); border: 1px solid #ffffff55;
+    box-shadow: 0 10px 24px #0008, inset 0 1px 0 #fff;
+}
+.staff .staff-lines line { stroke: #1d1b22; stroke-width: 1.4; }
+.staff .clef path { fill: none; stroke: #1d1b22; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.staff .clef circle { fill: #1d1b22; }
+.staff .staff-notes { transition: transform .35s ease-out; }
+.staff .ledger { stroke: #1d1b22; stroke-width: 1.6; }
+.staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
+.staff .acc { font-size: 13px; font-weight: 700; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
+.staff .head text { font-weight: 800; text-anchor: middle; dominant-baseline: central; font-family: inherit; }
+.staff .head { transform-box: fill-box; transform-origin: center; transition: transform .15s ease-out, filter .2s; }
+/* Já tocada: um pouco apagada; acesa: brilha na cor da tecla; acertada: forte. */
+.staff .note { opacity: .6; transition: opacity .2s; }
+.staff .note.done { opacity: 1; }
+.staff .note.lit { opacity: 1; transition: none; }
+.staff .note.lit .head { transform: scale(1.22); filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 6px var(--c)); transition: none; }
+.staff .note.pop { animation: surge .25s ease-out; }
+@keyframes surge { from { opacity: 0; } }
+.staff-figure { margin: 0; font-size: 11px; color: var(--muted); text-align: right; }
+
+/* Com pentagrama: pauta + teclado precisam caber juntos na altura da tela. */
+body.with-staff .device[data-look="teclado"],
+body.with-staff .staff-box { width: min(100%, 760px, calc((100vh - 170px) / .9)); }
+
 /* ---------- Tocar livre: some tudo o que é da partida ---------- */
 body.free-play .game-only { display: none !important; }
 body.free-play .actions { grid-template-columns: auto; justify-content: end; }
@@ -185,6 +215,40 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
 @media (min-width: 561px) and (max-width: 860px) {
     .settings { grid-template-columns: repeat(4, 1fr); }
 }
+@media (max-width: 860px) {
+    body.with-staff .device[data-look="teclado"], body.with-staff .staff-box { width: 100%; }
+}
+
+/* ---------- Celular deitado: aparelho à esquerda, controles à direita ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+    .app {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+        grid-template-areas: "stage panel" "stage bar"; grid-template-rows: auto 1fr;
+        align-items: start; gap: 8px 12px; padding: 6px 10px 10px; min-height: 100vh; min-height: 100dvh;
+    }
+    .layout { display: contents; }
+    .stage {
+        grid-area: stage; position: sticky; top: 6px; height: calc(100vh - 12px); height: calc(100dvh - 12px);
+        display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;
+    }
+    .panel { grid-area: panel; gap: 8px; }
+    .bar { grid-area: bar; gap: 8px; }
+    .brand { display: none; }
+    .settings { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 8px; }
+    .field select { min-width: 0; width: 100%; padding-top: 6px; padding-bottom: 6px; font-size: 12px; }
+    .status { min-height: 0; padding: 8px 10px; font-size: 13px; }
+    .btn { padding: 8px 10px; font-size: 13px; }
+    .btn.icon { min-width: 40px; }
+    .actions { grid-template-columns: 1fr 1fr auto auto; gap: 6px; }
+    .card { padding: 8px 10px; }
+    .score-row strong { font-size: 22px; }
+    .device { width: min(100%, calc(100dvh - 24px)); }
+    .device[data-look="teclado"] { width: min(100%, calc((100dvh - 24px) * 1.55)); }
+    body.with-staff .device[data-look="teclado"],
+    body.with-staff .staff-box { width: min(100%, calc((100dvh - 44px) / .9)); }
+    .staff-figure { display: none; }
+}
+
 @media (pointer: coarse) {
     .keys { display: none; }
 }

@@ -107,6 +107,9 @@ setLayout(false);
 const DAS_DELAY = 160; // atraso antes de repetir o movimento lateral
 const ARR_INTERVAL = 45; // intervalo de repetição lateral
 const SOFT_DROP_INTERVAL = 35;
+// Pelo teclado, a seta ↓ só acelera depois de segurada um instante: um toque
+// sem querer (ao apertar ← ou →) não derruba a peça.
+const SOFT_DROP_DELAY = 220;
 const LOCK_DELAY = 500;
 const MAX_LOCK_RESETS = 15;
 const CLEAR_ANIMATION = 180; // linhas racham por um instante antes de estilhaçar
@@ -261,6 +264,7 @@ const input = {
     horizontal: null, // última direção lateral pressionada
     dasTimer: 0,
     arrTimer: 0,
+    softDropWait: 0, // tempo que ainda falta segurar ↓ para acelerar (teclado)
 };
 
 // Altura da pilha (em linhas ocupadas a partir do fundo).
@@ -722,7 +726,8 @@ const updateHorizontal = (dt) => {
 };
 
 const updateGravity = (dt) => {
-    const softDrop = Boolean(input.held.softDrop);
+    if (input.held.softDrop && input.softDropWait > 0) input.softDropWait -= dt;
+    const softDrop = Boolean(input.held.softDrop) && input.softDropWait <= 0;
     const interval = softDrop
         ? Math.min(SOFT_DROP_INTERVAL, gravityInterval(state.level))
         : gravityInterval(state.level);
@@ -1260,9 +1265,10 @@ const fitCanvas = () => {
 // Entrada
 // =====================================================================
 
-const press = (action) => {
+const press = (action, fromKeyboard = false) => {
     if (input.held[action]) return;
     input.held[action] = true;
+    if (action === "softDrop") input.softDropWait = fromKeyboard ? SOFT_DROP_DELAY : 0;
 
     if (action === "moveLeft" || action === "moveRight") {
         input.horizontal = action;
@@ -1293,7 +1299,7 @@ window.addEventListener("keydown", (event) => {
     if (!action) return;
     event.preventDefault();
     if (event.repeat) return;
-    press(action);
+    press(action, true);
 });
 
 window.addEventListener("keyup", (event) => {

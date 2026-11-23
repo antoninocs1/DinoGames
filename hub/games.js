@@ -11,7 +11,7 @@ window.DINO_GAMES = [
         description: "Encaixe as peças que caem e complete linhas para pontuar. A velocidade aumenta a cada nível.",
         controls: [
             ["← →", "Mover"],
-            ["↓", "Descida suave"],
+            ["↓ (segurar)", "Descida rápida"],
             ["↑ / X", "Girar (horário)"],
             ["Z", "Girar (anti-horário)"],
             ["Espaço", "Queda instantânea"],
@@ -133,7 +133,7 @@ window.DINO_GAMES = [
         icon: "simon",
         path: "SigaDino/index.html",
         color: "#f97316",
-        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Disco de 4 cores ou teclado colorido de 7 ou 12 notas (♯/♭), e opção de tocar livre.",
+        description: "Jogo de memória: repita a sequência de cores e sons, que cresce a cada acerto. Disco de 4 cores ou teclado colorido de 7 ou 12 notas (♯/♭) com pentagrama na clave de sol, e opção de tocar livre.",
         controls: [
             ["Clique / toque", "Tocar o botão"],
             ["1–4 / Q W S A", "Disco: verde, vermelho, azul, amarelo"],

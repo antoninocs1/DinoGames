@@ -392,13 +392,15 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), staffBox: $("staff-box"), staffFigure: $("staff-figure"),
     };
+    const staff = window.SigaDinoStaff.createStaff($("staff"));
 
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -419,6 +421,7 @@
     let phase = "idle";    // idle | show | input | wait | paused | over | free (tocar livre)
     let run = 0;           // muda a cada nova partida/parada para cancelar o playback em andamento
     let answerTimer = 0;
+    let lastFreeAt = 0;    // hora do último toque no tocar livre (define a figura da nota)
 
     /** "Tocar livre": sem sequência nem placar, só tocar. */
     const isFree = () => prefs.play === "livre";
@@ -460,6 +463,7 @@
         ui.device.querySelectorAll(".pad").forEach((el) => { padEls[Number(el.dataset.i)] = el; });
         hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text"), size: r * 0.48 };
         ui.fieldAccidental.hidden = !mode.pads.some((p) => p.flat);
+        setupStaff();
         hub.el.addEventListener("click", hubAction);
         hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hubAction(); } });
         if (phase === "paused") setHubText("PAUSA");
@@ -468,6 +472,31 @@
         renderScore();
         setInputEnabled(phase === "input" || phase === "free");
         if (phase === "free") { setCount("♪"); setHubText("LIVRE"); }
+    };
+
+    // ---------- Pentagrama (só nos modelos de teclado) ----------
+    const staffOn = () => mode.look === "teclado" && prefs.staff === "1";
+
+    const setFigure = (name) => {
+        const fig = window.SigaDinoStaff.FIGURES[name];
+        ui.staffFigure.textContent = isFree()
+            ? `Figura: ${fig.title} — toque mais rápido para mudar`
+            : `Figura: ${fig.title}${name === "semibreve" ? " (devagar)" : name === "seminima" ? " (rápido)" : ""}`;
+    };
+
+    /** Prepara o pentagrama e redesenha a sequência atual (troca de ♯/♭ no meio da partida). */
+    const setupStaff = () => {
+        const on = staffOn();
+        ui.fieldStaff.hidden = mode.look !== "teclado";
+        ui.staffBox.hidden = !on;
+        document.body.classList.toggle("with-staff", on);
+        staff.setMode(mode, noteName, prefs.accidental === "bemol");
+        const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
+        setFigure(isFree() ? "semibreve" : fig);
+        if (!game || phase === "show" || phase === "wait") return;
+        game.sequence.forEach((p) => staff.push(p, fig));
+        if (game.won) staff.allDone();
+        else if (phase === "input") for (let k = 0; k < game.step; k++) staff.done(k);
     };
 
     const renderKeys = () => {
@@ -640,9 +669,13 @@
         renderProgress();
         setStatus(game.length === 1 ? "Observe o botão que acender." : `Observe a sequência de ${game.length} passos.`);
         const { on, gap } = E.timing(prefs.level, game.length);
+        const figure = staff.figureFor(on);
+        staff.clear();
+        setFigure(figure);
         for (const i of game.sequence) {
             if (id !== run) return;
             light(i, on);
+            staff.push(i, figure, on);
             await sleep(on + gap);
         }
         if (id !== run) return;
@@ -666,10 +699,13 @@
         if (phase !== "input") return;
         const { on } = E.timing(prefs.level, game.length);
         const expected = game.expected();
+        const at = game.step;
         const result = game.press(i);
-        if (result === "retry" || result === "over") { miss(false, i, expected); return; }
+        if (result === "retry" || result === "over") { miss(false, i, expected, at); return; }
 
         light(i, Math.min(on, 260));
+        staff.light(at, Math.min(on, 260));
+        staff.done(at);
         renderProgress();
         if (result === "ok") { armAnswerTimer(); return; }
 
@@ -683,7 +719,7 @@
     const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
     /** Erro ou tempo esgotado. */
-    const miss = async (timedOut, pressed = -1, expected = game.expected()) => {
+    const miss = async (timedOut, pressed = -1, expected = game.expected(), at = game.step) => {
         const id = run;
         clearAnswerTimer();
         setInputEnabled(false);
@@ -725,6 +761,7 @@
         await sleep(700);
         for (let t = 0; t < 3 && id === run; t++) {
             padEls[expected]?.classList.add("lit");
+            staff.light(at, 260);
             await sleep(260);
             padEls[expected]?.classList.remove("lit");
             await sleep(200);
@@ -744,6 +781,7 @@
         hub.el.setAttribute("aria-label", "Jogar de novo");
         renderScore();
         renderProgress();
+        staff.allDone();
         sound.win(mode.pads.map((p, i) => padFreq(i)));
         confetti();
         await sleep(400);
@@ -777,6 +815,15 @@
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i) => {
         light(i, 420);
+        if (staffOn()) {
+            // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
+            const now = performance.now();
+            const gapMs = lastFreeAt ? now - lastFreeAt : 2000;
+            lastFreeAt = now;
+            const figure = gapMs > 900 ? "semibreve" : gapMs > 450 ? "minima" : "seminima";
+            setFigure(figure);
+            staff.done(staff.push(i, figure, 420));
+        }
         const pad = mode.pads[i];
         const text = noteName(pad);
         setCount(text.length <= 4 ? text.toUpperCase() : "♪", text.length > 3 ? 0.78 : 1);
@@ -785,6 +832,8 @@
     const resetIdle = (message) => {
         stop();
         game = null;
+        lastFreeAt = 0;
+        setupStaff();
         document.body.classList.toggle("free-play", isFree());
         renderKeys();
         if (isFree()) {
@@ -846,6 +895,7 @@
     bindSelect(ui.mode, "mode", () => { mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.play, "play", () => { mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
+    bindSelect(ui.staffOpt, "staff", () => build());
     ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;
