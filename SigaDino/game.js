@@ -470,7 +470,9 @@
     let lastChordAt = 0;   // hora do início do último acorde (ou nota sozinha)
     let chordStart = 0;
     let freeFigure = "semibreve";
-    const CHORD_MS = 90;   // toques mais próximos que isso contam como simultâneos
+    const CHORD_MS = 40;   // só toques quase no mesmo instante contam como simultâneos
+    const held = new Set(); // dedos/teclas apertados agora ("p" + pointerId, "k" + tecla)
+    let lastSource = "";    // quem fez o último toque no tocar livre
 
     /** "Tocar livre": sem sequência nem placar, só tocar. */
     const isFree = () => prefs.play === "livre";
@@ -747,9 +749,9 @@
         playback(run);
     };
 
-    const press = (i) => {
+    const press = (i, source = "") => {
         sound.ensure();
-        if (phase === "free") { playFree(i); return; }
+        if (phase === "free") { playFree(i, source); return; }
         if (phase !== "input") return;
         const { on } = E.timing(prefs.level, game.length);
         const expected = game.expected();
@@ -867,14 +869,17 @@
     };
 
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
-    const playFree = (i) => {
+    const playFree = (i, source = "") => {
         light(i, 420);
         if (staffOn()) {
             // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
-            // Teclas tocadas juntas (quase no mesmo instante) viram um acorde na mesma posição.
+            // Acorde só quando outra tecla/dedo bate quase junto com a anterior, que ainda está
+            // apertada. Escala rápida ou glissando (o mesmo dedo arrastando) seguem nota a nota.
             const now = performance.now();
             const gapMs = lastFreeAt ? now - lastFreeAt : 2000;
-            const chord = gapMs < CHORD_MS && now - chordStart < 400;
+            const chord = gapMs < CHORD_MS && now - chordStart < 120
+                && source && lastSource && source !== lastSource && held.has(lastSource);
+            lastSource = source;
             if (!chord) {
                 chordStart = now;
                 // A figura sai do intervalo entre um toque (ou acorde) e o próximo.
@@ -933,7 +938,8 @@
         event.target.releasePointerCapture?.(event.pointerId);
         const i = Number(el.dataset.i);
         if (mode.look === "teclado") sliding.set(event.pointerId, i); // glissando só no teclado
-        press(i);
+        held.add("p" + event.pointerId);
+        press(i, "p" + event.pointerId);
     });
     window.addEventListener("pointermove", (event) => {
         if (!sliding.has(event.pointerId)) return;
@@ -942,10 +948,15 @@
         const i = Number(el.dataset.i);
         if (i === sliding.get(event.pointerId)) return;
         sliding.set(event.pointerId, i);
-        press(i);
+        press(i, "g" + event.pointerId); // glissando: nunca forma acorde
     });
     ["pointerup", "pointercancel"].forEach((type) =>
-        window.addEventListener(type, (event) => sliding.delete(event.pointerId)));
+        window.addEventListener(type, (event) => {
+            sliding.delete(event.pointerId);
+            held.delete("p" + event.pointerId);
+        }));
+    window.addEventListener("keyup", (event) => held.delete("k" + event.key.toLowerCase()));
+    window.addEventListener("blur", () => held.clear());
 
     ui.btnStart.addEventListener("click", startGame);
     ui.btnPause.addEventListener("click", togglePause);
@@ -1007,7 +1018,12 @@
         if (event.target.closest?.("select") || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
         const k = event.key.toLowerCase();
         const padIndex = mode.pads.findIndex((p) => p.keys.includes(k));
-        if (padIndex >= 0) { event.preventDefault(); press(padIndex); return; }
+        if (padIndex >= 0) {
+            event.preventDefault();
+            held.add("k" + k);
+            press(padIndex, "k" + k);
+            return;
+        }
         if (k === "enter" || k === "n") {
             if (event.target.closest?.("button, [role=button]")) return; // o próprio botão já trata
             event.preventDefault();
