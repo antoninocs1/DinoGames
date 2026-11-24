@@ -467,6 +467,10 @@
     let run = 0;           // muda a cada nova partida/parada para cancelar o playback em andamento
     let answerTimer = 0;
     let lastFreeAt = 0;    // hora do último toque no tocar livre (define a figura da nota)
+    let lastChordAt = 0;   // hora do início do último acorde (ou nota sozinha)
+    let chordStart = 0;
+    let freeFigure = "semibreve";
+    const CHORD_MS = 90;   // toques mais próximos que isso contam como simultâneos
 
     /** "Tocar livre": sem sequência nem placar, só tocar. */
     const isFree = () => prefs.play === "livre";
@@ -867,12 +871,20 @@
         light(i, 420);
         if (staffOn()) {
             // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
+            // Teclas tocadas juntas (quase no mesmo instante) viram um acorde na mesma posição.
             const now = performance.now();
             const gapMs = lastFreeAt ? now - lastFreeAt : 2000;
+            const chord = gapMs < CHORD_MS && now - chordStart < 400;
+            if (!chord) {
+                chordStart = now;
+                // A figura sai do intervalo entre um toque (ou acorde) e o próximo.
+                const sinceChord = lastChordAt ? now - lastChordAt : 2000;
+                freeFigure = sinceChord > 900 ? "semibreve" : sinceChord > 450 ? "minima" : "seminima";
+                lastChordAt = now;
+                setFigure(freeFigure);
+            }
             lastFreeAt = now;
-            const figure = gapMs > 900 ? "semibreve" : gapMs > 450 ? "minima" : "seminima";
-            setFigure(figure);
-            staff.done(staff.push(i, figure, 420));
+            staff.done(staff.push(i, freeFigure, 420, chord));
         }
         const pad = mode.pads[i];
         const text = noteName(pad);
@@ -883,6 +895,7 @@
         stop();
         game = null;
         lastFreeAt = 0;
+        lastChordAt = 0;
         setupStaff();
         document.body.classList.toggle("free-play", isFree());
         renderKeys();

@@ -134,7 +134,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .staff .staff-notes { transition: transform .35s ease-out; }
 .staff .ledger { stroke: #1d1b22; stroke-width: 1.6; }
 .staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
-.staff .acc { font-size: 17px; font-weight: 700; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
+.staff .acc { pointer-events: none; }
 .staff .head text { font-weight: 800; text-anchor: middle; dominant-baseline: central; font-family: inherit; }
 .staff .head { transform-box: fill-box; transform-origin: center; transition: transform .15s ease-out, filter .2s; }
 /* Já tocada: um pouco apagada; acesa: brilha na cor da tecla; acertada: forte. */
