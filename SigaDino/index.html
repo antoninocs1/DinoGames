@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.042">
-    <link rel="stylesheet" href="style.css?v=1.042">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.043">
+    <link rel="stylesheet" href="style.css?v=1.043">
 </head>
 <body>
     <main class="app">
@@ -32,6 +32,7 @@
                     <select id="play" aria-label="Tipo de jogo">
                         <option value="memoria">Siga a sequência</option>
                         <option value="livre">Tocar livre</option>
+                        <option value="musica">Executar música (notas)</option>
                     </select>
                 </label>
                 <label class="field" id="field-names" hidden>
@@ -99,6 +100,73 @@
                     </figcaption>
                 </figure>
                 <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
+
+                <section class="card music" id="music" aria-label="Executar música (notas)">
+                    <div class="music-head">
+                        <h2>Executar música (notas)</h2>
+                        <span class="song-name" id="song-name"></span>
+                    </div>
+                    <div class="music-tools">
+                        <button class="btn primary" id="btn-song-play" type="button">▶ Tocar</button>
+                        <button class="btn" id="btn-song-open" type="button" title="Abrir um arquivo .txt com as notas">📂 Abrir</button>
+                        <button class="btn" id="btn-song-save" type="button" title="Salvar (Ctrl+S)">💾 Salvar</button>
+                        <button class="btn" id="btn-song-saveas" type="button" title="Salvar como… (Ctrl+Shift+S)">Salvar como…</button>
+                        <button class="btn" id="btn-song-clear" type="button" title="Apagar o texto do editor">🧽 Limpar</button>
+                        <label class="song-tempo" title="Andamento: semínimas por minuto">♩ =
+                            <input id="song-tempo" type="number" min="30" max="240" step="1" value="80" aria-label="Andamento (semínimas por minuto)">
+                        </label>
+                        <select id="song-example" aria-label="Exemplos de música"></select>
+                    </div>
+                    <input id="song-file" type="file" accept=".txt,text/plain" hidden>
+                    <textarea id="song-text" class="song-text" spellcheck="false" autocomplete="off" aria-label="Notas da música (código)"
+                        placeholder="Escreva as notas, por exemplo:&#10;E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];&#10;C[n1], E[n1], G[n1];   (acorde)"></textarea>
+                    <p class="song-info" id="song-info" aria-live="polite"></p>
+                    <details class="music-help">
+                        <summary>❓ Ajuda — como escrever as notas</summary>
+                        <div class="help-body">
+                            <p>Cada nota é a <strong>letra</strong> (ou o nome) e a <strong>figura</strong> entre colchetes: <code>E[n1/4];</code> = Mi semínima.</p>
+                            <table>
+                                <thead><tr><th>Nota</th><th>Letra</th><th>Cor</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Dó</td><td>C</td><td>Vermelho</td></tr>
+                                    <tr><td>Ré</td><td>D</td><td>Laranja</td></tr>
+                                    <tr><td>Mi</td><td>E</td><td>Amarelo</td></tr>
+                                    <tr><td>Fá</td><td>F</td><td>Verde</td></tr>
+                                    <tr><td>Sol</td><td>G</td><td>Azul claro</td></tr>
+                                    <tr><td>Lá</td><td>A</td><td>Azul escuro</td></tr>
+                                    <tr><td>Si</td><td>B</td><td>Violeta</td></tr>
+                                </tbody>
+                            </table>
+                            <table>
+                                <thead><tr><th>Código</th><th>Figura</th><th>Pausa</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>[n2]</code></td><td>Breve (8 tempos)</td><td><code>[p2]</code></td></tr>
+                                    <tr><td><code>[n1]</code></td><td>Semibreve (4 tempos)</td><td><code>[p1]</code></td></tr>
+                                    <tr><td><code>[n1/2]</code></td><td>Mínima (2 tempos)</td><td><code>[p1/2]</code></td></tr>
+                                    <tr><td><code>[n1/4]</code></td><td>Semínima (1 tempo)</td><td><code>[p1/4]</code></td></tr>
+                                    <tr><td><code>[n1/8]</code></td><td>Colcheia</td><td><code>[p1/8]</code></td></tr>
+                                    <tr><td><code>[n1/16]</code></td><td>Semicolcheia</td><td><code>[p1/16]</code></td></tr>
+                                    <tr><td><code>[n1/32]</code></td><td>Fusa</td><td><code>[p1/32]</code></td></tr>
+                                    <tr><td><code>[n1/64]</code></td><td>Semifusa</td><td><code>[p1/64]</code></td></tr>
+                                    <tr><td><code>[n1/128]</code></td><td>Quartifusa</td><td><code>[p1/128]</code></td></tr>
+                                </tbody>
+                            </table>
+                            <ul>
+                                <li><strong>Ponto e vírgula</strong> (ou outra linha): uma nota depois da outra — <code>C[n1/4]; D[n1/4]; E[n1/2];</code></li>
+                                <li><strong>Vírgula</strong>: notas juntas, formando um <strong>acorde</strong> — <code>C[n1], E[n1], G[n1];</code></li>
+                                <li><strong>Pausa</strong> (silêncio): <code>[p1/4];</code> ou <code>p[1/4];</code></li>
+                                <li><strong>Sustenido</strong> (sobe ½ tom): <code>F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <code>Bb[n1/4]</code></li>
+                                <li><strong>Oitava</strong>: o número antes da nota diz qual Dó do pentagrama — <code>C[n1]</code> ou <code>1C[n1]</code> é o Dó central (1º Dó); <code>2C[n1]</code> é o Dó de cima (2º Dó); <code>0G[n1/2]</code> é o Sol abaixo do Dó central.</li>
+                                <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
+                                <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code></li>
+                                <li><strong>Andamento</strong>: escreva <code>semínima = 80</code> no texto (ou mude no ♩ =): 80 semínimas por minuto.</li>
+                                <li>Títulos, “Compasso 1:” e outros textos são ignorados; <code>//</code> começa um comentário.</li>
+                                <li>Ao tocar, as teclas do piano e as notas do pentagrama acendem. Use <strong>Abrir</strong>, <strong>Salvar</strong> e <strong>Salvar como…</strong> para guardar as suas músicas em arquivos .txt; o texto também fica guardado neste aparelho.</li>
+                                <li>Em <strong>Exemplos…</strong> está a <strong>Ode à Alegria</strong> (Beethoven) para começar.</li>
+                            </ul>
+                        </div>
+                    </details>
+                </section>
             </div>
 
             <aside class="panel">
@@ -143,6 +211,7 @@
                         <li>Em <strong>Som</strong> há também <strong>Piano</strong> e <strong>Órgão de igreja</strong>, com eco como numa igreja.</li>
                         <li>Arraste o dedo (ou o mouse apertado) pelas teclas para tocar uma escala, uma nota atrás da outra.</li>
                         <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
+                        <li>Em <strong>Jogo → Executar música (notas)</strong>, escreva (ou abra) as notas no editor, como <code>E[n1/4]; F[n1/4]; G[n1/2];</code>, e toque em <strong>▶ Tocar</strong>: o piano toca e as notas acendem no pentagrama. Veja a <strong>Ajuda</strong> do editor e o exemplo da <strong>Ode à Alegria</strong>.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
                         <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Em <strong>Só cor</strong> a nota fica com a cor da tecla, mas sem o nome dentro. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
                         <li>Em <strong>Nomes</strong>, troque Dó, Ré, Mi… pelas <strong>letras</strong> (C, D, E, F, G, A, B) no teclado e no pentagrama. A <strong>Legenda</strong> mostra a nota, a letra e a cor de cada tecla.</li>
@@ -157,11 +226,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.042"></script>
-    <script src="sounds.js?v=1.042"></script>
-    <script src="modes.js?v=1.042"></script>
-    <script src="engine.js?v=1.042"></script>
-    <script src="staff.js?v=1.042"></script>
-    <script src="game.js?v=1.042"></script>
+    <script src="../assets/combobox.js?v=1.043"></script>
+    <script src="sounds.js?v=1.043"></script>
+    <script src="modes.js?v=1.043"></script>
+    <script src="engine.js?v=1.043"></script>
+    <script src="staff.js?v=1.043"></script>
+    <script src="music.js?v=1.043"></script>
+    <script src="game.js?v=1.043"></script>
 </body>
 </html>

@@ -23,9 +23,16 @@
 
     const FIGURES = {
         // Cabeça com o nome dentro: pequena o bastante para ver se está na linha ou no espaço.
-        semibreve: { title: "Semibreve", rx: 10.2, ry: 7.4, hollow: true, stem: false },
-        minima:    { title: "Mínima",    rx: 9.4, ry: 7, hollow: true, stem: true },
-        seminima:  { title: "Semínima",  rx: 9.4, ry: 7, hollow: false, stem: true },
+        // flags = bandeirolas na haste (colcheia 1, semicolcheia 2 …); whole = cabeça de semibreve.
+        breve:        { title: "Breve",        rx: 10.2, ry: 7.4, hollow: true, stem: false, whole: true, breve: true },
+        semibreve:    { title: "Semibreve",    rx: 10.2, ry: 7.4, hollow: true, stem: false, whole: true },
+        minima:       { title: "Mínima",       rx: 9.4, ry: 7, hollow: true, stem: true },
+        seminima:     { title: "Semínima",     rx: 9.4, ry: 7, hollow: false, stem: true },
+        colcheia:     { title: "Colcheia",     rx: 9.4, ry: 7, hollow: false, stem: true, flags: 1 },
+        semicolcheia: { title: "Semicolcheia", rx: 9.4, ry: 7, hollow: false, stem: true, flags: 2 },
+        fusa:         { title: "Fusa",         rx: 9.4, ry: 7, hollow: false, stem: true, flags: 3 },
+        semifusa:     { title: "Semifusa",     rx: 9.4, ry: 7, hollow: false, stem: true, flags: 4 },
+        quartifusa:   { title: "Quartifusa",   rx: 9.4, ry: 7, hollow: false, stem: true, flags: 5 },
     };
 
     /** Figura pela duração da nota acesa (ms): quanto mais rápido, menor a figura. */
@@ -36,6 +43,7 @@
         minima:    { rx: 7.6, ry: 5.4, tilt: TILT },
         seminima:  { rx: 7.6, ry: 5.4, tilt: TILT },
     };
+    const monoOf = (name) => MONO[name] || (FIGURES[name]?.whole ? MONO.semibreve : MONO.seminima);
     const INK = "#1d1b22";
 
     /** Meia largura da elipse inclinada e a altura do ponto mais à direita (onde a haste encosta). */
@@ -66,6 +74,43 @@
             <path d="M-4 -19V5.2" fill="none" stroke="${INK}" stroke-width="1.3"/>
             <path d="M-4.6 5.4C1 2.6 4.6 -0.4 4.2 -3.4C3.8 -6.4 -0.4 -6.6 -4 -3.2V-1.2C-1 -4.2 1.9 -4.4 2 -2.6C2.1 -0.6 -0.6 1.8 -4 3.6Z" fill="${INK}"/>
         </g>`;
+
+    /** Bandeirolas na ponta da haste (sx, tip): para baixo se a haste sobe, para cima se desce. */
+    const flagsSvg = (sx, tip, n, up) => {
+        const d = up ? 1 : -1;
+        let p = "";
+        for (let k = 0; k < n; k++) {
+            const y = tip + d * k * 6.5;
+            p += `M${f(sx)} ${f(y)}C${f(sx + 1)} ${f(y + d * 6)} ${f(sx + 9.5)} ${f(y + d * 8)} ${f(sx + 7.5)} ${f(y + d * 17)}` +
+                `C${f(sx + 7.6)} ${f(y + d * 11)} ${f(sx + 4)} ${f(y + d * 8.6)} ${f(sx)} ${f(y + d * 7.4)}Z`;
+        }
+        return `<path class="flag" d="${p}" fill="${INK}"/>`;
+    };
+
+    /** Pausa da figura (sem nota), centrada em x. Linhas: y 0 (5ª) … 48 (1ª). */
+    const restSvg = (x, figureName) => {
+        const fig = FIGURES[figureName] || FIGURES.seminima;
+        const rect = (y, h, w = 12) => `<rect x="${f(x - w / 2)}" y="${y}" width="${w}" height="${h}" fill="${INK}"/>`;
+        if (figureName === "breve") return rect(12, 12, 6);
+        if (figureName === "semibreve") return rect(12, 6);          // pendurada na 4ª linha
+        if (figureName === "minima") return rect(18, 6);             // sentada na 3ª linha
+        if (figureName === "seminima") {
+            return `<path d="M${f(x - 3)} 9L${f(x + 3.5)} 17L${f(x - 1.5)} 23.5L${f(x + 4)} 31.5C${f(x - 2)} 28.5 ${f(x - 5)} 32 ${f(x - 0.5)} 38.5"
+                fill="none" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+        // Colcheia e menores: um gancho (bolinha + curva) para cada bandeirola, numa haste inclinada.
+        const n = fig.flags || 1;
+        const top = 18 - (n - 1) * 6, bottom = 36 + (n > 2 ? 6 : 0);
+        const lean = 0.28; // a haste inclina para a esquerda descendo
+        const sxAt = (y) => x + 3 - (y - top) * lean;
+        let p = `<line x1="${f(sxAt(top))}" y1="${top}" x2="${f(sxAt(bottom))}" y2="${bottom}" stroke="${INK}" stroke-width="1.6" stroke-linecap="round"/>`;
+        for (let k = 0; k < n; k++) {
+            const y = top + k * 6, sx = sxAt(y);
+            p += `<circle cx="${f(sx - 6)}" cy="${f(y + 1.6)}" r="2.3" fill="${INK}"/>` +
+                `<path d="M${f(sx - 7.5)} ${f(y + 2.6)}Q${f(sx - 3)} ${f(y + 4.4)} ${f(sx)} ${f(y)}" fill="none" stroke="${INK}" stroke-width="1.5"/>`;
+        }
+        return p;
+    };
 
     const figureFor = (ms) => (ms >= 500 ? "semibreve" : ms >= 340 ? "minima" : "seminima");
 
@@ -102,6 +147,7 @@
         let notes = [];          // { el, pad }
         let shift = 0;           // quanto (px) a pauta já rolou para a esquerda
         let first = 0;           // posição da 1ª nota ainda guardada (as anteriores já foram apagadas)
+        let lead = false;        // true = a nota da vez fica perto do começo (dá para ler as próximas)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
@@ -112,8 +158,13 @@
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
 
-        /** Posição (linha/espaço) e acidente de um botão do teclado. */
-        const placeOf = (index) => {
+        /**
+         * Posição (linha/espaço) e acidente de uma nota: índice do botão do teclado ou
+         * { index, step, acc } quando a música já diz onde ela fica (Si♭, Sol de baixo…).
+         */
+        const placeOf = (entry) => {
+            if (entry.step != null) return { step: entry.step, acc: entry.acc || "" };
+            const index = entry.index;
             const pads = mode.pads;
             const naturalBefore = pads.slice(0, index + 1).filter((p) => !p.sharp).length - 1;
             const pad = pads[index];
@@ -127,29 +178,31 @@
         const headSvg = (pad, step, acc, x, y, figureName, size) => {
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const { rx, ry, tilt, plain } = size;
+            const breve = fig.breve ? `<path d="M${f(x - rx - 2.4)} ${y - 7}v14M${f(x - rx - 4.8)} ${y - 7}v14M${f(x + rx + 2.4)} ${y - 7}v14M${f(x + rx + 4.8)} ${y - 7}v14"
+                stroke="${INK}" stroke-width="1.3"/>` : "";
             const color = look === "preto" ? INK : pad.color;
             if (plain) {
                 // Cabeça cheia (semínima) ou vazada (mínima/semibreve), sem nome: é preciso ler a pauta.
                 // O furo da semibreve/mínima é vazado de verdade: a linha da pauta aparece por dentro.
-                const whole = figureName === "semibreve";
+                const whole = fig.whole;
                 const hole = !fig.hollow ? ""
                     : whole ? ellipsePath(x, y, f(rx * 0.52), f(ry * 0.56), -50)
                     : ellipsePath(x, y, f(rx * 0.8), f(ry * 0.42), tilt - 12);
                 // Na versão colorida, um contorno fino deixa as cores claras (amarelo) visíveis no papel.
                 const edgeLine = look === "cor" ? ` stroke="#1d1b22" stroke-opacity=".55" stroke-width=".8"` : "";
                 const head = `<path d="${ellipsePath(x, y, rx, ry, tilt)}${hole}" fill="${color}" fill-rule="evenodd"${edgeLine}/>`;
-                return `<g class="head" style="--c:${look === "preto" ? "#3b82f6" : color}">${head}</g>`;
+                return `<g class="head" style="--c:${look === "preto" ? "#3b82f6" : color}">${head}${breve}</g>`;
             }
             // ♯/♭ já aparece fora da figura: dentro vai só o nome da nota natural (Dó♯ → Dó).
             const naturals = mode.pads.filter((p) => !p.sharp);
-            const name = acc ? nameOf(naturals[step] || pad) : nameOf(pad);
+            const name = acc ? nameOf(naturals[((step % 7) + 7) % 7] || pad) : nameOf(pad);
             const rot = tilt ? ` transform="rotate(${tilt} ${x} ${y})"` : "";
             const fill = fig.hollow ? tint(color, 0.72) : color;
             const ink = fig.hollow ? "#1d1b22" : lum(color) > 0.6 ? "#1d1b22" : "#fff";
             const fs = name.length > 2 ? 6 : name.length > 1 ? 6.6 : 7.4;
             return `<g class="head" style="--c:${color}">
                 <ellipse rx="${rx}" ry="${ry}" cx="${f(x)}" cy="${y}"${rot} fill="${fill}" stroke="${fig.hollow ? color : "#00000066"}" stroke-width="${fig.hollow ? 2.4 : 1}"/>
-                <text x="${f(x)}" y="${f(y + 0.3)}" font-size="${fs}" fill="${ink}">${name}</text>
+                <text x="${f(x)}" y="${f(y + 0.3)}" font-size="${fs}" fill="${ink}">${name}</text>${breve}
             </g>`;
         };
 
@@ -158,15 +211,18 @@
          * As cabeças ficam empilhadas na mesma vertical; numa segunda (notas vizinhas) uma
          * delas passa para o outro lado da haste, e os acidentes se escalonam para a esquerda.
          */
-        const chordSvg = (indices, x, figureName) => {
+        const chordSvg = (entries, x, figureName, dotted = false) => {
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const plain = look !== "nome"; // cabeça de partitura, sem nome dentro
-            const m = plain ? MONO[figureName] || MONO.semibreve : null;
+            const m = plain ? monoOf(figureName) : null;
             const size = { rx: m ? m.rx : fig.rx, ry: m ? m.ry : fig.ry, tilt: m ? m.tilt : TILT, plain };
             const edge = edgeOf(size.rx, size.ry, size.tilt);
-            const items = [...new Set(indices)]
-                .map((index) => ({ index, pad: mode.pads[index], ...placeOf(index) }))
+            const seen = new Set();
+            const items = entries
+                .map((e) => ({ ...e, pad: mode.pads[e.index], ...placeOf(e) }))
+                .filter((it) => it.pad && !seen.has(`${it.step}${it.acc}`) && seen.add(`${it.step}${it.acc}`))
                 .sort((a, b) => a.step - b.step || (a.acc ? 1 : 0) - (b.acc ? 1 : 0));
+            if (!items.length) return { html: "<g class=\"note\"></g>", extraLeft: 0, extraRight: 0 };
             const low = items[0].step, high = items[items.length - 1].step;
             // Haste: manda a nota mais longe da 3ª linha (Si). Abaixo dela, haste para cima.
             const up = (6 - low) >= (high - 6);
@@ -178,22 +234,38 @@
                 it.side = prev && !prev.side && Math.abs(it.step - prev.step) <= 1 ? (up ? 1 : -1) : 0;
                 prev = it;
             }
-            const minX = x - edge.half + Math.min(0, ...items.map((it) => it.side * shiftX));
-            const maxX = x + edge.half + Math.max(0, ...items.map((it) => it.side * shiftX));
+            const wing = fig.breve ? 6 : 0; // as barrinhas da breve
+            const minX = x - edge.half - wing + Math.min(0, ...items.map((it) => it.side * shiftX));
+            let maxX = x + edge.half + wing + Math.max(0, ...items.map((it) => it.side * shiftX));
             const parts = [];
-            // Linhas suplementares: Dó de baixo (0) e Lá/Si/… de cima (12, 14).
-            const ledger = (l) => parts.push(`<line class="ledger" x1="${f(minX - 7)}" x2="${f(maxX + 7)}" y1="${yOf(l)}" y2="${yOf(l)}"/>`);
+            // Linhas suplementares: Dó de baixo (0), Lá de baixo (-2)… e Lá/Si/… de cima (12, 14).
+            const ledger = (l) => parts.push(`<line class="ledger" x1="${f(minX - 7 + wing)}" x2="${f(maxX + 7 - wing)}" y1="${yOf(l)}" y2="${yOf(l)}"/>`);
             for (let l = 0; l >= low; l -= 2) ledger(l);
             for (let l = 12; l <= high; l += 2) ledger(l);
             if (fig.stem) {
                 // A haste encosta na ponta da cabeça inclinada (direita em cima, esquerda embaixo)
-                // e atravessa o acorde todo.
+                // e atravessa o acorde todo. Com 3 ou mais bandeirolas ela fica mais comprida.
+                const flags = fig.flags || 0;
+                const len = STEM + Math.max(0, flags - 2) * 6.5;
                 const sx = up ? x + edge.half - 0.8 : x - edge.half + 0.8;
                 const y1 = up ? yOf(low) + edge.dy : yOf(high) - edge.dy;
-                const y2 = up ? yOf(high) - STEM : yOf(low) + STEM;
+                const y2 = up ? yOf(high) - len : yOf(low) + len;
                 parts.push(`<line class="stem" x1="${f(sx)}" x2="${f(sx)}" y1="${f(y1)}" y2="${f(y2)}"/>`);
+                if (flags) {
+                    parts.push(flagsSvg(sx - 0.4, y2, flags, up));
+                    if (up) maxX = Math.max(maxX, sx + 10);
+                }
             }
             items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, yOf(it.step), figureName, size)));
+            // Ponto de aumento: à direita, no espaço (nota de linha sobe meio espaço).
+            if (dotted) {
+                const dx = maxX + 4;
+                items.forEach((it) => {
+                    const dy = it.step % 2 === 0 ? -SP / 2 : 0;
+                    parts.push(`<circle class="dot" cx="${f(dx)}" cy="${f(yOf(it.step) + dy)}" r="2" fill="${INK}"/>`);
+                });
+                maxX = dx + 2;
+            }
             // Acidentes: de cima para baixo, cada um na 1ª coluna (da direita) onde não esbarra em outro.
             const cols = [];
             let left = minX;
@@ -201,17 +273,32 @@
                 let c = 0;
                 while ((cols[c] || []).some((s) => Math.abs(s - it.step) < 5)) c++;
                 (cols[c] = cols[c] || []).push(it.step);
-                const w = it.acc === "♯" ? 10 : 8;
-                const ax = minX - 3 - w / 2 - c * 10;
-                left = Math.min(left, ax - w / 2);
-                parts.push(it.acc === "♯" ? sharpSvg(ax, yOf(it.step)) : flatSvg(ax, yOf(it.step)));
+                let ax = minX - 3 - c * 10;
+                // ♯♯ / ♭♭: dois sinais lado a lado.
+                [...it.acc].forEach((sign) => {
+                    const w = sign === "♯" ? 10 : 8;
+                    ax -= w / 2;
+                    parts.push(sign === "♯" ? sharpSvg(ax, yOf(it.step)) : flatSvg(ax, yOf(it.step)));
+                    left = Math.min(left, ax - w / 2);
+                    ax -= w / 2 + 1;
+                });
             });
             const mono = plain ? " mono" : "";
             return {
                 html: `<g class="note${mono}" data-figure="${figureName}">${parts.join("")}</g>`,
                 // Quanto o acorde passa de uma nota comum (com um ♯) para cada lado: vira espaço extra.
                 extraLeft: Math.max(0, x - left - (edge.half + 14)),
-                extraRight: Math.max(0, maxX - x - edge.half),
+                extraRight: Math.max(0, maxX - x - edge.half - 4),
+            };
+        };
+
+        /** Pausa numa posição da pauta. */
+        const restHtml = (x, figureName, dotted) => {
+            const dot = dotted ? `<circle class="dot" cx="${f(x + 9)}" cy="18" r="2" fill="${INK}"/>` : "";
+            return {
+                html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6">${restSvg(x, figureName)}${dot}</g></g>`,
+                extraLeft: 0,
+                extraRight: dotted ? 4 : 0,
             };
         };
 
@@ -219,19 +306,24 @@
         const scrollTo = (focus) => {
             const n = notes[focus - first];
             if (!n) return;
-            const want = Math.max(0, n.x - (X0 + (SLOTS - 2) * DX));
+            // Normal: a última nota fica perto do fim. Música: a da vez fica no começo (lê as próximas).
+            const end = X0 + (SLOTS - 2) * DX;
+            let want = Math.max(0, n.x - (lead ? X0 + DX : end));
+            // Na música, não passa do ponto em que a última nota chega ao fim da pauta.
+            if (lead) want = Math.min(want, Math.max(0, notes[notes.length - 1].x - end));
             if (want === shift) return;
             shift = want;
             layer.style.transform = `translateX(${f(-shift)}px)`;
             // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
-            notes.forEach((m) => m.el.classList.toggle("gone", m.x - shift < X0 - DX / 2));
+            notes.forEach((m) => m.el.classList.toggle("gone", m.x - shift < X0 - 6));
         };
 
         return {
             figureFor,
             FIGURES,
             /** Troca o modo (botões), como o nome aparece (♯ ou ♭) e o estilo: "nome", "cor" ou "preto". */
-            setMode(newMode, nameFn, useFlats, headLook = "nome") {
+            setMode(newMode, nameFn, useFlats, headLook = "nome", opts = {}) {
+                lead = !!opts.lead;
                 mode = newMode;
                 nameOf = nameFn;
                 flats = useFlats;
@@ -243,7 +335,7 @@
                 SLOTS = slotsFor(W);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
                 const top = wide ? -34 : -20;
-                const height = 76 - top;
+                const height = (opts.deep ? 92 : 76) - top; // deep: espaço para notas abaixo do Dó central
                 svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
                 svg.style.aspectRatio = `${W} / ${height}`;
                 document.body.style.setProperty("--sh", String(height / W));
@@ -265,18 +357,32 @@
              * apagadas de verdade (sem redesenhar as outras), então rolar é sempre suave.
              * Com chord = true a nota entra no acorde da última posição (tocadas juntas).
              */
-            push(index, figureName, ms = 0, chord = false) {
+            push(entry, figureName, ms = 0, chord = false, opts = {}) {
                 if (!mode) return -1;
+                const e = typeof entry === "number" ? { index: entry } : entry;
                 const last = notes[notes.length - 1];
-                const grow = chord && last;
-                const pads = grow ? [...new Set([...last.pads, index])] : [index];
+                const grow = chord && last && !last.rest;
+                const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
+                const dotted = grow ? last.dotted : !!opts.dotted;
                 // Posição: logo depois da anterior, com folga se um dos dois for largo
                 // (cabeça do outro lado da haste, acidentes escalonados).
                 const prev = grow ? notes[notes.length - 2] : last;
-                const probe = chordSvg(pads, 0, figure);
+                const probe = chordSvg(pads, 0, figure, dotted);
                 const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft : X0 + probe.extraLeft;
-                const drawn = chordSvg(pads, x, figure);
+                const drawn = chordSvg(pads, x, figure, dotted);
+                return this._place(drawn, x, { pads, figure, dotted }, grow, ms, opts.scroll !== false);
+            },
+            /** Pausa (sem som): ocupa uma posição da pauta como uma nota. */
+            pushRest(figureName, opts = {}) {
+                if (!mode) return -1;
+                const prev = notes[notes.length - 1];
+                const x = prev ? prev.x + DX + prev.extraRight : X0;
+                const drawn = restHtml(x, figureName, !!opts.dotted);
+                return this._place(drawn, x, { pads: [], figure: figureName, rest: true }, false, 0, opts.scroll !== false);
+            },
+            _place(drawn, x, data, grow, ms, scroll) {
+                const last = notes[notes.length - 1];
                 let slot;
                 if (grow) {
                     slot = first + notes.length - 1;
@@ -285,14 +391,15 @@
                     const el = last.el.nextElementSibling;
                     last.el.remove();
                     el.classList.add(...keep);
-                    Object.assign(last, { el, pads, x, extraRight: drawn.extraRight });
+                    Object.assign(last, data, { el, x, extraRight: drawn.extraRight });
                 } else {
                     slot = first + notes.length;
                     layer.insertAdjacentHTML("beforeend", drawn.html);
                     const el = layer.lastElementChild;
-                    el.classList.add("pop");
-                    notes.push({ el, pads, figure, x, extraRight: drawn.extraRight });
+                    if (scroll) el.classList.add("pop");
+                    notes.push({ ...data, el, x, extraRight: drawn.extraRight });
                 }
+                if (!scroll) return slot;
                 scrollTo(slot);
                 // Guarda no máximo MAX_NOTES; só apaga as que já estão fora da pauta.
                 while (notes.length > MAX_NOTES && notes[0].x - shift < X0 - 3 * DX) {

@@ -457,6 +457,7 @@
     /** Modo desenhado: no "Tocar livre" o teclado de 7 notas ganha as teclas pretas (freeMode). */
     const pickMode = () => {
         const chosen = MODES[prefs.mode];
+        if (prefs.play === "musica") return MODES.teclado24; // a música precisa das 2 oitavas e das pretas
         return (prefs.play === "livre" && MODES[chosen.freeMode]) || chosen;
     };
     let mode = pickMode();
@@ -475,7 +476,9 @@
     let lastSource = "";    // quem fez o último toque no tocar livre
 
     /** "Tocar livre": sem sequência nem placar, só tocar. */
-    const isFree = () => prefs.play === "livre";
+    const isFree = () => prefs.play !== "memoria";
+    /** "Executar música (notas)": toca o código de notas do editor (é um tocar livre com partitura). */
+    const isMusic = () => prefs.play === "musica";
     const recordKey = () => `${prefs.mode}:${prefs.level}`;
     const levelName = () => ui.level.options[ui.level.selectedIndex]?.text || "";
 
@@ -526,7 +529,7 @@
         renderKeys();
         renderScore();
         setInputEnabled(phase === "input" || phase === "free");
-        if (phase === "free") { setCount("♪"); setHubText("LIVRE"); }
+        if (phase === "free") { setCount("♪"); setHubText(isMusic() ? "MÚSICA" : "LIVRE"); }
     };
 
     // ---------- Pentagrama (só nos modelos de teclado) ----------
@@ -535,6 +538,7 @@
 
     const setFigure = (name) => {
         const fig = window.SigaDinoStaff.FIGURES[name];
+        if (isMusic()) { ui.staffFigure.textContent = `Figura: ${fig.title}`; return; }
         ui.staffFigure.textContent = isFree()
             ? `Figura: ${fig.title} — toque mais rápido para mudar`
             : `Figura: ${fig.title}${name === "semibreve" ? " (devagar)" : name === "seminima" ? " (rápido)" : ""}`;
@@ -546,7 +550,9 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
-        staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome");
+        staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome",
+            { lead: isMusic(), deep: isMusic() });
+        if (isMusic()) { setFigure("seminima"); renderSong(); return; }
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
         if (!game || phase === "show" || phase === "wait") return;
@@ -621,11 +627,11 @@
         return tones && mode.pads.length === 4 ? tones[i] : mode.pads[i].freq;
     };
 
-    const light = (i, ms) => {
+    const light = (i, ms, freq = padFreq(i)) => {
         const el = padEls[i];
         if (!el) return;
         el.classList.add("lit");
-        sound.pad(padFreq(i), ms / 1000);
+        sound.pad(freq, ms / 1000);
         clearTimeout(el._off);
         el._off = setTimeout(() => el.classList.remove("lit"), ms);
     };
@@ -871,7 +877,7 @@
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i, source = "") => {
         light(i, 420);
-        if (staffOn()) {
+        if (staffOn() && !songPlaying()) {
             // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
             // Acorde só quando outra tecla/dedo bate quase junto com a anterior, que ainda está
             // apertada. Escala rápida ou glissando (o mesmo dedo arrastando) seguem nota a nota.
@@ -896,8 +902,275 @@
         setCount(text.length <= 4 ? text.toUpperCase() : "♪", text.length > 3 ? 0.78 : 1);
     };
 
+    // =================================================================
+    // Executar música (notas): editor + leitura do código + tocar
+    // =================================================================
+    const MUSIC = window.SigaDinoMusic;
+    const SONG_KEY = "dinogames-sigadino-song";
+    const mu = {
+        text: $("song-text"), name: $("song-name"), tempo: $("song-tempo"), example: $("song-example"),
+        open: $("btn-song-open"), save: $("btn-song-save"), saveAs: $("btn-song-saveas"),
+        play: $("btn-song-play"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
+    };
+    const savedSong = storage.get(SONG_KEY);
+    const song = {
+        name: savedSong?.name || MUSIC.EXAMPLES[0].file,
+        handle: null,          // arquivo aberto (quando o navegador deixa salvar por cima)
+        dirty: false,          // mudou desde que abriu/salvou
+        textTempo: 0,          // andamento escrito no texto (para saber se o usuário mudou)
+    };
+    let songEvents = [];       // eventos lidos (para redesenhar o pentagrama)
+    let songRun = 0;           // muda para cancelar a música tocando
+    let songAt = -1;           // evento tocando agora (-1 = parada)
+    const songPlaying = () => songAt >= 0;
+
+    /** Semitons a partir do Dó central de cada tecla (pela frequência). */
+    const semiOf = (pad) => Math.round(12 * Math.log2(pad.freq / 261.63));
+    /** Tecla que toca a nota; fora do teclado, a mesma nota na oitava mais perto. */
+    const padForSemi = (semi) => {
+        let best = -1, dist = Infinity;
+        mode.pads.forEach((p, i) => {
+            const s = semiOf(p);
+            if (s === semi) { best = i; dist = -1; }
+            else if (dist >= 0 && (((s - semi) % 12) + 12) % 12 === 0 && Math.abs(s - semi) < dist) { best = i; dist = Math.abs(s - semi); }
+        });
+        return best;
+    };
+    const freqOfSemi = (semi) => +(261.63 * Math.pow(2, semi / 12)).toFixed(2);
+    const countText = (n) => `${n} ${n === 1 ? "nota/pausa lida" : "notas/pausas lidas"}.`;
+
+    /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
+    const renderSong = () => {
+        if (!isMusic()) return;
+        staff.clear();
+        songEvents.forEach((ev, k) => {
+            if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted });
+            else ev.notes.forEach((n, j) => {
+                const index = padForSemi(n.semi);
+                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, { scroll: false, dotted: ev.dotted });
+            });
+            if (k < songAt) staff.done(k);
+        });
+    };
+
+    const updatePlayButton = () => {
+        mu.play.textContent = songPlaying() ? "⏹ Parar" : "▶ Tocar";
+        mu.play.classList.toggle("primary", !songPlaying());
+        mu.play.title = songPlaying() ? "Parar a música" : "Tocar a música do editor";
+    };
+
+    const stopSong = () => {
+        songRun++;
+        if (songAt >= 0) padEls.forEach((el) => el.classList.remove("lit"));
+        songAt = -1;
+        updatePlayButton();
+    };
+
+    const describe = (ev) => {
+        const fig = window.SigaDinoStaff.FIGURES[ev.figure]?.title.toLowerCase() || "";
+        if (ev.kind === "rest") return `pausa de ${fig}`;
+        return `${ev.notes.map((n) => n.label).join(" + ")} (${fig}${ev.dotted ? " pontuada" : ""})`;
+    };
+
+    /** Lê o editor, desenha a pauta e toca nota por nota (teclas e pentagrama acendem). */
+    const playSong = async () => {
+        stopSong();
+        sound.ensure();
+        sound.load(prefs.timbre);
+        const { events, tempo, warnings } = MUSIC.parse(mu.text.value);
+        if (tempo && tempo !== song.textTempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
+        songEvents = events;
+        if (!events.length) {
+            renderSong();
+            setStatus("Não achei notas no editor. Exemplo: E[n1/4]; F[n1/4]; G[n1/2]; — veja a Ajuda.", "soft");
+            return;
+        }
+        const id = songRun;
+        songAt = 0;
+        updatePlayButton();
+        renderSong();
+        const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 80));
+        const quarter = 60000 / bpm;
+        const outside = events.some((ev) => ev.kind === "note" && ev.notes.some((n) => {
+            const p = mode.pads[padForSemi(n.semi)];
+            return p && semiOf(p) !== n.semi;
+        }));
+        mu.info.textContent = [
+            countText(events.length),
+            warnings.length ? `Aviso: ${warnings.slice(0, 3).join("; ")}${warnings.length > 3 ? "…" : ""}.` : "",
+            outside ? "Notas fora do teclado acendem a mesma nota em outra oitava." : "",
+        ].filter(Boolean).join(" ");
+        await sleep(250);
+        for (let k = 0; k < events.length; k++) {
+            if (id !== songRun) return;
+            songAt = k;
+            const ev = events[k];
+            const ms = ev.frac * 4 * quarter;          // semibreve = 4 semínimas
+            const on = Math.max(60, ms * 0.9);          // um respiro entre as notas
+            if (ev.kind === "note") ev.notes.forEach((n) => {
+                const i = padForSemi(n.semi);
+                if (i >= 0) light(i, on, freqOfSemi(n.semi));
+            });
+            staff.light(k, on);
+            staff.done(k);
+            setFigure(ev.figure);
+            setStatus(`🎵 Tocando ${k + 1} de ${events.length}: ${describe(ev)}`, "turn");
+            const label = ev.kind === "rest" ? "--" : ev.notes[0].label;
+            setCount(label.length <= 4 ? label : "♪", label.length > 3 ? 0.78 : 1);
+            await sleep(ms);
+        }
+        if (id !== songRun) return;
+        songAt = -1;
+        updatePlayButton();
+        setCount("♪");
+        setStatus("Fim da música! 🎉 Toque em ▶ Tocar para ouvir de novo.", "good");
+    };
+
+    // ---------- Arquivo: abrir, salvar, salvar como ----------
+    const rememberSong = () => storage.set(SONG_KEY, { text: mu.text.value, name: song.name });
+    const showName = () => { mu.name.textContent = `${song.name}${song.dirty ? " •" : ""}`; };
+    const setSongText = (text, name, handle = null) => {
+        stopSong();
+        mu.text.value = text;
+        song.name = name;
+        song.handle = handle;
+        song.dirty = false;
+        const { events, tempo } = MUSIC.parse(text);
+        if (tempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
+        songEvents = events;
+        renderSong();
+        mu.info.textContent = countText(events.length);
+        showName();
+        rememberSong();
+    };
+    /** Confirma antes de trocar um texto que mudou e não foi salvo. */
+    const okToReplace = () => !song.dirty || window.confirm("O texto foi alterado e não foi salvo. Continuar mesmo assim?");
+
+    const TXT = { description: "Texto com notas", accept: { "text/plain": [".txt"] } };
+    const openSong = async () => {
+        if (!okToReplace()) return;
+        if (window.showOpenFilePicker) {
+            try {
+                const [handle] = await window.showOpenFilePicker({ types: [TXT] });
+                const file = await handle.getFile();
+                setSongText(await file.text(), file.name, handle);
+                setStatus(`Arquivo “${file.name}” aberto. Toque em ▶ Tocar. 🎼`, "turn");
+            } catch { /* cancelado */ }
+            return;
+        }
+        mu.file.value = "";
+        mu.file.click();
+    };
+    mu.file.addEventListener("change", async () => {
+        const file = mu.file.files[0];
+        if (!file) return;
+        setSongText(await file.text(), file.name);
+        setStatus(`Arquivo “${file.name}” aberto. Toque em ▶ Tocar. 🎼`, "turn");
+    });
+
+    const writeTo = async (handle) => {
+        const w = await handle.createWritable();
+        await w.write(mu.text.value);
+        await w.close();
+    };
+    const savedOk = () => {
+        song.dirty = false;
+        showName();
+        rememberSong();
+        setStatus(`Música salva em “${song.name}”. 💾`, "good");
+    };
+    const saveSongAs = async () => {
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({ suggestedName: song.name, types: [TXT] });
+                await writeTo(handle);
+                song.handle = handle;
+                song.name = handle.name;
+                savedOk();
+            } catch { /* cancelado */ }
+            return;
+        }
+        // Sem acesso a arquivos (celular): baixa o .txt com o nome escolhido.
+        let name = window.prompt("Nome do arquivo:", song.name);
+        if (!name) return;
+        if (!/\.txt$/i.test(name)) name += ".txt";
+        const url = URL.createObjectURL(new Blob([mu.text.value], { type: "text/plain;charset=utf-8" }));
+        const a = Object.assign(document.createElement("a"), { href: url, download: name });
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        song.name = name;
+        savedOk();
+    };
+    const saveSong = async () => {
+        if (!song.handle?.createWritable) return saveSongAs();
+        try { await writeTo(song.handle); savedOk(); }
+        catch { saveSongAs(); }
+    };
+
+    mu.example.innerHTML = `<option value="">Exemplos…</option>` +
+        MUSIC.EXAMPLES.map((e) => `<option value="${e.id}">${e.title}</option>`).join("");
+    mu.example.addEventListener("change", () => {
+        const ex = MUSIC.EXAMPLES.find((e) => e.id === mu.example.value);
+        mu.example.value = "";
+        if (ex && okToReplace()) {
+            setSongText(ex.text, ex.file);
+            setStatus(`Exemplo “${ex.title}” carregado. Toque em ▶ Tocar. 🎼`, "turn");
+        }
+    });
+
+    let typing = 0;
+    mu.text.addEventListener("input", () => {
+        song.dirty = true;
+        showName();
+        clearTimeout(typing);
+        // Enquanto escreve, a pauta acompanha (sem tocar).
+        typing = setTimeout(() => {
+            rememberSong();
+            if (songPlaying()) return;
+            const { events } = MUSIC.parse(mu.text.value);
+            songEvents = events;
+            renderSong();
+            mu.info.textContent = countText(events.length);
+        }, 400);
+    });
+    mu.open.addEventListener("click", openSong);
+    mu.save.addEventListener("click", saveSong);
+    mu.saveAs.addEventListener("click", saveSongAs);
+    mu.play.addEventListener("click", () => {
+        if (!songPlaying()) { playSong(); return; }
+        stopSong();
+        setStatus("Música parada. Toque em ▶ Tocar para começar de novo.", "soft");
+    });
+    mu.clear.addEventListener("click", () => {
+        if (mu.text.value.trim() && !window.confirm("Apagar todo o texto do editor?")) return;
+        setSongText("", "nova-musica.txt");
+        setStatus("Editor limpo. Escreva as notas, por exemplo: C[n1/4]; D[n1/4]; E[n1/2];", "turn");
+    });
+    // Ctrl+S salva; Ctrl+Shift+S salva como.
+    mu.text.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+            e.preventDefault();
+            if (e.shiftKey) saveSongAs(); else saveSong();
+        }
+    });
+
+    // Texto inicial: o último que estava no editor, ou a Ode à Alegria.
+    mu.text.value = savedSong?.text ?? MUSIC.EXAMPLES[0].text;
+    {
+        const { events, tempo } = MUSIC.parse(mu.text.value);
+        songEvents = events;
+        if (tempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
+        mu.info.textContent = countText(events.length);
+    }
+    showName();
+    updatePlayButton();
+
     const resetIdle = (message) => {
         stop();
+        stopSong();
+        document.body.classList.toggle("music-play", isMusic());
         game = null;
         lastFreeAt = 0;
         lastChordAt = 0;
@@ -908,10 +1181,11 @@
             phase = "free";
             setInputEnabled(true);
             setCount("♪");
-            setHubText("LIVRE");
+            setHubText(isMusic() ? "MÚSICA" : "LIVRE");
             renderProgress();
             const what = mode.look === "teclado" ? "as teclas" : "os botões";
-            setStatus(`Tocar livre: toque ${what} e invente a sua música! 🎶`, "turn");
+            if (isMusic()) setStatus(message || "Executar música: escreva as notas (ou abra um arquivo) e toque em ▶ Tocar. 🎼", "turn");
+            else setStatus(`Tocar livre: toque ${what} e invente a sua música! 🎶`, "turn");
             return;
         }
         setCount("--");
@@ -960,6 +1234,8 @@
 
     ui.btnStart.addEventListener("click", startGame);
     ui.btnStaffClear.addEventListener("click", () => {
+        stopSong();
+        songEvents = [];
         staff.clear();
         lastFreeAt = 0;
         lastChordAt = 0;
@@ -1020,7 +1296,7 @@
 
     // Teclado: as teclas de cada botão vêm de modes.js.
     window.addEventListener("keydown", (event) => {
-        if (event.target.closest?.("select") || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+        if (event.target.closest?.("select, textarea, input") || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
         const k = event.key.toLowerCase();
         const padIndex = mode.pads.findIndex((p) => p.keys.includes(k));
         if (padIndex >= 0) {

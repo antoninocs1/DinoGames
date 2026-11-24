@@ -1,0 +1,29 @@
+ODE À ALEGRIA – Ludwig van Beethoven
+Melodia (pauta de cima), compasso 4/4
+Andamento: semínima = 80
+
+// Como ler: E[n1/4] = Mi semínima; D[n1/2] = Ré mínima; G[n1] = Sol semibreve
+// 0G = o Sol de baixo (abaixo do Dó central). Vírgula = acorde; ponto e vírgula = uma depois da outra.
+
+Compasso 1:  E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+Compasso 2:  G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+Compasso 3:  C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+Compasso 4:  E[n1/2]; D[n1/2];
+
+Compasso 5:  E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+Compasso 6:  G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+Compasso 7:  C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+Compasso 8:  D[n1/2]; C[n1/2];
+
+Compasso 9:  D[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+Compasso 10: D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+Compasso 11: D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; D[n1/4];
+Compasso 12: C[n1/4]; D[n1/4]; 0G[n1/2];
+
+Compasso 13: E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+Compasso 14: G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+Compasso 15: C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+Compasso 16: D[n1/2]; C[n1/2];
+
+// Final com acorde de Dó maior (Dó, Mi e Sol juntos):
+Compasso 17: C[n1], E[n1], G[n1];

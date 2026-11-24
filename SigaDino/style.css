@@ -167,6 +167,40 @@ body.free-play .actions { grid-template-columns: auto; justify-content: end; }
 body.free-play .hub { cursor: default; }
 body.free-play .hub:hover .hub-disc { filter: none; }
 
+/* ---------- Executar música (notas) ---------- */
+.music { display: none; width: 100%; box-sizing: border-box; flex-direction: column; gap: 8px; }
+body.music-play .music { display: flex; }
+body.music-play #field-mode { display: none; }
+body.music-play .staff-clear { display: none; }
+.music-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.music-head h2 { margin: 0; }
+.song-name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+.music-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.music-tools .btn { padding: 7px 10px; font-size: 13px; }
+.song-tempo { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.song-tempo input {
+    width: 58px; padding: 6px; border-radius: 8px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text); font: inherit; font-size: 13px;
+}
+.music-tools select {
+    padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text); font: inherit; font-size: 13px; max-width: 210px;
+}
+.music-tools select option { color: #111; }
+.song-text {
+    width: 100%; min-height: 150px; height: 190px; resize: vertical; box-sizing: border-box; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: #0b0a10; color: #e9e6f2; font: 13px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace; tab-size: 4;
+}
+.song-text:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.song-info { margin: 0; min-height: 1em; font-size: 12px; color: var(--muted); }
+.music-help summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent-2); }
+.help-body { margin-top: 8px; font-size: 12px; line-height: 1.55; color: #cfcad9; }
+.help-body p { margin: 0 0 8px; }
+.help-body ul { margin: 8px 0 0; padding-left: 18px; }
+.help-body li + li { margin-top: 4px; }
+.help-body table { display: inline-table; margin: 0 14px 8px 0; border-collapse: collapse; vertical-align: top; }
+.help-body th { text-align: left; font-size: 11px; color: var(--muted); padding: 0 8px 3px 0; }
+.help-body td { padding: 2px 8px 2px 0; border-top: 1px solid var(--line); }
+.help-body code, .rules code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: #ffffff12; padding: 0 4px; border-radius: 4px; }
+
 /* ---------- Painel ---------- */
 .panel { display: flex; flex-direction: column; gap: 12px; }
 .status {
