@@ -251,8 +251,12 @@
         return mode.pads.map((_, i) => first + i * span);
     };
 
-    /** Nome mostrado do botão: com bemol (Ré♭) ou sustenido (Dó♯), conforme a escolha. */
-    const noteName = (pad) => (prefs.accidental === "bemol" && pad.flat) || pad.short || pad.name;
+    /** Nome mostrado do botão: nome (Dó) ou letra (C), com bemol (Ré♭/D♭) ou sustenido (Dó♯/C♯), conforme a escolha. */
+    const noteName = (pad) => {
+        const flat = prefs.accidental === "bemol";
+        if (prefs.names === "letra" && pad.letter) return (flat && pad.flatLetter) || pad.letter;
+        return (flat && pad.flat) || pad.short || pad.name;
+    };
 
     const label = (pad, x, y, size) => {
         const ink = pad.sharp ? "#fff" : inkFor(pad.color); // tecla preta: letra branca
@@ -428,7 +432,7 @@
     // Estado e interface
     // =================================================================
     const ui = {
-        mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), accidental: $("accidental"), fieldAccidental: $("field-accidental"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
+        mode: $("mode"), fieldMode: $("field-mode"), play: $("play"), accidental: $("accidental"), fieldAccidental: $("field-accidental"), names: $("names"), fieldNames: $("field-names"), legend: $("legend"), legendRows: $("legend-rows"), timbre: $("timbre"), level: $("level"), strict: $("strict"), goal: $("goal"),
         device: $("device"), status: $("status"), progress: $("progress"),
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
@@ -441,7 +445,7 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", names: "nome", legend: true };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -506,6 +510,8 @@
         ui.device.querySelectorAll(".pad").forEach((el) => { padEls[Number(el.dataset.i)] = el; });
         hub = { el: $("hub"), count: $("hub-count"), text: $("hub-text"), size: r * 0.48 };
         ui.fieldAccidental.hidden = !mode.pads.some((p) => p.flat);
+        ui.fieldNames.hidden = !mode.pads.some((p) => p.letter);
+        ui.legend.hidden = mode.look !== "teclado";
         setupStaff();
         hub.el.addEventListener("click", hubAction);
         hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hubAction(); } });
@@ -518,7 +524,8 @@
     };
 
     // ---------- Pentagrama (só nos modelos de teclado) ----------
-    const staffOn = () => mode.look === "teclado" && prefs.staff !== "0"; // "1" colorido, "2" só preto
+    const staffOn = () => mode.look === "teclado" && prefs.staff !== "0"; // "1" cor com nome, "3" só cor, "2" só preto
+    const STAFF_LOOKS = { 1: "nome", 2: "preto", 3: "cor" };
 
     const setFigure = (name) => {
         const fig = window.SigaDinoStaff.FIGURES[name];
@@ -533,7 +540,7 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
-        staff.setMode(mode, noteName, prefs.accidental === "bemol", prefs.staff === "2");
+        staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome");
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
         if (!game || phase === "show" || phase === "wait") return;
@@ -959,6 +966,13 @@
     bindSelect(ui.play, "play", () => { mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     bindSelect(ui.staffOpt, "staff", () => build());
+    bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
+
+    // Legenda: Nota - Letra - Cor (aberta ou fechada fica salva).
+    ui.legendRows.innerHTML = (window.SIGA_DINO_LEGEND || []).map((p) =>
+        `<tr><td>${p.name}</td><td>${p.letter}</td><td><span class="swatch" style="--c:${p.color}"></span>${p.colorName}</td></tr>`).join("");
+    ui.legend.open = prefs.legend !== false;
+    ui.legend.addEventListener("toggle", () => { prefs.legend = ui.legend.open; storage.set(PREFS_KEY, prefs); });
     ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;

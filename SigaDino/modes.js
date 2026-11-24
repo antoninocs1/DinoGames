@@ -18,6 +18,9 @@
                  short  rótulo curto opcional
                  flat   nome com bemol (ex.: "Ré♭" para o "Dó♯"); o jogador
                         escolhe no seletor ♯/♭ qual nome aparece
+                 letter nome em letra (C D E F G A B; "C♯"), usado quando o
+                        jogador escolhe "Letras"; flatLetter é a versão bemol ("D♭")
+                 colorName  nome da cor (legenda)
                  color  cor do botão
                  freq   frequência do som em Hz
                  keys   teclas que tocam o botão (minúsculas)
@@ -36,13 +39,13 @@
     // As 7 notas naturais, cada uma com uma cor do arco-íris
     // (dó vermelho … si roxo), como nos teclados coloridos de musicalização.
     const RAINBOW_NOTES = [
-        { name: "Dó",  color: "#e53935", freq: NOTE(0),  keys: ["1", "c"] },
-        { name: "Ré",  color: "#fb8c00", freq: NOTE(2),  keys: ["2", "d"] },
-        { name: "Mi",  color: "#fdd835", freq: NOTE(4),  keys: ["3", "e"] },
-        { name: "Fá",  color: "#43a047", freq: NOTE(5),  keys: ["4", "f"] },
-        { name: "Sol", color: "#29b6f6", freq: NOTE(7),  keys: ["5", "g"] },
-        { name: "Lá",  color: "#3949ab", freq: NOTE(9),  keys: ["6", "a"] },
-        { name: "Si",  color: "#8e24aa", freq: NOTE(11), keys: ["7", "b"] },
+        { name: "Dó",  letter: "C", colorName: "Vermelho",    color: "#e53935", freq: NOTE(0),  keys: ["1", "c"] },
+        { name: "Ré",  letter: "D", colorName: "Laranja",     color: "#fb8c00", freq: NOTE(2),  keys: ["2", "d"] },
+        { name: "Mi",  letter: "E", colorName: "Amarelo",     color: "#fdd835", freq: NOTE(4),  keys: ["3", "e"] },
+        { name: "Fá",  letter: "F", colorName: "Verde",       color: "#43a047", freq: NOTE(5),  keys: ["4", "f"] },
+        { name: "Sol", letter: "G", colorName: "Azul claro",  color: "#29b6f6", freq: NOTE(7),  keys: ["5", "g"] },
+        { name: "Lá",  letter: "A", colorName: "Azul escuro", color: "#3949ab", freq: NOTE(9),  keys: ["6", "a"] },
+        { name: "Si",  letter: "B", colorName: "Violeta",     color: "#8e24aa", freq: NOTE(11), keys: ["7", "b"] },
     ];
 
     /** Mistura duas cores (a luz da tecla preta é a média das vizinhas). */
@@ -65,6 +68,7 @@
         if (!s) return [pad];
         return [pad, {
             name: s.name, flat: s.flat, sharp: true, keys: [sharpKeys[SHARPS.indexOf(s)]],
+            letter: pad.letter + "♯", flatLetter: naturals[i + 1].letter + "♭",
             color: mix(pad.color, naturals[i + 1].color),
             freq: +(pad.freq * Math.pow(2, 1 / 12)).toFixed(2),
         }];
@@ -78,6 +82,8 @@
         ...pad, freq: +(pad.freq * 2).toFixed(2), keys: [UPPER_KEYS[i]], octave: 1,
     }));
     const CHROMATIC_24 = [...CHROMATIC, ...chromatic(UPPER_NOTES, ["s", "x", "h", "j", "v"]).map((p) => ({ ...p, octave: 1 }))];
+
+    window.SIGA_DINO_LEGEND = RAINBOW_NOTES; // Nota - Letra - Cor
 
     window.SIGA_DINO_MODES = {
         // Modelo clássico de 4 cores. Os tons formam um acorde de Dó maior

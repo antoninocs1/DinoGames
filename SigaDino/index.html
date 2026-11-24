@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.038">
-    <link rel="stylesheet" href="style.css?v=1.038">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.039">
+    <link rel="stylesheet" href="style.css?v=1.039">
 </head>
 <body>
     <main class="app">
@@ -34,6 +34,13 @@
                         <option value="livre">Tocar livre</option>
                     </select>
                 </label>
+                <label class="field" id="field-names" hidden>
+                    <span>Nomes</span>
+                    <select id="names" aria-label="Mostrar o nome ou a letra da nota">
+                        <option value="nome">Dó, Ré, Mi…</option>
+                        <option value="letra">Letras (C, D, E…)</option>
+                    </select>
+                </label>
                 <label class="field" id="field-accidental" hidden>
                     <span>Nomes ♯/♭</span>
                     <select id="accidental" aria-label="Mostrar sustenido ou bemol">
@@ -44,7 +51,8 @@
                 <label class="field" id="field-staff" hidden>
                     <span>Pentagrama</span>
                     <select id="staff-opt" aria-label="Mostrar as notas na partitura">
-                        <option value="1">Colorido</option>
+                        <option value="1">Cor com nome</option>
+                        <option value="3">Só cor (sem nome)</option>
                         <option value="2">Só preto (desafio)</option>
                         <option value="0">Esconder</option>
                     </select>
@@ -111,6 +119,14 @@
                     <p class="record" id="record-info"></p>
                 </div>
 
+                <details class="card legend" id="legend" hidden>
+                    <summary>Legenda</summary>
+                    <table>
+                        <thead><tr><th>Nota</th><th>Letra</th><th>Cor</th></tr></thead>
+                        <tbody id="legend-rows"></tbody>
+                    </table>
+                </details>
+
                 <details class="card rules">
                     <summary>Como jogar</summary>
                     <ul>
@@ -125,7 +141,8 @@
                         <li>Arraste o dedo (ou o mouse apertado) pelas teclas para tocar uma escala, uma nota atrás da outra.</li>
                         <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
-                        <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
+                        <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Em <strong>Só cor</strong> a nota fica com a cor da tecla, mas sem o nome dentro. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
+                        <li>Em <strong>Nomes</strong>, troque Dó, Ré, Mi… pelas <strong>letras</strong> (C, D, E, F, G, A, B) no teclado e no pentagrama. A <strong>Legenda</strong> mostra a nota, a letra e a cor de cada tecla.</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
                 </details>
@@ -137,11 +154,11 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.038"></script>
-    <script src="sounds.js?v=1.038"></script>
-    <script src="modes.js?v=1.038"></script>
-    <script src="engine.js?v=1.038"></script>
-    <script src="staff.js?v=1.038"></script>
-    <script src="game.js?v=1.038"></script>
+    <script src="../assets/combobox.js?v=1.039"></script>
+    <script src="sounds.js?v=1.039"></script>
+    <script src="modes.js?v=1.039"></script>
+    <script src="engine.js?v=1.039"></script>
+    <script src="staff.js?v=1.039"></script>
+    <script src="game.js?v=1.039"></script>
 </body>
 </html>

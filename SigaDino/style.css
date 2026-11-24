@@ -134,7 +134,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .staff .staff-notes { transition: transform .35s ease-out; }
 .staff .ledger { stroke: #1d1b22; stroke-width: 1.6; }
 .staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
-.staff .acc { font-size: 13px; font-weight: 700; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
+.staff .acc { font-size: 17px; font-weight: 700; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
 .staff .head text { font-weight: 800; text-anchor: middle; dominant-baseline: central; font-family: inherit; }
 .staff .head { transform-box: fill-box; transform-origin: center; transition: transform .15s ease-out, filter .2s; }
 /* Já tocada: um pouco apagada; acesa: brilha na cor da tecla; acertada: forte. */
@@ -198,6 +198,12 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
 .rules summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent-2); }
 .rules ul { margin: 10px 0 0; padding-left: 18px; color: #cfcad9; font-size: 12px; line-height: 1.55; }
 .rules li + li { margin-top: 4px; }
+.legend summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent-2); }
+.legend table { width: 100%; margin-top: 8px; border-collapse: collapse; font-size: 12px; color: #cfcad9; }
+.legend th { text-align: left; font-size: 11px; font-weight: 700; color: var(--muted); padding: 0 4px 4px; }
+.legend td { padding: 3px 4px; border-top: 1px solid var(--line); }
+.legend td:nth-child(2) { font-weight: 800; }
+.legend .swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 50%; vertical-align: -2px; background: var(--c); box-shadow: 0 0 0 1px #0006; }
 .keys { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 
 /* ---------- Confete ---------- */

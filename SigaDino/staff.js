@@ -2,8 +2,8 @@
    Siga o Dino — pentagrama (clave de sol) para os modelos de teclado
    ---------------------------------------------------------------------
    Desenha as notas da sequência na pauta, com a cor da tecla e o nome
-   dentro da cabeça da nota (ou só em preto, sem nome, como numa partitura
-   de verdade — modo desafio). A cabeça é um pouco inclinada, como na
+   dentro da cabeça da nota, só com a cor (sem nome) ou só em preto, sem
+   nome, como numa partitura de verdade — modo desafio. A cabeça é um pouco inclinada, como na
    escrita musical. A nota acende quando toca.
    A figura acompanha a velocidade:
      semibreve (lenta) → mínima → semínima (rápida)
@@ -22,14 +22,15 @@
     const slotsFor = (w) => Math.floor((w - X0 - 8) / DX) + 1; // notas que cabem sem rolar
 
     const FIGURES = {
-        semibreve: { title: "Semibreve", rx: 12.5, ry: 9.4, hollow: true, stem: false },
-        minima:    { title: "Mínima",    rx: 11, ry: 9, hollow: true, stem: true },
-        seminima:  { title: "Semínima",  rx: 11, ry: 9, hollow: false, stem: true },
+        // Cabeça com o nome dentro: pequena o bastante para ver se está na linha ou no espaço.
+        semibreve: { title: "Semibreve", rx: 10.2, ry: 7.4, hollow: true, stem: false },
+        minima:    { title: "Mínima",    rx: 9.4, ry: 7, hollow: true, stem: true },
+        seminima:  { title: "Semínima",  rx: 9.4, ry: 7, hollow: false, stem: true },
     };
 
     /** Figura pela duração da nota acesa (ms): quanto mais rápido, menor a figura. */
     const TILT = -20;            // inclinação da cabeça (graus, sobe para a direita)
-    // Partitura em preto: cabeças menores e mais alongadas, sem nome dentro.
+    // Sem nome (só preto ou só cor): cabeças menores e mais alongadas, como numa partitura.
     const MONO = {
         semibreve: { rx: 8.6, ry: 6.2, tilt: 0 },
         minima:    { rx: 7.6, ry: 5.4, tilt: TILT },
@@ -81,7 +82,7 @@
         let mode = null;
         let nameOf = (pad) => pad.name;
         let flats = false;
-        let mono = false;        // partitura só em preto, sem nomes
+        let look = "nome";       // "nome" (cor + nome), "cor" (só cor) ou "preto" (desafio)
         let notes = [];          // { el, pad }
         let shift = 0;           // quantas notas já rolaram para a esquerda
         let first = 0;           // posição da 1ª nota ainda guardada (as anteriores já foram apagadas)
@@ -111,8 +112,9 @@
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const { step, acc } = placeOf(index);
             const x = X0 + slot * DX, y = yOf(step);
-            const color = mono ? INK : pad.color;
-            const m = mono ? MONO[figureName] || MONO.semibreve : null;
+            const plain = look !== "nome"; // cabeça de partitura, sem nome dentro
+            const color = look === "preto" ? INK : pad.color;
+            const m = plain ? MONO[figureName] || MONO.semibreve : null;
             const rx = m ? m.rx : fig.rx, ry = m ? m.ry : fig.ry, tilt = m ? m.tilt : TILT;
             const edge = edgeOf(rx, ry, tilt);
             // ♯/♭ já aparece fora da figura: dentro vai só o nome da nota natural (Dó♯ → Dó).
@@ -129,24 +131,26 @@
                 const sy = up ? y + edge.dy : y - edge.dy;
                 parts.push(`<line class="stem" x1="${f(sx)}" x2="${f(sx)}" y1="${f(sy)}" y2="${f(up ? y - STEM : y + STEM)}"/>`);
             }
-            if (acc) parts.push(`<text class="acc" x="${f(x - edge.half - 4.5)}" y="${y}">${acc}</text>`);
+            if (acc) parts.push(`<text class="acc" x="${f(x - edge.half - 6)}" y="${y}">${acc}</text>`);
             const rot = tilt ? ` transform="rotate(${tilt} ${x} ${y})"` : "";
-            if (mono) {
-                // Cabeça preta (semínima) ou vazada (mínima/semibreve), sem nome: é preciso ler a pauta.
+            if (plain) {
+                // Cabeça cheia (semínima) ou vazada (mínima/semibreve), sem nome: é preciso ler a pauta.
                 // O furo da semibreve/mínima é vazado de verdade: a linha da pauta aparece por dentro.
                 const whole = figureName === "semibreve";
                 const hole = !fig.hollow ? ""
                     : whole ? ellipsePath(x, y, f(rx * 0.52), f(ry * 0.56), -50)
                     : ellipsePath(x, y, f(rx * 0.8), f(ry * 0.42), tilt - 12);
-                const head = `<path d="${ellipsePath(x, y, rx, ry, tilt)}${hole}" fill="${INK}" fill-rule="evenodd"/>`;
-                parts.push(`<g class="head" style="--c:#3b82f6">${head}</g>`);
+                // Na versão colorida, um contorno fino deixa as cores claras (amarelo) visíveis no papel.
+                const edgeLine = look === "cor" ? ` stroke="#1d1b22" stroke-opacity=".55" stroke-width=".8"` : "";
+                const head = `<path d="${ellipsePath(x, y, rx, ry, tilt)}${hole}" fill="${color}" fill-rule="evenodd"${edgeLine}/>`;
+                parts.push(`<g class="head" style="--c:${look === "preto" ? "#3b82f6" : color}">${head}</g>`);
                 return `<g class="note mono" data-figure="${figureName}">${parts.join("")}</g>`;
             }
             const fill = fig.hollow ? tint(color, 0.72) : color;
             const ink = fig.hollow ? "#1d1b22" : lum(color) > 0.6 ? "#1d1b22" : "#fff";
-            const size = name.length > 3 ? 6.2 : name.length > 2 ? 7.2 : 8;
+            const size = name.length > 2 ? 6 : name.length > 1 ? 6.6 : 7.4;
             parts.push(`<g class="head" style="--c:${color}">
-                <ellipse rx="${rx}" ry="${ry}" cx="${x}" cy="${y}"${rot} fill="${fill}" stroke="${fig.hollow ? color : "#00000066"}" stroke-width="${fig.hollow ? 3 : 1}"/>
+                <ellipse rx="${rx}" ry="${ry}" cx="${x}" cy="${y}"${rot} fill="${fill}" stroke="${fig.hollow ? color : "#00000066"}" stroke-width="${fig.hollow ? 2.4 : 1}"/>
                 <text x="${x}" y="${f(y + 0.3)}" font-size="${size}" fill="${ink}">${name}</text>
             </g>`);
             return `<g class="note" data-figure="${figureName}">${parts.join("")}</g>`;
@@ -163,13 +167,13 @@
         return {
             figureFor,
             FIGURES,
-            /** Troca o modo (botões), como o nome aparece (♯ ou ♭) e se a partitura é só preta. */
-            setMode(newMode, nameFn, useFlats, onlyBlack = false) {
+            /** Troca o modo (botões), como o nome aparece (♯ ou ♭) e o estilo: "nome", "cor" ou "preto". */
+            setMode(newMode, nameFn, useFlats, headLook = "nome") {
                 mode = newMode;
                 nameOf = nameFn;
                 flats = useFlats;
-                mono = onlyBlack;
-                svg.classList.toggle("mono", mono);
+                look = headLook;
+                svg.classList.toggle("mono", look === "preto");
                 // Altura do desenho: com 2 oitavas sobe para caber as notas agudas.
                 const wide = mode.pads.some((p) => p.octave);
                 W = wide ? W_WIDE : W_NORMAL;
