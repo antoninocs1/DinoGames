@@ -105,7 +105,7 @@
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
-            <defs><clipPath id="staff-clip"><rect x="${X0 - 28}" y="-60" width="${W_WIDE}" height="160"/></clipPath></defs>
+            <defs><clipPath id="staff-clip"><rect x="0" y="-60" width="${W_WIDE}" height="160"/></clipPath></defs>
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
                 `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
@@ -223,6 +223,8 @@
             if (want === shift) return;
             shift = want;
             layer.style.transform = `translateX(${f(-shift)}px)`;
+            // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
+            notes.forEach((m) => m.el.classList.toggle("gone", m.x - shift < X0 - DX / 2));
         };
 
         return {

@@ -437,7 +437,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), staffBox: $("staff-box"), staffFigure: $("staff-figure"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
 
@@ -959,6 +959,11 @@
     window.addEventListener("blur", () => held.clear());
 
     ui.btnStart.addEventListener("click", startGame);
+    ui.btnStaffClear.addEventListener("click", () => {
+        staff.clear();
+        lastFreeAt = 0;
+        lastChordAt = 0;
+    });
     ui.btnPause.addEventListener("click", togglePause);
 
     const updateSoundButton = () => {

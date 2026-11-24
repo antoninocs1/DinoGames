@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.041">
-    <link rel="stylesheet" href="style.css?v=1.041">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.042">
+    <link rel="stylesheet" href="style.css?v=1.042">
 </head>
 <body>
     <main class="app">
@@ -93,7 +93,10 @@
             <div class="stage">
                 <figure class="staff-box" id="staff-box" hidden>
                     <svg class="staff" id="staff" role="img" aria-label="Pentagrama na clave de sol com as notas tocadas"></svg>
-                    <figcaption class="staff-figure" id="staff-figure"></figcaption>
+                    <figcaption class="staff-foot">
+                        <button type="button" class="staff-clear" id="btn-staff-clear" aria-label="Limpar as notas do pentagrama">🧽 Limpar</button>
+                        <span class="staff-figure" id="staff-figure"></span>
+                    </figcaption>
                 </figure>
                 <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
             </div>
@@ -154,11 +157,11 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.041"></script>
-    <script src="sounds.js?v=1.041"></script>
-    <script src="modes.js?v=1.041"></script>
-    <script src="engine.js?v=1.041"></script>
-    <script src="staff.js?v=1.041"></script>
-    <script src="game.js?v=1.041"></script>
+    <script src="../assets/combobox.js?v=1.042"></script>
+    <script src="sounds.js?v=1.042"></script>
+    <script src="modes.js?v=1.042"></script>
+    <script src="engine.js?v=1.042"></script>
+    <script src="staff.js?v=1.042"></script>
+    <script src="game.js?v=1.042"></script>
 </body>
 </html>
