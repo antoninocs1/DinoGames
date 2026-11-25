@@ -208,30 +208,49 @@ const guqin = (f0) => {
 };
 
 // ---------------------------------------------------------------------
-// Flauta de bambu (dizi): tom soprado — fundamental forte, poucos
-// harmônicos, sopro de ar (ruído) e o zumbido leve da membrana; entrada
-// com um "chiff" curto e vibrato que aparece depois de um instante.
-// Longa (o jogo corta quando a luz apaga).
+// Flauta soprada (tubo aberto): seno com poucos harmônicos, sopro de ar,
+// entrada macia e vibrato que aparece depois de um instante. Longa (o
+// jogo corta quando a luz apaga).
+//   parts    [múltiplo, volume] dos harmônicos
+//   breath   quanto de sopro (ruído) fica durante a nota
+//   vib      profundidade do vibrato (fração da frequência) e rate (Hz)
+//   buzz     zumbido da membrana do dizi (0 = sem membrana)
 // ---------------------------------------------------------------------
-const flauta = (f0) => {
+const blown = (f0, { parts, breath, chiff, attack, vib, rate, buzz = 0 }) => {
     const buf = new Float32Array(seconds(3.4));
-    const parts = [[1, 1], [2, 0.32], [3, 0.16], [4, 0.05], [5, 0.035]];
     let phase = 0, noise = 0, band = 0;
     for (let i = 0; i < buf.length; i++) {
         const t = i / RATE;
-        const vib = Math.min(1, Math.max(0, (t - 0.3) / 0.5)) * 0.006 * Math.sin(2 * Math.PI * 5 * t);
-        phase += 2 * Math.PI * f0 * (1 + vib) / RATE;
+        const grow = Math.min(1, Math.max(0, (t - 0.3) / 0.5));
+        const wob = Math.sin(2 * Math.PI * rate * t);
+        phase += 2 * Math.PI * f0 * (1 + grow * vib * wob) / RATE;
         let s = 0;
         for (const [m, v] of parts) s += v * Math.sin(m * phase);
-        // Sopro: ruído suavizado, mais forte na entrada.
+        // Membrana (dizi): a onda "raspa" — corta um pouco os picos, criando harmônicos ásperos.
+        if (buzz) s = (1 - buzz) * s + buzz * Math.tanh(3 * s);
         noise = noise * 0.75 + rand() * 0.25;
         band = band * 0.6 + noise * 0.4;
-        const air = band * (0.12 + 0.5 * Math.exp(-t / 0.05));
-        const env = Math.min(1, t / 0.06) * (1 + 0.04 * Math.sin(2 * Math.PI * 0.7 * t));
+        const air = band * (breath + chiff * Math.exp(-t / 0.05));
+        // Na flauta de orquestra o vibrato também mexe no volume.
+        const env = Math.min(1, t / attack) * (1 + grow * 0.06 * wob);
         buf[i] = env * s + air;
     }
     return edges(buf, 0.002, 0.08);
 };
+
+// Flauta de bambu (dizi): mais áspera e "zumbida" (membrana), sopro forte,
+// vibrato mais rápido.
+const dizi = (f0) => blown(f0, {
+    parts: [[1, 1], [2, 0.5], [3, 0.38], [4, 0.2], [5, 0.16], [6, 0.08], [7, 0.06]],
+    breath: 0.2, chiff: 0.6, attack: 0.04, vib: 0.009, rate: 6, buzz: 0.45,
+});
+
+// Flauta transversal de orquestra (metal): som puro e redondo, quase só a
+// fundamental, sopro discreto, entrada macia e vibrato amplo e calmo.
+const flautaOrquestra = (f0) => blown(f0, {
+    parts: [[1, 1], [2, 0.22], [3, 0.07], [4, 0.025]],
+    breath: 0.06, chiff: 0.22, attack: 0.08, vib: 0.006, rate: 5,
+});
 
 fs.mkdirSync(OUT, { recursive: true });
 // As frequências base precisam bater com SigaDino/sounds.js.
@@ -241,4 +260,5 @@ writeWav("xilofone.wav", xilofone(523.25));
 writeWav("caixinha.wav", caixinha(523.25));
 writeWav("guzheng.wav", guzheng(392));
 writeWav("guqin.wav", guqin(196));
-writeWav("flauta.wav", flauta(440));
+writeWav("flauta.wav", dizi(440));
+writeWav("flauta-orquestra.wav", flautaOrquestra(523.25));

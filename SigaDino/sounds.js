@@ -53,5 +53,7 @@
         guzheng:    { title: "Guzheng (cítara chinesa)", type: "sample", file: "sounds/guzheng.wav", base: 392, ring: true },
         guqin:      { title: "Guqin (cítara de 7 cordas)", type: "sample", file: "sounds/guqin.wav", base: 196, ring: true, octave: -1 },
         flauta:     { title: "Flauta de bambu (dizi)", type: "sample", file: "sounds/flauta.wav", base: 440, ring: false },
+        // Flauta transversal de metal, a da orquestra: som puro e redondo.
+        flautaOrq:  { title: "Flauta (orquestra)", type: "sample", file: "sounds/flauta-orquestra.wav", base: 523.25, ring: false },
     };
 })();
