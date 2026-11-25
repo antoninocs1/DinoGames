@@ -943,6 +943,7 @@
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
         if (!isMusic()) return;
+        staff.setTitle(MUSIC.parse(mu.text.value).title); // linha "Música: …" do texto
         staff.clear();
         songEvents.forEach((ev, k) => {
             if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted, bar: ev.bar });
@@ -1213,13 +1214,13 @@
         setStatus("Caixinha de notas limpa. Toque as teclas para escrever de novo. 🎶", "turn");
     });
     tr.save.addEventListener("click", async () => {
-        const text = `Música tocada no Siga o Dino\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        const text = `Música: Minha música\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
         const saved = await saveTextFile(text, "minha-musica.txt");
         if (saved) setStatus(`Notas salvas em “${saved.name}”. 💾 Abra no Executar música para tocar.`, "good");
     });
     tr.send.addEventListener("click", () => {
         if (!okToReplace()) return;
-        const text = `Música tocada no Siga o Dino\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        const text = `Música: Minha música\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
         prefs.play = "musica";
         ui.play.value = "musica";
         storage.set(PREFS_KEY, prefs);

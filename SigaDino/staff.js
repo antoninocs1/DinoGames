@@ -158,8 +158,23 @@
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
                 `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
+            <text class="staff-title" text-anchor="middle"></text>
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
+        const titleEl = svg.querySelector(".staff-title");
+        let view = { top: -20, bottom: 76 }; // área do desenho sem o título
+        let title = "";
+        /** Ajusta a área do desenho: com título, ganha uma faixa em cima para o nome da música. */
+        const applyView = () => {
+            const top = view.top - (title ? 18 : 0);
+            const height = view.bottom - top;
+            svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
+            svg.style.aspectRatio = `${W} / ${height}`;
+            document.body.style.setProperty("--sh", String(height / W));
+            titleEl.textContent = title;
+            titleEl.setAttribute("x", W / 2);
+            titleEl.setAttribute("y", top + 13);
+        };
 
         /**
          * Posição (linha/espaço) e acidente de uma nota: índice do botão do teclado ou
@@ -345,12 +360,18 @@
                 W = wide ? W_WIDE : W_NORMAL;
                 SLOTS = slotsFor(W);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
-                const top = wide ? -34 : -20;
-                const height = (opts.deep ? 92 : 76) - top; // deep: espaço para notas abaixo do Dó central
-                svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
-                svg.style.aspectRatio = `${W} / ${height}`;
-                document.body.style.setProperty("--sh", String(height / W));
+                // deep: espaço para notas abaixo do Dó central.
+                view = { top: wide ? -34 : -20, bottom: opts.deep ? 92 : 76 };
+                title = "";
+                applyView();
                 this.clear();
+            },
+            /** Nome da música, centralizado em cima do pentagrama ("" tira). */
+            setTitle(text = "") {
+                const t = String(text).trim();
+                if (t === title) return;
+                title = t;
+                applyView();
             },
             clear() {
                 endBar = null;

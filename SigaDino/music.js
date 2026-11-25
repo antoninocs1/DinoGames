@@ -18,6 +18,7 @@
    ou de "|", ganha a barra antes dela no pentagrama (e a música termina com a barra dupla).
    Texto que não é nota (títulos, "Compasso 1:", |) é ignorado; "//" começa um
    comentário até o fim da linha. "Andamento: semínima = 80" define a velocidade.
+   "Música: Nome da música" dá o título, mostrado em cima do pentagrama.
    ===================================================================== */
 (() => {
     "use strict";
@@ -110,12 +111,14 @@
         }
         const tempoMatch = text.match(/sem[ií]nima\s*=\s*(\d{2,3})/i) || text.match(/(?:andamento|bpm|tempo)\s*[:=]?\s*(\d{2,3})/i);
         const tempo = tempoMatch ? Math.min(240, Math.max(30, Number(tempoMatch[1]))) : 0;
-        return { events, tempo, warnings };
+        const titleMatch = text.match(/^[ \t]*m[úu]sica[ \t]*:[ \t]*(.+?)[ \t]*$/im);
+        const title = titleMatch ? titleMatch[1] : "";
+        return { events, tempo, warnings, title };
     };
 
     // ---------- Exemplos ----------
     // Igual ao arquivo "Ode_a_Alegria_notas.txt" (melodia principal, 8 compassos).
-    const ODE = `ODE À ALEGRIA – Ludwig van Beethoven
+    const ODE = `Música: ODE À ALEGRIA – Ludwig van Beethoven
 Transcrição em texto (melodia principal)
 
 Referência: arquivo “Teoria Musical.pdf”, página 3.
