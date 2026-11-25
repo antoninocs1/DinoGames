@@ -170,6 +170,9 @@ body.free-play .hub:hover .hub-disc { filter: none; }
 /* ---------- Executar música (notas) ---------- */
 .music { display: none; width: 100%; box-sizing: border-box; flex-direction: column; gap: 8px; }
 body.music-play .music { display: flex; }
+.free-notes { display: none; width: 100%; box-sizing: border-box; flex-direction: column; gap: 8px; }
+body.free-keys .free-notes { display: flex; }
+.song-text.free-text { min-height: 70px; height: 96px; }
 body.music-play #field-mode { display: none; }
 body.music-play .staff-clear { display: none; }
 .music-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }

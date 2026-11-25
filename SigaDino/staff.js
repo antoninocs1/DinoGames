@@ -63,14 +63,15 @@
      * Sustenido e bemol desenhados (não com letra de fonte), com o centro exatamente na
      * altura da nota: em cima da linha quando a nota é de linha, no meio do espaço quando é de espaço.
      */
+    const ACC_SCALE = 0.78; // tamanho do ♯/♭ em relação ao desenho original
     const sharpSvg = (x, y) => {
         const bar = (cy) => `M-5 ${cy + 1.4}L5 ${cy - 1.4}L5 ${cy + 1.4}L-5 ${cy + 4.2}Z`;
-        return `<g class="acc" transform="translate(${f(x)} ${f(y)})">
+        return `<g class="acc" transform="translate(${f(x)} ${f(y)}) scale(${ACC_SCALE})">
             <path d="M-2.3 -10.5V13M2.3 -13V10.5" fill="none" stroke="${INK}" stroke-width="1.3"/>
             <path d="${bar(-6.2)}${bar(3.4)}" fill="${INK}"/>
         </g>`;
     };
-    const flatSvg = (x, y) => `<g class="acc" transform="translate(${f(x)} ${f(y)})">
+    const flatSvg = (x, y) => `<g class="acc" transform="translate(${f(x)} ${f(y)}) scale(${ACC_SCALE})">
             <path d="M-4 -19V5.2" fill="none" stroke="${INK}" stroke-width="1.3"/>
             <path d="M-4.6 5.4C1 2.6 4.6 -0.4 4.2 -3.4C3.8 -6.4 -0.4 -6.6 -4 -3.2V-1.2C-1 -4.2 1.9 -4.4 2 -2.6C2.1 -0.6 -0.6 1.8 -4 3.6Z" fill="${INK}"/>
         </g>`;
@@ -273,10 +274,10 @@
                 let c = 0;
                 while ((cols[c] || []).some((s) => Math.abs(s - it.step) < 5)) c++;
                 (cols[c] = cols[c] || []).push(it.step);
-                let ax = minX - 3 - c * 10;
+                let ax = minX - 3 - c * 8;
                 // ♯♯ / ♭♭: dois sinais lado a lado.
                 [...it.acc].forEach((sign) => {
-                    const w = sign === "♯" ? 10 : 8;
+                    const w = (sign === "♯" ? 10 : 8) * ACC_SCALE;
                     ax -= w / 2;
                     parts.push(sign === "♯" ? sharpSvg(ax, yOf(it.step)) : flatSvg(ax, yOf(it.step)));
                     left = Math.min(left, ax - w / 2);
@@ -287,7 +288,7 @@
             return {
                 html: `<g class="note${mono}" data-figure="${figureName}">${parts.join("")}</g>`,
                 // Quanto o acorde passa de uma nota comum (com um ♯) para cada lado: vira espaço extra.
-                extraLeft: Math.max(0, x - left - (edge.half + 14)),
+                extraLeft: Math.max(0, x - left - (edge.half + 11)),
                 extraRight: Math.max(0, maxX - x - edge.half - 4),
             };
         };

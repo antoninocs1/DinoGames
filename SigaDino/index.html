@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.043">
-    <link rel="stylesheet" href="style.css?v=1.043">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.044">
+    <link rel="stylesheet" href="style.css?v=1.044">
 </head>
 <body>
     <main class="app">
@@ -100,6 +100,20 @@
                     </figcaption>
                 </figure>
                 <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
+
+                <section class="card free-notes" id="free-notes" aria-label="Notas tocadas em código">
+                    <div class="music-head">
+                        <h2>Notas tocadas (código)</h2>
+                        <span class="song-name">figura pelo ritmo: devagar = [n1], médio = [n1/2], rápido = [n1/4]</span>
+                    </div>
+                    <textarea id="free-text" class="song-text free-text" readonly spellcheck="false" aria-label="Notas tocadas, no código do Executar música"
+                        placeholder="Toque as teclas: as notas aparecem aqui no código, por exemplo E[n1/4]; F[n1/4]; C[n1], E[n1], G[n1];"></textarea>
+                    <div class="music-tools">
+                        <button class="btn" id="btn-free-save" type="button" title="Salvar as notas num arquivo .txt">💾 Salvar</button>
+                        <button class="btn" id="btn-free-clear" type="button" title="Apagar as notas da caixinha">🧽 Limpar</button>
+                        <button class="btn" id="btn-free-send" type="button" title="Abrir estas notas no Executar música para tocar e editar">▶ Levar para Executar música</button>
+                    </div>
+                </section>
 
                 <section class="card music" id="music" aria-label="Executar música (notas)">
                     <div class="music-head">
@@ -226,12 +240,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.043"></script>
-    <script src="sounds.js?v=1.043"></script>
-    <script src="modes.js?v=1.043"></script>
-    <script src="engine.js?v=1.043"></script>
-    <script src="staff.js?v=1.043"></script>
-    <script src="music.js?v=1.043"></script>
-    <script src="game.js?v=1.043"></script>
+    <script src="../assets/combobox.js?v=1.044"></script>
+    <script src="sounds.js?v=1.044"></script>
+    <script src="modes.js?v=1.044"></script>
+    <script src="engine.js?v=1.044"></script>
+    <script src="staff.js?v=1.044"></script>
+    <script src="music.js?v=1.044"></script>
+    <script src="game.js?v=1.044"></script>
 </body>
 </html>

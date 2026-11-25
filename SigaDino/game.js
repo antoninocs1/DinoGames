@@ -550,6 +550,7 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
+        document.body.classList.toggle("free-keys", isFree() && !isMusic() && mode.pads.some((p) => p.letter));
         staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome",
             { lead: isMusic(), deep: isMusic() });
         if (isMusic()) { setFigure("seminima"); renderSong(); return; }
@@ -877,26 +878,26 @@
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i, source = "") => {
         light(i, 420);
-        if (staffOn() && !songPlaying()) {
-            // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
-            // Acorde só quando outra tecla/dedo bate quase junto com a anterior, que ainda está
-            // apertada. Escala rápida ou glissando (o mesmo dedo arrastando) seguem nota a nota.
-            const now = performance.now();
-            const gapMs = lastFreeAt ? now - lastFreeAt : 2000;
-            const chord = gapMs < CHORD_MS && now - chordStart < 120
-                && source && lastSource && source !== lastSource && held.has(lastSource);
-            lastSource = source;
-            if (!chord) {
-                chordStart = now;
-                // A figura sai do intervalo entre um toque (ou acorde) e o próximo.
-                const sinceChord = lastChordAt ? now - lastChordAt : 2000;
-                freeFigure = sinceChord > 900 ? "semibreve" : sinceChord > 450 ? "minima" : "seminima";
-                lastChordAt = now;
-                setFigure(freeFigure);
-            }
-            lastFreeAt = now;
-            staff.done(staff.push(i, freeFigure, 420, chord));
+        if (songPlaying()) return; // a música do editor está tocando: só acende e toca
+        // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
+        // Acorde só quando outra tecla/dedo bate quase junto com a anterior, que ainda está
+        // apertada. Escala rápida ou glissando (o mesmo dedo arrastando) seguem nota a nota.
+        const now = performance.now();
+        const gapMs = lastFreeAt ? now - lastFreeAt : 2000;
+        const chord = gapMs < CHORD_MS && now - chordStart < 120
+            && source && lastSource && source !== lastSource && held.has(lastSource);
+        lastSource = source;
+        const sinceChord = lastChordAt ? now - lastChordAt : 99999;
+        if (!chord) {
+            chordStart = now;
+            // A figura sai do intervalo entre um toque (ou acorde) e o próximo.
+            freeFigure = sinceChord > 900 ? "semibreve" : sinceChord > 450 ? "minima" : "seminima";
+            lastChordAt = now;
+            if (staffOn()) setFigure(freeFigure);
         }
+        lastFreeAt = now;
+        if (staffOn()) staff.done(staff.push(i, freeFigure, 420, chord));
+        if (!isMusic()) transcribe(i, freeFigure, chord, sinceChord);
         const pad = mode.pads[i];
         const text = noteName(pad);
         setCount(text.length <= 4 ? text.toUpperCase() : "♪", text.length > 3 ? 0.78 : 1);
@@ -1079,28 +1080,37 @@
         rememberSong();
         setStatus(`Música salva em “${song.name}”. 💾`, "good");
     };
-    const saveSongAs = async () => {
+    /**
+     * Salva um texto num arquivo .txt escolhido pelo usuário. Devolve { name, handle }
+     * (handle só quando o navegador deixa gravar de novo no mesmo arquivo) ou null se cancelou.
+     */
+    const saveTextFile = async (text, suggestedName) => {
         if (window.showSaveFilePicker) {
             try {
-                const handle = await window.showSaveFilePicker({ suggestedName: song.name, types: [TXT] });
-                await writeTo(handle);
-                song.handle = handle;
-                song.name = handle.name;
-                savedOk();
-            } catch { /* cancelado */ }
-            return;
+                const handle = await window.showSaveFilePicker({ suggestedName, types: [TXT] });
+                const w = await handle.createWritable();
+                await w.write(text);
+                await w.close();
+                return { name: handle.name, handle };
+            } catch { return null; } // cancelado
         }
         // Sem acesso a arquivos (celular): baixa o .txt com o nome escolhido.
-        let name = window.prompt("Nome do arquivo:", song.name);
-        if (!name) return;
+        let name = window.prompt("Nome do arquivo:", suggestedName);
+        if (!name) return null;
         if (!/\.txt$/i.test(name)) name += ".txt";
-        const url = URL.createObjectURL(new Blob([mu.text.value], { type: "text/plain;charset=utf-8" }));
+        const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
         const a = Object.assign(document.createElement("a"), { href: url, download: name });
         document.body.append(a);
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        song.name = name;
+        return { name, handle: null };
+    };
+    const saveSongAs = async () => {
+        const saved = await saveTextFile(mu.text.value, song.name);
+        if (!saved) return;
+        song.name = saved.name;
+        song.handle = saved.handle;
         savedOk();
     };
     const saveSong = async () => {
@@ -1155,6 +1165,72 @@
             if (e.shiftKey) saveSongAs(); else saveSong();
         }
     });
+
+    // =================================================================
+    // Tocar livre: as notas tocadas viram código (o mesmo do Executar música)
+    // =================================================================
+    const tr = {
+        box: $("free-notes"), text: $("free-text"), save: $("btn-free-save"),
+        clear: $("btn-free-clear"), send: $("btn-free-send"),
+    };
+    const FREE_KEY = "dinogames-sigadino-free-notes";
+    const FRAC_CODE = { semibreve: "1", minima: "1/2", seminima: "1/4" };
+    let freeEvents = storage.get(FREE_KEY)?.events || []; // [{ notes: ["E"], fig, br }]
+
+    /** Código da tecla: letra com # ou b (conforme ♯/♭ escolhido) e "2" na oitava de cima. */
+    const codeOf = (pad) => {
+        if (!pad.letter) return "";
+        const flat = prefs.accidental === "bemol" && pad.flatLetter;
+        const letter = (flat ? pad.flatLetter : pad.letter).replace("♯", "#").replace("♭", "b");
+        return `${pad.octave ? "2" : ""}${letter}`;
+    };
+    const renderFree = () => {
+        tr.text.value = freeEvents.map((ev, k) =>
+            `${k && ev.br ? "\n" : k ? " " : ""}${ev.notes.map((n) => `${n}[n${FRAC_CODE[ev.fig] || "1/4"}]`).join(", ")};`).join("");
+        tr.text.scrollTop = tr.text.scrollHeight;
+        const empty = !freeEvents.length;
+        tr.save.disabled = tr.clear.disabled = tr.send.disabled = empty;
+        storage.set(FREE_KEY, { events: freeEvents });
+    };
+    /** Acrescenta a nota tocada (ou junta no acorde). Pausa longa ou 8 notas = linha nova. */
+    function transcribe(i, figure, chord, sinceMs) {
+        const code = codeOf(mode.pads[i]);
+        if (!code) return;
+        const last = freeEvents[freeEvents.length - 1];
+        if (chord && last) {
+            if (!last.notes.includes(code)) last.notes.push(code);
+        } else {
+            let run = 0;
+            for (let k = freeEvents.length - 1; k >= 0 && !freeEvents[k].br; k--) run++;
+            freeEvents.push({ notes: [code], fig: figure, br: sinceMs > 2500 || run >= 7 });
+        }
+        renderFree();
+    }
+    tr.clear.addEventListener("click", () => {
+        freeEvents = [];
+        renderFree();
+        setStatus("Caixinha de notas limpa. Toque as teclas para escrever de novo. 🎶", "turn");
+    });
+    tr.save.addEventListener("click", async () => {
+        const text = `Música tocada no Siga o Dino\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        const saved = await saveTextFile(text, "minha-musica.txt");
+        if (saved) setStatus(`Notas salvas em “${saved.name}”. 💾 Abra no Executar música para tocar.`, "good");
+    });
+    tr.send.addEventListener("click", () => {
+        if (!okToReplace()) return;
+        const text = `Música tocada no Siga o Dino\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        prefs.play = "musica";
+        ui.play.value = "musica";
+        storage.set(PREFS_KEY, prefs);
+        mode = pickMode();
+        resetIdle();
+        build();
+        setSongText(text, "minha-musica.txt");
+        song.dirty = true;
+        showName();
+        setStatus("As notas foram para o editor. Toque em ▶ Tocar para ouvir (e edite à vontade).", "turn");
+    });
+    renderFree();
 
     // Texto inicial: o último que estava no editor, ou a Ode à Alegria.
     mu.text.value = savedSong?.text ?? MUSIC.EXAMPLES[0].text;
