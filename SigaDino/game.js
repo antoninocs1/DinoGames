@@ -1120,11 +1120,11 @@
         catch { saveSongAs(); }
     };
 
-    mu.example.innerHTML = `<option value="">Exemplos…</option>` +
-        MUSIC.EXAMPLES.map((e) => `<option value="${e.id}">${e.title}</option>`).join("");
-    mu.example.addEventListener("change", () => {
-        const ex = MUSIC.EXAMPLES.find((e) => e.id === mu.example.value);
-        mu.example.value = "";
+    // Um botão para cada música de exemplo guardada no código (music.js).
+    mu.example.innerHTML = MUSIC.EXAMPLES.map((e) =>
+        `<button class="btn example" type="button" data-id="${e.id}" title="Carregar a música de exemplo ${e.title}">🎼 ${e.short || e.title}</button>`).join("");
+    mu.example.addEventListener("click", (event) => {
+        const ex = MUSIC.EXAMPLES.find((e) => e.id === event.target.closest("[data-id]")?.dataset.id);
         if (ex && okToReplace()) {
             setSongText(ex.text, ex.file);
             setStatus(`Exemplo “${ex.title}” carregado. Toque em ▶ Tocar. 🎼`, "turn");

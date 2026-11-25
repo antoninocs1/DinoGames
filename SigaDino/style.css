@@ -190,7 +190,8 @@ body.music-play .staff-clear { display: none; }
 .music-tools select {
     padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text); font: inherit; font-size: 13px; max-width: 210px;
 }
-.music-tools select option { color: #111; }
+.song-examples { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.btn.example { border-color: #fdba7466; color: var(--accent-2); }
 .song-text {
     width: 100%; min-height: 150px; height: 190px; resize: vertical; box-sizing: border-box; padding: 10px 12px; border-radius: 10px;
     border: 1px solid var(--line); background: #0b0a10; color: #e9e6f2; font: 13px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace; tab-size: 4;

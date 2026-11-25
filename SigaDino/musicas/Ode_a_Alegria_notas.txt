@@ -1,29 +1,46 @@
 ODE À ALEGRIA – Ludwig van Beethoven
-Melodia (pauta de cima), compasso 4/4
-Andamento: semínima = 80
+Transcrição em texto (melodia principal)
 
-// Como ler: E[n1/4] = Mi semínima; D[n1/2] = Ré mínima; G[n1] = Sol semibreve
-// 0G = o Sol de baixo (abaixo do Dó central). Vírgula = acorde; ponto e vírgula = uma depois da outra.
+Referência: arquivo “Teoria Musical.pdf”, página 3.
+Instrumento/linha considerada: pauta superior (melodia).
+Compasso: 4/4
+Andamento indicado na partitura: semínima = 80
 
-Compasso 1:  E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
-Compasso 2:  G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
-Compasso 3:  C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
-Compasso 4:  E[n1/2]; D[n1/2];
+Convenção utilizada conforme o material:
+[n1/4] = semínima
+[n1/2] = mínima
+[n1]   = semibreve
 
-Compasso 5:  E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
-Compasso 6:  G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
-Compasso 7:  C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
-Compasso 8:  D[n1/2]; C[n1/2];
+As letras representam as notas conforme a legenda:
+C = Dó | D = Ré | E = Mi | F = Fá | G = Sol | A = Lá | B = Si
 
-Compasso 9:  D[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
-Compasso 10: D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
-Compasso 11: D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; D[n1/4];
-Compasso 12: C[n1/4]; D[n1/4]; 0G[n1/2];
+MELODIA – TEMA PRINCIPAL
 
-Compasso 13: E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
-Compasso 14: G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
-Compasso 15: C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
-Compasso 16: D[n1/2]; C[n1/2];
+Compasso 1:
+E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
 
-// Final com acorde de Dó maior (Dó, Mi e Sol juntos):
-Compasso 17: C[n1], E[n1], G[n1];
+Compasso 2:
+G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+
+Compasso 3:
+C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+
+Compasso 4:
+E[n1/2]; D[n1/2];
+
+Compasso 5:
+E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+
+Compasso 6:
+G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+
+Compasso 7:
+C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+
+Compasso 8:
+D[n1/2]; C[n1/2];
+
+Observação:
+Esta transcrição apresenta o tema principal da melodia, organizado em oito compassos,
+com base na pauta superior da partitura da página 3. Não representa o acompanhamento
+da pauta inferior do piano.
