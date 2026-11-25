@@ -134,7 +134,7 @@
             const t = ctx.currentTime;
             const src = ctx.createBufferSource();
             src.buffer = buffer;
-            src.playbackRate.value = freq / opt.base;
+            src.playbackRate.value = freq * Math.pow(2, opt.octave || 0) / opt.base;
             const g = ctx.createGain();
             g.gain.value = 0.55;
             src.connect(g).connect(this.out);

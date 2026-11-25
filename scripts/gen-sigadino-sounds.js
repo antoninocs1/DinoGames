@@ -128,9 +128,117 @@ const caixinha = (f0) => {
     return edges(buf, 0.002, 0.15);
 };
 
+// ---------------------------------------------------------------------
+// Corda dedilhada genérica (Karplus-Strong) usada pelos instrumentos chineses.
+//   bright   0..1: quanto o "dedilhado" tem de agudo (unha/plectro = brilhante)
+//   damp     perda por volta da corda (mais perto de 1 = soa mais tempo)
+//   tone     0..1: mistura da média (0,5 = padrão; maior = mais escuro)
+// ---------------------------------------------------------------------
+const pluck = (f0, dur, { bright = 0.5, damp = 0.996, tone = 0.5 } = {}) => {
+    const len = seconds(dur);
+    const period = RATE / f0 - tone; // a média atrasa ~tone amostra por volta: desconta para afinar
+    const n = Math.floor(period);
+    const frac = period - n;
+    const line = new Float32Array(n + 2);
+    let prev = 0;
+    for (let i = 0; i < line.length; i++) { prev = prev * (1 - bright) + rand() * bright; line[i] = prev; }
+    const buf = new Float32Array(len);
+    let idx = 0, last = 0;
+    for (let i = 0; i < len; i++) {
+        const a = line[idx % line.length];
+        const b = line[(idx + 1) % line.length];
+        const out = a + (b - a) * frac;
+        line[idx % line.length] = damp * ((1 - tone) * out + tone * last);
+        last = out;
+        buf[i] = out;
+        idx++;
+    }
+    return buf;
+};
+
+/**
+ * Relê o som com a velocidade variando no tempo (rate(t) = 1 é o original):
+ * dá o vibrato e os deslizes de altura que a mão esquerda faz na corda.
+ */
+const warp = (src, rate) => {
+    const out = new Float32Array(src.length);
+    let pos = 0;
+    for (let i = 0; i < out.length; i++) {
+        const k = Math.floor(pos);
+        if (k + 1 >= src.length) break;
+        out[i] = src[k] + (src[k + 1] - src[k]) * (pos - k);
+        pos += rate(i / RATE);
+    }
+    return out;
+};
+const semis = (s) => Math.pow(2, s / 12);
+
+// ---------------------------------------------------------------------
+// Guzheng: cítara chinesa de cordas de aço tocadas com unha — ataque
+// brilhante e, depois de um instante, o vibrato largo da mão esquerda
+// apertando a corda do outro lado da ponte (róu xián).
+// ---------------------------------------------------------------------
+const guzheng = (f0) => {
+    const dry = pluck(f0, 2.6, { bright: 0.85, damp: 0.9975, tone: 0.42 });
+    const buf = warp(dry, (t) => {
+        const amount = Math.min(1, Math.max(0, (t - 0.35) / 0.4)); // o vibrato entra devagar
+        return semis(0.32 * amount * Math.sin(2 * Math.PI * 5.2 * t));
+    });
+    // Um "tlin" metálico bem curto da unha na corda.
+    for (let i = 0; i < seconds(0.02); i++) buf[i] += rand() * 0.18 * (1 - i / seconds(0.02));
+    return edges(buf, 0.001, 0.25);
+};
+
+// ---------------------------------------------------------------------
+// Guqin: cítara de 7 cordas de seda, tocada com a ponta do dedo — som
+// grave, escuro e longo, com um leve deslize subindo até a nota no
+// começo e um vibrato lento e discreto (yín).
+// ---------------------------------------------------------------------
+const guqin = (f0) => {
+    const dry = pluck(f0, 3.4, { bright: 0.3, damp: 0.9985, tone: 0.62 });
+    const buf = warp(dry, (t) => {
+        const slide = -0.45 * Math.exp(-t / 0.06);                  // chega na nota deslizando
+        const amount = Math.min(1, Math.max(0, (t - 0.6) / 0.8));
+        return semis(slide + 0.18 * amount * Math.sin(2 * Math.PI * 3.4 * t));
+    });
+    // Corpo de madeira: realça um pouco o grave (média com o passado).
+    let low = 0;
+    for (let i = 0; i < buf.length; i++) { low = low * 0.92 + buf[i] * 0.08; buf[i] = buf[i] * 0.7 + low * 2.2; }
+    return edges(buf, 0.004, 0.3);
+};
+
+// ---------------------------------------------------------------------
+// Flauta de bambu (dizi): tom soprado — fundamental forte, poucos
+// harmônicos, sopro de ar (ruído) e o zumbido leve da membrana; entrada
+// com um "chiff" curto e vibrato que aparece depois de um instante.
+// Longa (o jogo corta quando a luz apaga).
+// ---------------------------------------------------------------------
+const flauta = (f0) => {
+    const buf = new Float32Array(seconds(3.4));
+    const parts = [[1, 1], [2, 0.32], [3, 0.16], [4, 0.05], [5, 0.035]];
+    let phase = 0, noise = 0, band = 0;
+    for (let i = 0; i < buf.length; i++) {
+        const t = i / RATE;
+        const vib = Math.min(1, Math.max(0, (t - 0.3) / 0.5)) * 0.006 * Math.sin(2 * Math.PI * 5 * t);
+        phase += 2 * Math.PI * f0 * (1 + vib) / RATE;
+        let s = 0;
+        for (const [m, v] of parts) s += v * Math.sin(m * phase);
+        // Sopro: ruído suavizado, mais forte na entrada.
+        noise = noise * 0.75 + rand() * 0.25;
+        band = band * 0.6 + noise * 0.4;
+        const air = band * (0.12 + 0.5 * Math.exp(-t / 0.05));
+        const env = Math.min(1, t / 0.06) * (1 + 0.04 * Math.sin(2 * Math.PI * 0.7 * t));
+        buf[i] = env * s + air;
+    }
+    return edges(buf, 0.002, 0.08);
+};
+
 fs.mkdirSync(OUT, { recursive: true });
 // As frequências base precisam bater com SigaDino/sounds.js.
 writeWav("eletronico.wav", eletronico(220));
 writeWav("harpa.wav", harpa(261.63));
 writeWav("xilofone.wav", xilofone(523.25));
 writeWav("caixinha.wav", caixinha(523.25));
+writeWav("guzheng.wav", guzheng(392));
+writeWav("guqin.wav", guqin(196));
+writeWav("flauta.wav", flauta(440));

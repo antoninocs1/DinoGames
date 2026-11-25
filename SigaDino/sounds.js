@@ -20,6 +20,8 @@
                altura de cada botão pela velocidade de reprodução
      ring      true = deixa a nota soar até sumir (instrumentos de toque);
                false = corta quando a luz apaga (tom contínuo)
+     octave    opcional: toca N oitavas abaixo (-1) ou acima (1) dos botões
+               (o guqin é grave: soa uma oitava abaixo)
      tones4    opcional: frequências próprias para o modo de 4 cores
                (ordem dos botões: verde, vermelho, azul, amarelo)
 
@@ -47,5 +49,9 @@
         harpa:      { title: "Harpa",      type: "sample", file: "sounds/harpa.wav",      base: 261.63, ring: true },
         xilofone:   { title: "Xilofone",   type: "sample", file: "sounds/xilofone.wav",   base: 523.25, ring: true },
         caixinha:   { title: "Caixinha de música", type: "sample", file: "sounds/caixinha.wav", base: 523.25, ring: true },
+        // Instrumentos chineses: cordas dedilhadas com o vibrato da mão esquerda, e a flauta de bambu.
+        guzheng:    { title: "Guzheng (cítara chinesa)", type: "sample", file: "sounds/guzheng.wav", base: 392, ring: true },
+        guqin:      { title: "Guqin (cítara de 7 cordas)", type: "sample", file: "sounds/guqin.wav", base: 196, ring: true, octave: -1 },
+        flauta:     { title: "Flauta de bambu (dizi)", type: "sample", file: "sounds/flauta.wav", base: 440, ring: false },
     };
 })();
