@@ -944,7 +944,7 @@
     const mu = {
         text: $("song-text"), name: $("song-name"), tempo: $("song-tempo"), example: $("song-example"),
         open: $("btn-song-open"), save: $("btn-song-save"), saveAs: $("btn-song-saveas"),
-        play: $("btn-song-play"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
+        play: $("btn-song-play"), playHere: $("btn-song-here"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
     };
     const savedSong = storage.get(SONG_KEY);
     const song = {
@@ -991,6 +991,7 @@
 
     const updatePlayButton = () => {
         mu.play.textContent = songPlaying() ? "⏹ Parar" : "▶ Tocar";
+        mu.playHere.disabled = songPlaying();
         mu.play.classList.toggle("primary", !songPlaying());
         mu.play.title = songPlaying() ? "Parar a música" : "Tocar a música do editor";
     };
@@ -1009,7 +1010,11 @@
     };
 
     /** Lê o editor, desenha a pauta e toca nota por nota (teclas e pentagrama acendem). */
-    const playSong = async () => {
+    /**
+     * Toca a música do editor. fromCursor: só o trecho marcado ou, sem marcação, do cursor
+     * até o fim (as notas antes ficam fortes no pentagrama, como já tocadas).
+     */
+    const playSong = async (fromCursor = false) => {
         stopSong();
         sound.ensure();
         sound.load(prefs.timbre);
@@ -1021,8 +1026,28 @@
             setStatus("Não achei notas no editor. Exemplo: E[n1/4]; F[n1/4]; G[n1/2]; — veja a Ajuda.", "soft");
             return;
         }
+        // Trecho: notas que tocam a seleção; sem seleção, a 1ª nota que termina depois do cursor.
+        let k0 = 0, k1 = events.length;
+        let part = "";
+        if (fromCursor) {
+            const a = mu.text.selectionStart, b = mu.text.selectionEnd;
+            if (b > a) {
+                k0 = events.findIndex((ev) => ev.to > a);
+                k1 = events.findIndex((ev) => ev.from >= b);
+                if (k1 < 0) k1 = events.length;
+                part = "trecho marcado";
+            } else {
+                k0 = events.findIndex((ev) => ev.to > a);
+                part = "do cursor em diante";
+            }
+            if (k0 < 0 || k0 >= k1) {
+                renderSong();
+                setStatus(b > a ? "Não há notas no trecho marcado." : "Não há notas depois do cursor. Coloque o cursor antes de uma nota.", "soft");
+                return;
+            }
+        }
         const id = songRun;
-        songAt = 0;
+        songAt = k0;
         updatePlayButton();
         renderSong();
         const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 80));
@@ -1037,7 +1062,7 @@
             outside ? "Notas fora do teclado acendem a mesma nota em outra oitava." : "",
         ].filter(Boolean).join(" ");
         await sleep(250);
-        for (let k = 0; k < events.length; k++) {
+        for (let k = k0; k < k1; k++) {
             if (id !== songRun) return;
             songAt = k;
             const ev = events[k];
@@ -1050,7 +1075,7 @@
             staff.light(k, on);
             staff.done(k);
             setFigure(ev.figure);
-            setStatus(`🎵 Tocando ${k + 1} de ${events.length}: ${describe(ev)}`, "turn");
+            setStatus(`🎵 Tocando ${k + 1} de ${events.length}${part ? ` (${part})` : ""}: ${describe(ev)}`, "turn");
             const label = ev.kind === "rest" ? "--" : ev.notes[0].label;
             setCount(label.length <= 4 ? label : "♪", label.length > 3 ? 0.78 : 1);
             await sleep(ms);
@@ -1059,7 +1084,9 @@
         songAt = -1;
         updatePlayButton();
         setCount("♪");
-        setStatus("Fim da música! 🎉 Toque em ▶ Tocar para ouvir de novo.", "good");
+        setStatus(part === "trecho marcado"
+            ? "Fim do trecho marcado. 🎵 Toque em ⏯ Do cursor para ouvir de novo."
+            : "Fim da música! 🎉 Toque em ▶ Tocar para ouvir de novo.", "good");
     };
 
     // ---------- Arquivo: abrir, salvar, salvar como ----------
@@ -1184,6 +1211,9 @@
     mu.open.addEventListener("click", openSong);
     mu.save.addEventListener("click", saveSong);
     mu.saveAs.addEventListener("click", saveSongAs);
+    // O botão não tira a marcação do texto (o editor guarda a seleção mesmo sem foco).
+    mu.playHere.addEventListener("mousedown", (e) => e.preventDefault());
+    mu.playHere.addEventListener("click", () => playSong(true));
     mu.play.addEventListener("click", () => {
         if (!songPlaying()) { playSong(); return; }
         stopSong();
@@ -1194,8 +1224,13 @@
         setSongText("", "nova-musica.txt");
         setStatus("Editor limpo. Escreva as notas, por exemplo: C[n1/4]; D[n1/4]; E[n1/2];", "turn");
     });
-    // Ctrl+S salva; Ctrl+Shift+S salva como.
+    // Ctrl+S salva; Ctrl+Shift+S salva como; Ctrl+Enter toca do cursor (ou o trecho marcado).
     mu.text.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            if (songPlaying()) stopSong(); else playSong(true);
+            return;
+        }
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
             e.preventDefault();
             if (e.shiftKey) saveSongAs(); else saveSong();
