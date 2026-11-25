@@ -4,7 +4,7 @@ Transcrição em texto (melodia principal)
 Referência: arquivo “Teoria Musical.pdf”, página 3.
 Instrumento/linha considerada: pauta superior (melodia).
 Compasso: 4/4
-Andamento indicado na partitura: semínima = 80
+Andamento indicado na partitura: semínima = 160
 
 Convenção utilizada conforme o material:
 [n1/4] = semínima
@@ -40,7 +40,33 @@ C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
 Compasso 8:
 D[n1/2]; C[n1/2];
 
-Compasso 9 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
+Compasso 9:
+D[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+
+Compasso 10:
+D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+
+Compasso 11:
+D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; D[n1/4];
+
+Compasso 12 (G de baixo = 0G):
+C[n1/4]; D[n1/4]; 0G[n1/2];
+
+Compasso 13:
+E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+
+Compasso 14:
+G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+
+Compasso 15:
+C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+
+Compasso 16:
+D[n1/2]; C[n1/2];
+
+Compasso 17 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
 C[n1], E[n1], G[n1];
 
-Observação: Esta transcrição apresenta o tema principal da melodia, organizado em oito compassos, com base na pauta superior da partitura da página 3. Não representa o acompanhamento da pauta inferior do piano.
+Fim
+
+Observação: Esta transcrição apresenta o tema principal da melodia completo, com dezesseis compassos e o acorde final, com base na pauta superior da partitura da página 3 (compassos 1 a 8) e na continuação do tema (compassos 9 a 16). Não representa o acompanhamento da pauta inferior do piano.

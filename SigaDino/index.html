@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.049">
-    <link rel="stylesheet" href="style.css?v=1.049">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.050">
+    <link rel="stylesheet" href="style.css?v=1.050">
 </head>
 <body>
     <main class="app">
@@ -128,7 +128,7 @@
                         <button class="btn" id="btn-song-saveas" type="button" title="Salvar como… (Ctrl+Shift+S)">Salvar como…</button>
                         <button class="btn" id="btn-song-clear" type="button" title="Apagar o texto do editor">🧽 Limpar</button>
                         <label class="song-tempo" title="Andamento: semínimas por minuto">♩ =
-                            <input id="song-tempo" type="number" min="30" max="240" step="1" value="80" aria-label="Andamento (semínimas por minuto)">
+                            <input id="song-tempo" type="number" min="30" max="240" step="1" value="160" aria-label="Andamento (semínimas por minuto)">
                         </label>
                         <span class="song-examples" id="song-example" role="group" aria-label="Músicas de exemplo"></span>
                     </div>
@@ -175,8 +175,11 @@
                                 <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
                                 <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code></li>
                                 <li><strong>Nome da música</strong>: escreva uma linha <code>Música: Nome da música</code> — o nome aparece em cima do pentagrama.</li>
-                                <li><strong>Andamento</strong>: escreva <code>semínima = 80</code> no texto (ou mude no ♩ =): 80 semínimas por minuto.</li>
-                                <li><strong>Compassos</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele. No fim da música aparece a barra dupla.</li>
+                                <li><strong>Andamento</strong>: escreva <code>semínima = 160</code> no texto (ou mude no ♩ =): 160 semínimas por minuto.</li>
+                                <li><strong>Compassos</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele.</li>
+                                <li><strong>Fórmula de compasso</strong>: uma linha <code>Compasso: 4/4</code> (com dois-pontos) mostra o 4/4 logo depois da clave (vale 3/4, 2/4, 6/8…).</li>
+                                <li><strong>Fim</strong>: uma linha <code>Fim</code> (ou <code>:Fim</code>) depois da última nota põe as <strong>duas barras do fim</strong> da música.</li>
+                                <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
                                 <li>No editor valem <strong>Ctrl+Z</strong> (desfazer), <strong>Ctrl+Y</strong> (refazer), <strong>Ctrl+C</strong> (copiar), <strong>Ctrl+X</strong> (recortar), <strong>Ctrl+V</strong> ou <strong>Ctrl+P</strong> (colar) e <strong>Ctrl+S</strong> (salvar).</li>
                                 <li>Títulos, “Compasso 1:” e outros textos são ignorados (só marcam o compasso); <code>//</code> começa um comentário.</li>
@@ -245,12 +248,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.049"></script>
-    <script src="sounds.js?v=1.049"></script>
-    <script src="modes.js?v=1.049"></script>
-    <script src="engine.js?v=1.049"></script>
-    <script src="staff.js?v=1.049"></script>
-    <script src="music.js?v=1.049"></script>
-    <script src="game.js?v=1.049"></script>
+    <script src="../assets/combobox.js?v=1.050"></script>
+    <script src="sounds.js?v=1.050"></script>
+    <script src="modes.js?v=1.050"></script>
+    <script src="engine.js?v=1.050"></script>
+    <script src="staff.js?v=1.050"></script>
+    <script src="music.js?v=1.050"></script>
+    <script src="game.js?v=1.050"></script>
 </body>
 </html>

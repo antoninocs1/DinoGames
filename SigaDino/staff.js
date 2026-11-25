@@ -20,7 +20,8 @@
     const STEM = 34;
     const BAR_GAP = 12;          // folga a mais quando há barra de compasso antes da nota
     const MAX_NOTES = 120;       // guarda só as últimas (as mais antigas já saíram de vista)
-    const slotsFor = (w) => Math.floor((w - X0 - 8) / DX) + 1; // notas que cabem sem rolar
+    const METER_W = 18;          // espaço a mais depois da clave quando há fórmula de compasso (4/4)
+    const slotsFor = (w, x0 = X0) => Math.floor((w - x0 - 8) / DX) + 1; // notas que cabem sem rolar
 
     const FIGURES = {
         // Cabeça com o nome dentro: pequena o bastante para ver se está na linha ou no espaço.
@@ -150,7 +151,9 @@
         let shift = 0;           // quanto (px) a pauta já rolou para a esquerda
         let first = 0;           // posição da 1ª nota ainda guardada (as anteriores já foram apagadas)
         let lead = false;
-        let endBar = null;       // barra dupla do fim da música        // true = a nota da vez fica perto do começo (dá para ler as próximas)
+        let endBar = null;       // barra dupla do fim da música
+        let x0 = X0;             // x da 1ª nota (mais à direita com a fórmula de compasso)
+        let meter = "";          // fórmula de compasso desenhada depois da clave ("4/4")
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
@@ -158,10 +161,12 @@
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
                 `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
+            <g class="meter"></g>
             <text class="staff-title" text-anchor="middle"></text>
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
         const titleEl = svg.querySelector(".staff-title");
+        const meterEl = svg.querySelector(".meter");
         let view = { top: -20, bottom: 76 }; // área do desenho sem o título
         let title = "";
         /** Ajusta a área do desenho: com título, ganha uma faixa em cima para o nome da música. */
@@ -226,8 +231,8 @@
 
         /**
          * Uma nota ou um acorde (várias notas tocadas juntas) na mesma posição da pauta.
-         * As cabeças ficam empilhadas na mesma vertical; numa segunda (notas vizinhas) uma
-         * delas passa para o outro lado da haste, e os acidentes se escalonam para a esquerda.
+         * As cabeças ficam empilhadas na mesma vertical, também numa segunda (notas vizinhas,
+         * como Dó e Ré); os acidentes se escalonam para a esquerda.
          */
         const chordSvg = (entries, x, figureName, dotted = false) => {
             const fig = FIGURES[figureName] || FIGURES.semibreve;
@@ -244,14 +249,9 @@
             const low = items[0].step, high = items[items.length - 1].step;
             // Haste: manda a nota mais longe da 3ª linha (Si). Abaixo dela, haste para cima.
             const up = (6 - low) >= (high - 6);
-            // Numa segunda (ou mesma linha, Dó e Dó♯), a nota vizinha vai para o outro lado da haste.
+            // Todas na mesma vertical (side 0), até as vizinhas (Dó e Ré).
             const shiftX = 2 * edge.half - 1.6;
-            const order = up ? items : [...items].reverse();
-            let prev = null;
-            for (const it of order) {
-                it.side = prev && !prev.side && Math.abs(it.step - prev.step) <= 1 ? (up ? 1 : -1) : 0;
-                prev = it;
-            }
+            for (const it of items) it.side = 0;
             const wing = fig.breve ? 6 : 0; // as barrinhas da breve
             const minX = x - edge.half - wing + Math.min(0, ...items.map((it) => it.side * shiftX));
             let maxX = x + edge.half + wing + Math.max(0, ...items.map((it) => it.side * shiftX));
@@ -329,8 +329,8 @@
             const n = notes[focus - first];
             if (!n) return;
             // Normal: a última nota fica perto do fim. Música: a da vez fica no começo (lê as próximas).
-            const end = X0 + (SLOTS - 2) * DX;
-            let want = Math.max(0, n.x - (lead ? X0 + DX : end));
+            const end = x0 + (SLOTS - 2) * DX;
+            let want = Math.max(0, n.x - (lead ? x0 + DX : end));
             // Na música, não passa do ponto em que a última nota chega ao fim da pauta.
             if (lead) want = Math.min(want, Math.max(0, notes[notes.length - 1].x - end));
             if (want === shift) return;
@@ -338,7 +338,7 @@
             layer.style.transform = `translateX(${f(-shift)}px)`;
             // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
             notes.forEach((m) => {
-                const gone = m.x - shift < X0 - 6;
+                const gone = m.x - shift < x0 - 6;
                 m.el.classList.toggle("gone", gone);
                 m.barEl?.classList.toggle("gone", gone);
             });
@@ -358,12 +358,26 @@
                 // Altura do desenho: com 2 oitavas sobe para caber as notas agudas.
                 const wide = mode.pads.some((p) => p.octave);
                 W = wide ? W_WIDE : W_NORMAL;
-                SLOTS = slotsFor(W);
+                SLOTS = slotsFor(W, x0);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
                 // deep: espaço para notas abaixo do Dó central.
                 view = { top: wide ? -34 : -20, bottom: opts.deep ? 92 : 76 };
                 title = "";
                 applyView();
+                this.setMeter("");
+                this.clear();
+            },
+            /** Fórmula de compasso ("4/4", "3/4"…) logo depois da clave; "" tira. */
+            setMeter(text = "") {
+                const mt = String(text).match(/^\s*(\d{1,2})\s*\/\s*(\d{1,2})\s*$/);
+                const next = mt ? `${mt[1]}/${mt[2]}` : "";
+                if (next === meter) return;
+                meter = next;
+                x0 = meter ? X0 + METER_W : X0;
+                SLOTS = slotsFor(W, x0);
+                const cx = 50;
+                // Número de cima na metade de cima da pauta, o de baixo na metade de baixo.
+                meterEl.innerHTML = meter ? `<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>` : "";
                 this.clear();
             },
             /** Nome da música, centralizado em cima do pentagrama ("" tira). */
@@ -403,7 +417,7 @@
                 // (cabeça do outro lado da haste, acidentes escalonados).
                 const prev = grow ? notes[notes.length - 2] : last;
                 const probe = chordSvg(pads, 0, figure, dotted);
-                const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft + (bar ? BAR_GAP : 0) : X0 + probe.extraLeft;
+                const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft + (bar ? BAR_GAP : 0) : x0 + probe.extraLeft;
                 const drawn = chordSvg(pads, x, figure, dotted);
                 return this._place(drawn, x, { pads, figure, dotted, bar }, grow, ms, opts.scroll !== false);
             },
@@ -412,7 +426,7 @@
                 if (!mode) return -1;
                 const prev = notes[notes.length - 1];
                 const bar = !!opts.bar;
-                const x = prev ? prev.x + DX + prev.extraRight + (bar ? BAR_GAP : 0) : X0;
+                const x = prev ? prev.x + DX + prev.extraRight + (bar ? BAR_GAP : 0) : x0;
                 const drawn = restHtml(x, figureName, !!opts.dotted);
                 return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar }, false, 0, opts.scroll !== false);
             },
@@ -447,7 +461,7 @@
                 if (!scroll) return slot;
                 scrollTo(slot);
                 // Guarda no máximo MAX_NOTES; só apaga as que já estão fora da pauta.
-                while (notes.length > MAX_NOTES && notes[0].x - shift < X0 - 3 * DX) {
+                while (notes.length > MAX_NOTES && notes[0].x - shift < x0 - 3 * DX) {
                     const old = notes.shift();
                     clearTimeout(old.off);
                     old.el.remove();

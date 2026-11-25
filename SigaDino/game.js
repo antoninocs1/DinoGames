@@ -976,7 +976,9 @@
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
         if (!isMusic()) return;
-        staff.setTitle(MUSIC.parse(mu.text.value).title); // linha "Música: …" do texto
+        const info = MUSIC.parse(mu.text.value);
+        staff.setTitle(info.title); // linha "Música: …" do texto
+        staff.setMeter(info.meter); // "Compasso: 4/4" → fórmula de compasso depois da clave
         staff.clear();
         songEvents.forEach((ev, k) => {
             if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted, bar: ev.bar });
@@ -986,7 +988,7 @@
             });
             if (k < songAt) staff.done(k);
         });
-        if (songEvents.length) staff.finish(); // barra dupla no fim da música
+        if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
     };
 
     const updatePlayButton = () => {
@@ -1050,7 +1052,7 @@
         songAt = k0;
         updatePlayButton();
         renderSong();
-        const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 80));
+        const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 160));
         const quarter = 60000 / bpm;
         const outside = events.some((ev) => ev.kind === "note" && ev.notes.some((n) => {
             const p = mode.pads[padForSemi(n.semi)];
@@ -1290,13 +1292,13 @@
         setStatus("Caixinha de notas limpa. Toque as teclas para escrever de novo. 🎶", "turn");
     });
     tr.save.addEventListener("click", async () => {
-        const text = `Música: Minha música\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        const text = `Música: Minha música\nAndamento: semínima = 160\n\n${tr.text.value}\n`;
         const saved = await saveTextFile(text, "minha-musica.txt");
         if (saved) setStatus(`Notas salvas em “${saved.name}”. 💾 Abra no Executar música para tocar.`, "good");
     });
     tr.send.addEventListener("click", () => {
         if (!okToReplace()) return;
-        const text = `Música: Minha música\nAndamento: semínima = 80\n\n${tr.text.value}\n`;
+        const text = `Música: Minha música\nAndamento: semínima = 160\n\n${tr.text.value}\n`;
         prefs.play = "musica";
         ui.play.value = "musica";
         storage.set(PREFS_KEY, prefs);

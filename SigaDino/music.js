@@ -17,8 +17,10 @@
    Barra de compasso: nota que começa uma linha nova, ou vem depois de "Compasso"
    ou de "|", ganha a barra antes dela no pentagrama (e a música termina com a barra dupla).
    Texto que não é nota (títulos, "Compasso 1:", |) é ignorado; "//" começa um
-   comentário até o fim da linha. "Andamento: semínima = 80" define a velocidade.
+   comentário até o fim da linha. "Andamento: semínima = 160" define a velocidade.
    "Música: Nome da música" dá o título, mostrado em cima do pentagrama.
+   "Compasso: 4/4" (com dois-pontos) põe a fórmula de compasso depois da clave.
+   Uma linha "Fim" (ou ":Fim") põe a barra dupla de fim depois da última nota.
    ===================================================================== */
 (() => {
     "use strict";
@@ -36,8 +38,8 @@
 
     const plain = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-    // Nota: [oitava] letra/nome [acidente] [n num / den .]   — pausa: [p1/4] ou p[1/4]
-    const NOTE_RE = String.raw`(?<![\p{L}\d])(\d?)\s*(D[óo]|R[ée]|Mi|F[áa]|Sol|L[áa]|Si|[A-G])\s*(##|#|♯|bb|b|♭)?\s*\[\s*n\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\]`;
+    // Nota: [oitava colada, ex. 2C] letra/nome [acidente] [n num / den .]   — pausa: [p1/4] ou p[1/4]
+    const NOTE_RE = String.raw`(?<![\p{L}\d])(\d?)(D[óo]|R[ée]|Mi|F[áa]|Sol|L[áa]|Si|[A-G])\s*(##|#|♯|bb|b|♭)?\s*\[\s*n\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\]`;
     const REST_RE = String.raw`(?<!\p{L})(?:p\s*\[\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\]|\[\s*p\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\])`;
     const TOKEN = new RegExp(`${NOTE_RE}|${REST_RE}`, "giu");
     const CODE_LIKE = /\[\s*[np][^\]]*\]/giu; // parece código, mas não foi entendido
@@ -113,18 +115,21 @@
         const tempo = tempoMatch ? Math.min(240, Math.max(30, Number(tempoMatch[1]))) : 0;
         const titleMatch = text.match(/^[ \t]*m[úu]sica[ \t]*:[ \t]*(.+?)[ \t]*$/im);
         const title = titleMatch ? titleMatch[1] : "";
-        return { events, tempo, warnings, title };
+        const meterMatch = text.match(/compasso[ \t]*:[ \t]*(\d{1,2})[ \t]*\/[ \t]*(\d{1,2})/i);
+        const meter = meterMatch ? `${meterMatch[1]}/${meterMatch[2]}` : "";
+        const end = /^[ \t]*:?[ \t]*fim[ \t]*[:.!]?[ \t]*$/im.test(text) || /:[ \t]*fim(?![\p{L}\d])/iu.test(text);
+        return { events, tempo, warnings, title, meter, end };
     };
 
     // ---------- Exemplos ----------
-    // Igual ao arquivo "Ode_a_Alegria_notas.txt" (melodia principal, 8 compassos).
+    // Igual ao arquivo "Ode_a_Alegria_notas.txt" (melodia principal completa, 16 compassos e acorde final).
     const ODE = `Música: ODE À ALEGRIA – Ludwig van Beethoven
 Transcrição em texto (melodia principal)
 
 Referência: arquivo “Teoria Musical.pdf”, página 3.
 Instrumento/linha considerada: pauta superior (melodia).
 Compasso: 4/4
-Andamento indicado na partitura: semínima = 80
+Andamento indicado na partitura: semínima = 160
 
 Convenção utilizada conforme o material:
 [n1/4] = semínima
@@ -160,10 +165,36 @@ C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
 Compasso 8:
 D[n1/2]; C[n1/2];
 
-Compasso 9 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
+Compasso 9:
+D[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+
+Compasso 10:
+D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+
+Compasso 11:
+D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; D[n1/4];
+
+Compasso 12 (G de baixo = 0G):
+C[n1/4]; D[n1/4]; 0G[n1/2];
+
+Compasso 13:
+E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+
+Compasso 14:
+G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+
+Compasso 15:
+C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+
+Compasso 16:
+D[n1/2]; C[n1/2];
+
+Compasso 17 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
 C[n1], E[n1], G[n1];
 
-Observação: Esta transcrição apresenta o tema principal da melodia, organizado em oito compassos, com base na pauta superior da partitura da página 3. Não representa o acompanhamento da pauta inferior do piano.
+Fim
+
+Observação: Esta transcrição apresenta o tema principal da melodia completo, com dezesseis compassos e o acorde final, com base na pauta superior da partitura da página 3 (compassos 1 a 8) e na continuação do tema (compassos 9 a 16). Não representa o acompanhamento da pauta inferior do piano.
 `;
 
     window.SigaDinoMusic = {
