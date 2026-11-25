@@ -133,6 +133,9 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 .staff .clef circle { fill: #1d1b22; }
 .staff .staff-notes { transition: transform .35s ease-out; }
 .staff .ledger { stroke: #1d1b22; stroke-width: 1.6; }
+/* Barra de compasso (atravessa as 5 linhas). */
+.staff .bar { stroke: #1d1b22; stroke-width: 1.4; transition: opacity .15s; }
+.staff .bar.gone { opacity: 0; }
 .staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
 .staff .acc { pointer-events: none; }
 .staff .head text { font-weight: 800; text-anchor: middle; dominant-baseline: central; font-family: inherit; }

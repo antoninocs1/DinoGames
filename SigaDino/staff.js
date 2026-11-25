@@ -18,6 +18,7 @@
     const W_NORMAL = 420;        // largura do desenho (7 e 12 notas)
     const W_WIDE = 640;          // 2 oitavas: teclado mais largo, pauta mais comprida
     const STEM = 34;
+    const BAR_GAP = 12;          // folga a mais quando há barra de compasso antes da nota
     const MAX_NOTES = 120;       // guarda só as últimas (as mais antigas já saíram de vista)
     const slotsFor = (w) => Math.floor((w - X0 - 8) / DX) + 1; // notas que cabem sem rolar
 
@@ -148,7 +149,8 @@
         let notes = [];          // { el, pad }
         let shift = 0;           // quanto (px) a pauta já rolou para a esquerda
         let first = 0;           // posição da 1ª nota ainda guardada (as anteriores já foram apagadas)
-        let lead = false;        // true = a nota da vez fica perto do começo (dá para ler as próximas)
+        let lead = false;
+        let endBar = null;       // barra dupla do fim da música        // true = a nota da vez fica perto do começo (dá para ler as próximas)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
@@ -290,6 +292,8 @@
                 // Quanto o acorde passa de uma nota comum (com um ♯) para cada lado: vira espaço extra.
                 extraLeft: Math.max(0, x - left - (edge.half + 11)),
                 extraRight: Math.max(0, maxX - x - edge.half - 4),
+                leftEdge: left,
+                rightEdge: maxX,
             };
         };
 
@@ -300,6 +304,8 @@
                 html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6">${restSvg(x, figureName)}${dot}</g></g>`,
                 extraLeft: 0,
                 extraRight: dotted ? 4 : 0,
+                leftEdge: x - 7,
+                rightEdge: x + (dotted ? 11 : 7),
             };
         };
 
@@ -316,7 +322,11 @@
             shift = want;
             layer.style.transform = `translateX(${f(-shift)}px)`;
             // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
-            notes.forEach((m) => m.el.classList.toggle("gone", m.x - shift < X0 - 6));
+            notes.forEach((m) => {
+                const gone = m.x - shift < X0 - 6;
+                m.el.classList.toggle("gone", gone);
+                m.barEl?.classList.toggle("gone", gone);
+            });
         };
 
         return {
@@ -343,6 +353,7 @@
                 this.clear();
             },
             clear() {
+                endBar = null;
                 notes = [];
                 first = 0;
                 shift = 0;
@@ -366,24 +377,30 @@
                 const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
                 const dotted = grow ? last.dotted : !!opts.dotted;
+                const bar = grow ? !!last.bar : !!opts.bar;
                 // Posição: logo depois da anterior, com folga se um dos dois for largo
                 // (cabeça do outro lado da haste, acidentes escalonados).
                 const prev = grow ? notes[notes.length - 2] : last;
                 const probe = chordSvg(pads, 0, figure, dotted);
-                const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft : X0 + probe.extraLeft;
+                const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft + (bar ? BAR_GAP : 0) : X0 + probe.extraLeft;
                 const drawn = chordSvg(pads, x, figure, dotted);
-                return this._place(drawn, x, { pads, figure, dotted }, grow, ms, opts.scroll !== false);
+                return this._place(drawn, x, { pads, figure, dotted, bar }, grow, ms, opts.scroll !== false);
             },
             /** Pausa (sem som): ocupa uma posição da pauta como uma nota. */
             pushRest(figureName, opts = {}) {
                 if (!mode) return -1;
                 const prev = notes[notes.length - 1];
-                const x = prev ? prev.x + DX + prev.extraRight : X0;
+                const bar = !!opts.bar;
+                const x = prev ? prev.x + DX + prev.extraRight + (bar ? BAR_GAP : 0) : X0;
                 const drawn = restHtml(x, figureName, !!opts.dotted);
-                return this._place(drawn, x, { pads: [], figure: figureName, rest: true }, false, 0, opts.scroll !== false);
+                return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar }, false, 0, opts.scroll !== false);
             },
             _place(drawn, x, data, grow, ms, scroll) {
                 const last = notes[notes.length - 1];
+                const prev = grow ? notes[notes.length - 2] : last;
+                // Barra de compasso: no meio entre a nota anterior e esta (com o ♯/♭ dela).
+                const barX = prev && data.bar ? f((prev.rightEdge + drawn.leftEdge) / 2) : null;
+                const barLine = `<line class="bar" x1="${barX}" x2="${barX}" y1="0" y2="${BOTTOM}"/>`;
                 let slot;
                 if (grow) {
                     slot = first + notes.length - 1;
@@ -392,13 +409,19 @@
                     const el = last.el.nextElementSibling;
                     last.el.remove();
                     el.classList.add(...keep);
-                    Object.assign(last, data, { el, x, extraRight: drawn.extraRight });
+                    Object.assign(last, data, { el, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge });
+                    if (last.barEl && barX != null) { last.barEl.setAttribute("x1", barX); last.barEl.setAttribute("x2", barX); }
                 } else {
                     slot = first + notes.length;
+                    let barEl = null;
+                    if (barX != null) {
+                        layer.insertAdjacentHTML("beforeend", barLine);
+                        barEl = layer.lastElementChild;
+                    }
                     layer.insertAdjacentHTML("beforeend", drawn.html);
                     const el = layer.lastElementChild;
                     if (scroll) el.classList.add("pop");
-                    notes.push({ ...data, el, x, extraRight: drawn.extraRight });
+                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge });
                 }
                 if (!scroll) return slot;
                 scrollTo(slot);
@@ -407,10 +430,21 @@
                     const old = notes.shift();
                     clearTimeout(old.off);
                     old.el.remove();
+                    old.barEl?.remove();
                     first++;
                 }
                 if (ms) this.light(slot, ms);
                 return slot;
+            },
+            /** Barra dupla de fim (fina + grossa) depois da última nota. */
+            finish() {
+                endBar?.remove();
+                const last = notes[notes.length - 1];
+                if (!last) return;
+                const bx = f(last.rightEdge + 12);
+                layer.insertAdjacentHTML("beforeend", `<g class="end-bar"><line class="bar" x1="${bx}" x2="${bx}" y1="0" y2="${BOTTOM}"/>` +
+                    `<rect x="${f(bx + 3)}" y="0" width="3.6" height="${BOTTOM}" fill="${INK}"/></g>`);
+                endBar = layer.lastElementChild;
             },
             /** Acende a nota na posição i por ms. */
             light(i, ms) {

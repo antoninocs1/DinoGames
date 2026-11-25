@@ -945,13 +945,14 @@
         if (!isMusic()) return;
         staff.clear();
         songEvents.forEach((ev, k) => {
-            if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted });
+            if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted, bar: ev.bar });
             else ev.notes.forEach((n, j) => {
                 const index = padForSemi(n.semi);
-                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, { scroll: false, dotted: ev.dotted });
+                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, { scroll: false, dotted: ev.dotted, bar: ev.bar });
             });
             if (k < songAt) staff.done(k);
         });
+        if (songEvents.length) staff.finish(); // barra dupla no fim da música
     };
 
     const updatePlayButton = () => {

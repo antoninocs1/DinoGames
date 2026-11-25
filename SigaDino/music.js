@@ -14,6 +14,8 @@
    Figuras: [n2] breve, [n1] semibreve, [n1/2] mínima, [n1/4] semínima,
    [n1/8] colcheia, [n1/16] semicolcheia, [n1/32] fusa, [n1/64] semifusa,
    [n1/128] quartifusa.
+   Barra de compasso: nota que começa uma linha nova, ou vem depois de "Compasso"
+   ou de "|", ganha a barra antes dela no pentagrama (e a música termina com a barra dupla).
    Texto que não é nota (títulos, "Compasso 1:", |) é ignorado; "//" começa um
    comentário até o fim da linha. "Andamento: semínima = 80" define a velocidade.
    ===================================================================== */
@@ -67,7 +69,9 @@
             const frac = base * (dotted ? 1.5 : 1);
             const gap = lastEnd >= 0 ? text.slice(lastEnd, from) : "";
             lastEnd = to;
-            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, from, to }); continue; }
+            // Linha nova, "Compasso" ou "|" antes desta nota = começa outro compasso.
+            const bar = events.length > 0 && /\n|compasso|\|/i.test(gap);
+            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, bar, from, to }); continue; }
 
             const word = plain(m[2]);
             const letter = word.length === 1 ? LETTERS.indexOf(word.toUpperCase()) : NAMES[word];
@@ -88,7 +92,7 @@
                 if (frac > prev.frac) Object.assign(prev, { frac, figure, dotted });
                 continue;
             }
-            events.push({ kind: "note", notes: [note], frac, figure, dotted, from, to });
+            events.push({ kind: "note", notes: [note], frac, figure, dotted, bar, from, to });
         }
         // Códigos com colchetes que não viraram nota nem pausa (letra errada, etc.).
         let c;
