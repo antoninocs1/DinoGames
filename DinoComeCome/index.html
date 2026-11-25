@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#06140d">
+    <title>Dino Come-Come</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.053">
+    <link rel="stylesheet" href="style.css?v=1.053">
+</head>
+<body>
+    <main class="stage" id="stage">
+        <canvas id="game" tabindex="0" aria-label="Dino Come-Come"></canvas>
+
+        <!-- Menu inicial -->
+        <section class="panel" id="menu" aria-label="Menu">
+            <div class="card">
+                <h1>Dino <span>Come-Come</span></h1>
+                <p class="lead">Coma todas as sementes do labirinto sem ser pego pelos raptores.
+                    Pegue uma <strong>estrela</strong> e eles fogem de você — aí é a sua vez de correr atrás!</p>
+
+                <div class="crew" aria-hidden="true">
+                    <span style="--c:#ef4444">Brasa<small>persegue</small></span>
+                    <span style="--c:#c05cf5">Flor<small>embosca</small></span>
+                    <span style="--c:#22b8f0">Gelo<small>cerca</small></span>
+                    <span style="--c:#f59e0b">Lama<small>vai e volta</small></span>
+                </div>
+
+                <div class="options">
+                    <label class="field">
+                        <span>Dificuldade</span>
+                        <select id="opt-diff" aria-label="Dificuldade">
+                            <option value="facil">Fácil (5 vidas)</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="dificil">Difícil</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Velocidade</span>
+                        <select id="opt-speed" aria-label="Velocidade do jogo">
+                            <option value="bemdevagar">Bem devagar (crianças)</option>
+                            <option value="devagar">Devagar</option>
+                            <option value="normal">Normal</option>
+                            <option value="rapida">Rápida</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Visual</span>
+                        <select id="opt-look" aria-label="Visual do labirinto">
+                            <option value="natureza">Natureza (muda por fase)</option>
+                            <option value="fliperama">Fliperama (neon)</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Labirinto</span>
+                        <select id="opt-maze" aria-label="Labirinto">
+                            <option value="seq">Todos, um por fase</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>No celular</span>
+                        <select id="opt-touch" aria-label="Controle no celular">
+                            <option value="swipe">Deslizar o dedo</option>
+                            <option value="pad">Botões na tela</option>
+                        </select>
+                    </label>
+                    <button class="icon-btn" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <button class="play" id="btn-play" type="button">Jogar</button>
+                <p class="record" id="menu-record"></p>
+
+                <details class="howto">
+                    <summary>Como jogar</summary>
+                    <ul>
+                        <li><b>Sementes</b> valem 10 pontos e <b>estrelas</b> 50. Coma todas para passar de fase.</li>
+                        <li>Depois de uma estrela os raptores ficam roxos e com medo: pegue-os seguidos para 200, 400, 800 e 1600 pontos (os 4 dão bônus de 1200).</li>
+                        <li>Eles piscam quando o efeito está acabando. Raptor comido vira ossinho e volta para o ninho.</li>
+                        <li><b>Rugido</b>: cada semente enche a barra. Cheia, aperte <kbd>Espaço</kbd> (ou o botão 🦖) e os raptores por perto ficam tontos por um tempo, sem poder pegar você.</li>
+                        <li>Frutas aparecem embaixo do ninho duas vezes por fase. Vida extra com 10.000 pontos e depois a cada 25.000.</li>
+                        <li>Os túneis nas laterais levam ao outro lado, e lá dentro os raptores ficam lentos.</li>
+                        <li><b>Velocidade</b>: comece em "Bem devagar" ou "Devagar" e aumente quando pegar o jeito.</li>
+                        <li>Pode apertar a direção antes de chegar na curva: o Dino vira assim que der.</li>
+                    </ul>
+                </details>
+                <p class="keys">Setas/WASD: mover · Espaço: rugido · P/Esc: pausa · M: som · Enter: jogar</p>
+            </div>
+        </section>
+
+        <!-- Pausa -->
+        <section class="panel" id="pause" aria-label="Pausa" hidden>
+            <div class="card small">
+                <h2>Pausado</h2>
+                <div class="row">
+                    <button class="play" id="btn-resume" type="button">Continuar</button>
+                    <button class="ghost-btn" id="btn-quit" type="button">Menu</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fim de jogo -->
+        <section class="panel" id="over" aria-label="Fim de jogo" hidden>
+            <div class="card small">
+                <h2 id="over-title">Fim de jogo</h2>
+                <p class="over-score" id="over-score"></p>
+                <p class="record" id="over-record"></p>
+                <div class="row">
+                    <button class="play" id="btn-again" type="button">Jogar de novo</button>
+                    <button class="ghost-btn" id="btn-menu" type="button">Menu</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controles de toque -->
+        <div class="touch" id="touch">
+            <button class="t-pause" type="button" id="t-pause" aria-label="Pausar">⏸</button>
+            <button class="t-roar" type="button" id="t-roar" aria-label="Rugido">🦖</button>
+            <div class="dpad" id="dpad">
+                <button type="button" data-dir="0" class="up" aria-label="Cima">▲</button>
+                <button type="button" data-dir="3" class="left" aria-label="Esquerda">◀</button>
+                <button type="button" data-dir="1" class="right" aria-label="Direita">▶</button>
+                <button type="button" data-dir="2" class="down" aria-label="Baixo">▼</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../assets/combobox.js?v=1.053"></script>
+    <script src="mazes.js?v=1.053"></script>
+    <script src="sound.js?v=1.053"></script>
+    <script src="game.js?v=1.053"></script>
+</body>
+</html>

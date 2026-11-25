@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f1a16">
+    <title>Cobrinha</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.053">
+    <link rel="stylesheet" href="style.css?v=1.053">
+</head>
+<body>
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17c0-3 3-3 5-3s3-1 3-3-1-3-3-3H8" fill="none" stroke="#2fbf71" stroke-width="3.2" stroke-linecap="round"/><path d="M12 11c0 2 1 3 3 3h2a3 3 0 0 0 0-6" fill="none" stroke="#2fbf71" stroke-width="3.2" stroke-linecap="round"/><circle cx="17.5" cy="8" r="2.6" fill="#2fbf71"/><circle cx="18.2" cy="7.4" r=".7" fill="#0d1a14"/><circle cx="6" cy="6" r="2" fill="#ef4444"/></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Coma e cresça</p>
+                    <h1>Cobrinha</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field">
+                    <span>Modo</span>
+                    <select id="opt-mode" aria-label="Modo de jogo">
+                        <option value="classico">Clássico</option>
+                        <option value="tempo">Contra o tempo (60 s)</option>
+                        <option value="zen">Zen (sem morrer)</option>
+                        <option value="obstaculos">Obstáculos (fases)</option>
+                        <option value="diario">Desafio do dia</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Jogadores</span>
+                    <select id="opt-players" aria-label="Jogadores">
+                        <option value="1">Sozinho</option>
+                        <option value="cpu">Contra o Dino</option>
+                        <option value="2">2 jogadores</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Velocidade</span>
+                    <select id="opt-diff" aria-label="Velocidade">
+                        <option value="facil">Lenta</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="dificil">Rápida</option>
+                        <option value="turbo">Turbo</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Bordas</span>
+                    <select id="opt-walls" aria-label="Bordas do campo">
+                        <option value="0">Atravessar</option>
+                        <option value="1">Parede</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Campo</span>
+                    <select id="opt-size" aria-label="Tamanho do campo">
+                        <option value="p">Pequeno (17 × 11)</option>
+                        <option value="m" selected>Médio (25 × 15)</option>
+                        <option value="g">Grande (33 × 19)</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Visual</span>
+                    <select id="opt-skin" aria-label="Visual da cobrinha"></select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="board-area">
+                <div class="players" id="players"></div>
+                <div class="board-frame" id="frame">
+                    <canvas class="board" id="board" tabindex="0" aria-label="Campo da cobrinha"></canvas>
+                    <div class="overlay" id="overlay">
+                        <div class="overlay-card">
+                            <div class="overlay-icon" id="ov-icon">🐍</div>
+                            <h2 id="ov-title">Cobrinha</h2>
+                            <p id="ov-text">Coma as frutas para crescer sem bater em você mesma.</p>
+                            <div class="overlay-actions">
+                                <button class="btn primary" id="ov-play" type="button">Jogar</button>
+                                <button class="btn" id="ov-menu" type="button" hidden>Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dpad" id="dpad" hidden>
+                    <button type="button" data-dir="0" class="up" aria-label="Cima">▲</button>
+                    <button type="button" data-dir="3" class="left" aria-label="Esquerda">◀</button>
+                    <button type="button" data-dir="1" class="right" aria-label="Direita">▶</button>
+                    <button type="button" data-dir="2" class="down" aria-label="Baixo">▼</button>
+                </div>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite"></div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-play" type="button" title="Jogar (Espaço / Enter)">Jogar</button>
+                    <button class="btn" id="btn-pause" type="button" title="Pausar (P)">⏸ Pausar</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card score">
+                    <h2>Partida</h2>
+                    <div class="score-row" id="score"></div>
+                    <div class="effects" id="effects"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Recordes</h2>
+                    <div class="records" id="records"></div>
+                </div>
+
+                <div class="card prefs">
+                    <h2>No celular</h2>
+                    <label class="field">
+                        <span>Controle</span>
+                        <select id="opt-touch" aria-label="Controle no celular">
+                            <option value="swipe">Deslizar o dedo</option>
+                            <option value="pad">Botões na tela</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Vibrar</span>
+                        <select id="opt-vibrate" aria-label="Vibrar ao comer">
+                            <option value="1">Sim</option>
+                            <option value="0">Não</option>
+                        </select>
+                    </label>
+                </div>
+
+                <details class="card rules">
+                    <summary>Como jogar e itens</summary>
+                    <ul>
+                        <li>🍎 Fruta: +10 pontos e a cobrinha cresce. A velocidade sobe aos poucos.</li>
+                        <li>⭐ Estrela: pontos em dobro por 8 s.</li>
+                        <li>🐢 Tartaruga: tudo fica mais lento por 7 s.</li>
+                        <li>👻 Fantasma: atravesse o próprio corpo por 7 s.</li>
+                        <li>✂️ Tesoura: corta 3 pedaços da cauda.</li>
+                        <li><b>Contra o tempo</b>: 60 s; bater custa 5 s e encolhe a cobrinha.</li>
+                        <li><b>Obstáculos</b>: a cada 5 frutas o campo muda. <b>Desafio do dia</b>: o mesmo campo para todos no dia.</li>
+                        <li><b>Contra o Dino</b>: o computador também caça as frutas. Quem bater perde.</li>
+                        <li>Visuais Naja e Brasa são liberados com 250 e 500 pontos.</li>
+                    </ul>
+                </details>
+
+                <p class="keys" id="keys">Setas/WASD: mover · Espaço/Enter: jogar · P: pausa · M: som<br>2 jogadores: WASD × Setas</p>
+            </aside>
+        </section>
+    </main>
+
+    <script src="../assets/combobox.js?v=1.053"></script>
+    <script src="game.js?v=1.053"></script>
+</body>
+</html>

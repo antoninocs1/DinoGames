@@ -1,0 +1,372 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --panel: rgba(8, 16, 14, 0.94);
+    --border: rgba(126, 224, 143, 0.3);
+    --text: #e8f5ec;
+    --dim: #a9c2b2;
+    --gold: #ffd94d;
+    --accent: #34cca3;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: var(--text);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    touch-action: none;
+}
+
+/* ---------- Painéis (menu, pausa, fim) ---------- */
+
+.panel {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 14px;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.card {
+    width: min(560px, 100%);
+    padding: 20px 22px;
+    border-radius: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+.card.small {
+    width: min(380px, 100%);
+    text-align: center;
+}
+
+.card h1 {
+    text-align: center;
+    font-size: clamp(1.6rem, 6vw, 2.3rem);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-shadow: 0 0 18px rgba(52, 204, 163, 0.45);
+}
+
+.card h1 span {
+    color: var(--gold);
+}
+
+.card h2 {
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+}
+
+.lead {
+    margin: 8px 0 14px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.lead strong {
+    color: var(--gold);
+}
+
+.crew {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.crew span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 74px;
+    padding: 5px 8px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+    background: color-mix(in srgb, var(--c) 16%, transparent);
+    color: var(--c);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.crew small {
+    color: var(--dim);
+    font-weight: 400;
+    font-size: 0.7rem;
+}
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.field {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--dim);
+    font-size: 0.72rem;
+}
+
+.field select {
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    outline: none;
+    cursor: pointer;
+}
+
+.field select option {
+    background: #10201a;
+}
+
+.icon-btn {
+    width: 48px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.play,
+.ghost-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 0;
+    background: linear-gradient(180deg, #3fe0b4, #1fa57f);
+    color: #04140e;
+    font: inherit;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(52, 204, 163, 0.3);
+}
+
+.play:hover,
+.play:focus-visible {
+    outline: none;
+    filter: brightness(1.12);
+}
+
+.ghost-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: none;
+    font-weight: 600;
+}
+
+.ghost-btn:hover,
+.ghost-btn:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+}
+
+.row > * {
+    flex: 1;
+}
+
+.record {
+    margin-top: 10px;
+    text-align: center;
+    color: var(--gold);
+    font-size: 0.88rem;
+    min-height: 1.2em;
+}
+
+.over-score {
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+.over-score b {
+    font-size: 1.8rem;
+    color: #fff;
+}
+
+.howto {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 0.86rem;
+    color: var(--dim);
+}
+
+.howto summary {
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.howto ul {
+    margin: 8px 0 2px 18px;
+    line-height: 1.45;
+}
+
+.howto li + li {
+    margin-top: 4px;
+}
+
+.howto b {
+    color: var(--text);
+}
+
+kbd {
+    padding: 0 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 0.8em;
+}
+
+.keys {
+    margin-top: 10px;
+    text-align: center;
+    color: var(--dim);
+    font-size: 0.74rem;
+}
+
+/* ---------- Controles de toque ---------- */
+
+.touch {
+    display: none;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.touch.show {
+    display: block;
+}
+
+.touch button {
+    pointer-events: auto;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(8, 16, 14, 0.55);
+    color: #fff;
+    font-size: 1.3rem;
+    touch-action: none;
+    cursor: pointer;
+}
+
+.touch button.active {
+    background: rgba(52, 204, 163, 0.6);
+    border-color: var(--accent);
+}
+
+.t-pause {
+    position: absolute;
+    top: max(6px, env(safe-area-inset-top));
+    right: 6px;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem !important;
+}
+
+.t-roar {
+    position: absolute;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: 68px;
+    height: 68px;
+    font-size: 1.9rem !important;
+    opacity: 0.5;
+    transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.t-roar.ready {
+    opacity: 1;
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 18px rgba(255, 217, 77, 0.7);
+}
+
+.dpad {
+    display: none;
+    position: absolute;
+    left: 14px;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    grid-template-columns: repeat(3, 56px);
+    grid-template-rows: repeat(3, 56px);
+    gap: 4px;
+}
+
+.touch.pad .dpad {
+    display: grid;
+}
+
+.dpad button {
+    width: 56px;
+    height: 56px;
+}
+
+.dpad .up { grid-area: 1 / 2; }
+.dpad .left { grid-area: 2 / 1; }
+.dpad .right { grid-area: 2 / 3; }
+.dpad .down { grid-area: 3 / 2; }
+
+/* Celular em pé: o D-pad fica centralizado na faixa abaixo do labirinto */
+@media (orientation: portrait) {
+    .touch.pad .dpad {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
