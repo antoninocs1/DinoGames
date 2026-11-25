@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.047">
-    <link rel="stylesheet" href="style.css?v=1.047">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.048">
+    <link rel="stylesheet" href="style.css?v=1.048">
 </head>
 <body>
     <main class="app">
@@ -106,7 +106,7 @@
                         <h2>Notas tocadas (código)</h2>
                         <span class="song-name">figura pelo ritmo: devagar = [n1], médio = [n1/2], rápido = [n1/4]</span>
                     </div>
-                    <textarea id="free-text" class="song-text free-text" readonly spellcheck="false" aria-label="Notas tocadas, no código do Executar música"
+                    <textarea id="free-text" class="song-text free-text" spellcheck="false" aria-label="Notas tocadas, no código do Executar música"
                         placeholder="Toque as teclas: as notas aparecem aqui no código, por exemplo E[n1/4]; F[n1/4]; C[n1], E[n1], G[n1];"></textarea>
                     <div class="music-tools">
                         <button class="btn" id="btn-free-save" type="button" title="Salvar as notas num arquivo .txt">💾 Salvar</button>
@@ -176,6 +176,7 @@
                                 <li><strong>Nome da música</strong>: escreva uma linha <code>Música: Nome da música</code> — o nome aparece em cima do pentagrama.</li>
                                 <li><strong>Andamento</strong>: escreva <code>semínima = 80</code> no texto (ou mude no ♩ =): 80 semínimas por minuto.</li>
                                 <li><strong>Compassos</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele. No fim da música aparece a barra dupla.</li>
+                                <li>No editor valem <strong>Ctrl+Z</strong> (desfazer), <strong>Ctrl+Y</strong> (refazer), <strong>Ctrl+C</strong> (copiar), <strong>Ctrl+X</strong> (recortar), <strong>Ctrl+V</strong> ou <strong>Ctrl+P</strong> (colar) e <strong>Ctrl+S</strong> (salvar).</li>
                                 <li>Títulos, “Compasso 1:” e outros textos são ignorados (só marcam o compasso); <code>//</code> começa um comentário.</li>
                                 <li>Ao tocar, as teclas do piano e as notas do pentagrama acendem. Use <strong>Abrir</strong>, <strong>Salvar</strong> e <strong>Salvar como…</strong> para guardar as suas músicas em arquivos .txt; o texto também fica guardado neste aparelho.</li>
                                 <li>O botão <strong>Ode à Alegria</strong> carrega a música de exemplo (Beethoven), guardada no jogo, para tocar ou usar de modelo.</li>
@@ -242,12 +243,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.047"></script>
-    <script src="sounds.js?v=1.047"></script>
-    <script src="modes.js?v=1.047"></script>
-    <script src="engine.js?v=1.047"></script>
-    <script src="staff.js?v=1.047"></script>
-    <script src="music.js?v=1.047"></script>
-    <script src="game.js?v=1.047"></script>
+    <script src="../assets/combobox.js?v=1.048"></script>
+    <script src="sounds.js?v=1.048"></script>
+    <script src="modes.js?v=1.048"></script>
+    <script src="engine.js?v=1.048"></script>
+    <script src="staff.js?v=1.048"></script>
+    <script src="music.js?v=1.048"></script>
+    <script src="game.js?v=1.048"></script>
 </body>
 </html>

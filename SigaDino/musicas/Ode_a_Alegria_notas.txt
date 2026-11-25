@@ -40,6 +40,9 @@ C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
 Compasso 8:
 D[n1/2]; C[n1/2];
 
+Compasso 9 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
+C[n1], E[n1], G[n1];
+
 Observação:
 Esta transcrição apresenta o tema principal da melodia, organizado em oito compassos,
 com base na pauta superior da partitura da página 3. Não representa o acompanhamento

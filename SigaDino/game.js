@@ -907,6 +907,39 @@
     // Executar música (notas): editor + leitura do código + tocar
     // =================================================================
     const MUSIC = window.SigaDinoMusic;
+
+    /**
+     * Troca todo o texto de uma caixa como se fosse digitado: assim o Ctrl+Z desfaz
+     * (abrir arquivo, carregar exemplo, limpar…). Se o navegador não deixar, troca direto.
+     */
+    const replaceText = (area, text) => {
+        if (area.value === text) return;
+        const visible = area.offsetParent !== null;
+        if (visible) {
+            const before = document.activeElement;
+            area.focus({ preventScroll: true });
+            area.select();
+            const ok = text ? document.execCommand("insertText", false, text) : document.execCommand("delete");
+            const done = ok && area.value === text;
+            if (done) { area.setSelectionRange(0, 0); area.scrollTop = 0; }
+            // Devolve o foco (senão as teclas do computador escreveriam no texto em vez de tocar).
+            if (before !== area) { area.blur(); before?.focus?.({ preventScroll: true }); }
+            if (done) return;
+        }
+        area.value = text;
+    };
+    /** Ctrl+P também cola (além do Ctrl+V), nas caixas de texto das músicas. */
+    const pasteShortcut = (area) => area.addEventListener("keydown", async (e) => {
+        if (!(e.ctrlKey || e.metaKey) || e.altKey || e.key.toLowerCase() !== "p") return;
+        e.preventDefault(); // não abre a impressão
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text && !document.execCommand("insertText", false, text)) area.setRangeText(text, area.selectionStart, area.selectionEnd, "end");
+            area.dispatchEvent(new Event("input"));
+        } catch {
+            setStatus("O navegador não deixou colar com Ctrl+P. Use Ctrl+V.", "soft");
+        }
+    });
     const SONG_KEY = "dinogames-sigadino-song";
     const mu = {
         text: $("song-text"), name: $("song-name"), tempo: $("song-tempo"), example: $("song-example"),
@@ -1034,7 +1067,7 @@
     const showName = () => { mu.name.textContent = `${song.name}${song.dirty ? " •" : ""}`; };
     const setSongText = (text, name, handle = null) => {
         stopSong();
-        mu.text.value = text;
+        replaceText(mu.text, text);
         song.name = name;
         song.handle = handle;
         song.dirty = false;
@@ -1147,6 +1180,7 @@
             mu.info.textContent = countText(events.length);
         }, 400);
     });
+    pasteShortcut(mu.text);
     mu.open.addEventListener("click", openSong);
     mu.save.addEventListener("click", saveSong);
     mu.saveAs.addEventListener("click", saveSongAs);
@@ -1177,7 +1211,12 @@
     };
     const FREE_KEY = "dinogames-sigadino-free-notes";
     const FRAC_CODE = { semibreve: "1", minima: "1/2", seminima: "1/4" };
-    let freeEvents = storage.get(FREE_KEY)?.events || []; // [{ notes: ["E"], fig, br }]
+    // A caixinha é texto comum (dá para editar, desfazer, copiar e colar); as notas tocadas
+    // entram no fim. Versão antiga guardava a lista de notas: vira texto uma vez.
+    const freeSaved = storage.get(FREE_KEY) || {};
+    const oldEvents = freeSaved.events || [];
+    tr.text.value = freeSaved.text ?? oldEvents.map((ev, k) =>
+        `${k && ev.br ? "\n" : k ? " " : ""}${ev.notes.map((n) => `${n}[n${FRAC_CODE[ev.fig] || "1/4"}]`).join(", ")};`).join("");
 
     /** Código da tecla: letra com # ou b (conforme ♯/♭ escolhido) e "2" na oitava de cima. */
     const codeOf = (pad) => {
@@ -1187,29 +1226,31 @@
         return `${pad.octave ? "2" : ""}${letter}`;
     };
     const renderFree = () => {
-        tr.text.value = freeEvents.map((ev, k) =>
-            `${k && ev.br ? "\n" : k ? " " : ""}${ev.notes.map((n) => `${n}[n${FRAC_CODE[ev.fig] || "1/4"}]`).join(", ")};`).join("");
-        tr.text.scrollTop = tr.text.scrollHeight;
-        const empty = !freeEvents.length;
+        const empty = !tr.text.value.trim();
         tr.save.disabled = tr.clear.disabled = tr.send.disabled = empty;
-        storage.set(FREE_KEY, { events: freeEvents });
+        storage.set(FREE_KEY, { text: tr.text.value });
     };
-    /** Acrescenta a nota tocada (ou junta no acorde). Pausa longa ou 8 notas = linha nova. */
+    tr.text.addEventListener("input", renderFree);
+    /** Acrescenta a nota tocada (ou junta no acorde). Pausa longa ou 8 notas na linha = linha nova. */
     function transcribe(i, figure, chord, sinceMs) {
         const code = codeOf(mode.pads[i]);
         if (!code) return;
-        const last = freeEvents[freeEvents.length - 1];
-        if (chord && last) {
-            if (!last.notes.includes(code)) last.notes.push(code);
+        const token = `${code}[n${FRAC_CODE[figure] || "1/4"}]`;
+        const text = tr.text.value.replace(/\s+$/, "");
+        let next;
+        if (chord && text.endsWith(";")) {
+            next = `${text.slice(0, -1)}, ${token};`; // vírgula = acorde
         } else {
-            let run = 0;
-            for (let k = freeEvents.length - 1; k >= 0 && !freeEvents[k].br; k--) run++;
-            freeEvents.push({ notes: [code], fig: figure, br: sinceMs > 2500 || run >= 7 });
+            const line = text.slice(text.lastIndexOf("\n") + 1);
+            const onLine = (line.match(/;/g) || []).length;
+            next = `${text}${!text ? "" : sinceMs > 2500 || onLine >= 8 ? "\n" : " "}${token};`;
         }
+        tr.text.value = next;
+        tr.text.scrollTop = tr.text.scrollHeight;
         renderFree();
     }
     tr.clear.addEventListener("click", () => {
-        freeEvents = [];
+        replaceText(tr.text, "");
         renderFree();
         setStatus("Caixinha de notas limpa. Toque as teclas para escrever de novo. 🎶", "turn");
     });
@@ -1232,6 +1273,7 @@
         showName();
         setStatus("As notas foram para o editor. Toque em ▶ Tocar para ouvir (e edite à vontade).", "turn");
     });
+    pasteShortcut(tr.text);
     renderFree();
 
     // Texto inicial: o último que estava no editor, ou a Ode à Alegria.
