@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.058">
-    <link rel="stylesheet" href="style.css?v=1.058">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.059">
+    <link rel="stylesheet" href="style.css?v=1.059">
 </head>
 <body>
     <main class="app">
@@ -218,7 +218,7 @@
                                     <code>Compasso 1:</code><br>
                                     <code>MD: E[n1/4]; F[n1/4]; G[n1/2];</code><br>
                                     <code>ME: 0C[n1/2], 0G[n1/2]; -1G[n1/2];</code></li>
-                                <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code>; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
+                                <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code> ou quando a música desce abaixo do Fá de baixo (<code>0F</code>) — sem <code>ME:</code>, as notas abaixo do Dó central vão para a clave de Fá; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
                                 <li><strong>Teclado</strong> (nas opções, em cima): <strong>Automático</strong> parte das 2 oitavas do Dó central e acrescenta oitavas embaixo e em cima até caber a música (de <code>-2C</code> até <code>4B</code>), como um piano; <strong>2 oitavas</strong> é o teclado de 24 notas; <strong>Piano (5 oitavas)</strong> vai do <code>-1C</code> ao <code>3B</code>. Com o <strong>Modelo: Piano (5 oitavas)</strong>, o Automático parte das 5 oitavas. A bolinha no pé da tecla marca o <strong>Dó central</strong>. As teclas do computador continuam nas 2 oitavas do meio; as outras se tocam com o mouse ou o dedo.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
@@ -275,7 +275,7 @@
                         <li>Arraste o dedo (ou o mouse apertado) pelas teclas para tocar uma escala, uma nota atrás da outra.</li>
                         <li>Em <strong>Jogo → Tocar livre</strong>, não tem sequência nem placar: é só tocar e inventar músicas.</li>
                         <li>Em <strong>Jogo → Executar música (notas)</strong>, escreva (ou abra) as notas no editor, como <code>E[n1/4]; F[n1/4]; G[n1/2];</code>, e toque em <strong>▶ Tocar</strong>: o piano toca e as notas acendem no pentagrama. Veja a <strong>Ajuda</strong> do editor e o exemplo da <strong>Ode à Alegria</strong>.</li>
-                        <li>No <strong>Tocar livre</strong> e no <strong>Executar música</strong>, o Modelo tem também o <strong>Piano (5 oitavas)</strong>, do Dó grave ao Si agudo (no Siga a sequência ele fica de fora: a sequência usa o teclado de 24 notas).</li>
+                        <li>No <strong>Tocar livre</strong> e no <strong>Executar música</strong>, o Modelo tem também o <strong>Piano (5 oitavas)</strong>, do Dó grave ao Si agudo (no Siga a sequência ele fica de fora: a sequência usa o teclado de 24 notas). Com o piano, o pentagrama do Tocar livre vira <strong>pauta dupla</strong>: as notas abaixo do Dó central aparecem na clave de Fá.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
                         <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Em <strong>Só cor</strong> a nota fica com a cor da tecla, mas sem o nome dentro. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
                         <li>Em <strong>Nomes</strong>, troque Dó, Ré, Mi… pelas <strong>letras</strong> (C, D, E, F, G, A, B) no teclado e no pentagrama. A <strong>Legenda</strong> mostra a nota, a letra e a cor de cada tecla.</li>
@@ -290,12 +290,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.058"></script>
-    <script src="sounds.js?v=1.058"></script>
-    <script src="modes.js?v=1.058"></script>
-    <script src="engine.js?v=1.058"></script>
-    <script src="staff.js?v=1.058"></script>
-    <script src="music.js?v=1.058"></script>
-    <script src="game.js?v=1.058"></script>
+    <script src="../assets/combobox.js?v=1.059"></script>
+    <script src="sounds.js?v=1.059"></script>
+    <script src="modes.js?v=1.059"></script>
+    <script src="engine.js?v=1.059"></script>
+    <script src="staff.js?v=1.059"></script>
+    <script src="music.js?v=1.059"></script>
+    <script src="game.js?v=1.059"></script>
 </body>
 </html>

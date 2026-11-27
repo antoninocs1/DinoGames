@@ -289,22 +289,19 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
     body.with-staff .device[data-look="teclado"], body.with-staff .staff-box { width: 100%; }
 }
 
-/* ---------- Celular deitado: aparelho à esquerda, controles à direita ---------- */
+/* ---------- Celular deitado: pentagrama e aparelho na largura toda (nada do lado);
+   opções, placar, legenda e regras ficam embaixo, rolando a tela ---------- */
 @media (orientation: landscape) and (max-height: 520px) {
-    .app {
-        display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
-        grid-template-areas: "stage panel" "stage bar"; grid-template-rows: auto 1fr;
-        align-items: start; gap: 8px 12px; padding: 6px 10px 10px; min-height: 100vh; min-height: 100dvh;
-    }
+    .app { display: flex; flex-direction: column; gap: 8px; padding: 6px 10px 10px; min-height: 100vh; min-height: 100dvh; }
     .layout { display: contents; }
     .stage {
-        grid-area: stage; position: sticky; top: 6px; height: calc(100vh - 12px); height: calc(100dvh - 12px);
+        order: 1; width: 100%; min-height: calc(100vh - 12px); min-height: calc(100dvh - 12px);
         display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px;
     }
-    .panel { grid-area: panel; gap: 8px; }
-    .bar { grid-area: bar; gap: 8px; }
+    .bar { order: 2; gap: 8px; }
+    .panel { order: 3; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; align-items: start; }
     .brand { display: none; }
-    .settings { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 8px; }
+    .settings { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 8px; }
     .field select { min-width: 0; width: 100%; padding-top: 6px; padding-bottom: 6px; font-size: 12px; }
     .status { min-height: 0; padding: 8px 10px; font-size: 13px; }
     .btn { padding: 8px 10px; font-size: 13px; }

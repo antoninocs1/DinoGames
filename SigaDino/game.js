@@ -583,7 +583,7 @@
         document.body.classList.toggle("with-staff", on);
         document.body.classList.toggle("free-keys", isFree() && !isMusic() && mode.pads.some((p) => p.letter));
         staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome",
-            { lead: isMusic(), deep: isMusic(), grand: isMusic() && wantGrand(MUSIC.parse(mu.text.value)) });
+            { lead: isMusic(), deep: isMusic(), grand: isMusic() ? wantGrand(MUSIC.parse(mu.text.value)) : freeGrand() });
         if (isMusic()) { setFigure("seminima"); renderSong(); return; }
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
@@ -906,6 +906,9 @@
         }
     };
 
+    let freeAt = 0;        // coluna do pentagrama no Tocar livre (acorde = mesma coluna)
+    /** Pauta dupla no Tocar livre: quando o teclado tem oitavas abaixo do Dó central (piano). */
+    const freeGrand = () => isFree() && !isMusic() && mode.pads.some((p) => p.octave < 0);
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i, source = "") => {
         light(i, 420);
@@ -927,7 +930,11 @@
             if (staffOn()) setFigure(freeFigure);
         }
         lastFreeAt = now;
-        if (staffOn()) staff.done(staff.push(i, freeFigure, 420, chord));
+        if (!chord) freeAt++;
+        // Piano no Tocar livre (pauta dupla): abaixo do Dó central vai para a clave de Fá;
+        // o acorde com notas dos dois lados fica na mesma vertical (mesma coluna, freeAt).
+        const hand = staff.grand && mode.pads[i].octave < 0 ? "me" : "md";
+        if (staffOn()) staff.done(staff.push(i, freeFigure, 420, chord, { hand, at: freeAt }));
         if (!isMusic()) transcribe(i, freeFigure, chord, sinceChord);
         const pad = mode.pads[i];
         const text = noteName(pad);
@@ -1025,8 +1032,12 @@
     };
 
     /** Pauta dupla (clave de Sol + Fá): escolhida, ou automática quando o texto tem a mão esquerda. */
-    const wantGrand = (info) => prefs.pauta === "dupla" || (prefs.pauta !== "sol" && info.hands === 2);
-    let songSlots = [];        // posição no pentagrama de cada evento (-1 = não desenhado)
+    const wantGrand = (info) => prefs.pauta === "dupla" || (prefs.pauta !== "sol" && (info.hands === 2 || lowStep(info) <= GRAND_STEP));
+    /** Nota mais grave da música (step: 0 = Dó central, −1 = Si de baixo…). */
+    const lowStep = (info) => Math.min(Infinity, ...info.events.flatMap((ev) => (ev.kind === "note" ? ev.notes.map((n) => n.step) : [])));
+    // Abaixo do Fá de baixo (Mi, step −5: 3 linhas suplementares na clave de Sol) vale a pauta dupla.
+    const GRAND_STEP = -5;
+    let songSlots = [];        // posições no pentagrama de cada evento (uma por pauta)
 
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
@@ -1044,34 +1055,46 @@
             if (g && g.a >= 0) staff.tuplet(g.a, g.b, g.n);
             groups[hand] = null;
         };
+        const grand = staff.grand;
         songEvents.forEach((ev, k) => {
-            const hand = ev.hand || "md";
-            // at: notas do mesmo instante (das duas mãos) ficam na mesma vertical.
-            const opts = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over, hand, at: ev.at };
-            let slot = -1;
-            if (ev.kind === "rest") slot = staff.pushRest(ev.figure, opts);
-            else ev.notes.forEach((n) => {
-                const index = padForSemi(n.semi);
-                // A nota ligada não repete o ♯/♭ (vale o da nota onde a ligadura começa).
-                if (index >= 0) slot = staff.push({ index, step: n.step, acc: n.tied ? "" : n.acc }, ev.figure, 0, slot >= 0, opts);
-            });
-            slots[k] = slot;
-            if (slot >= 0 && k < songAt) staff.done(slot);
-            // Ligadura: arco da nota anterior da mesma mão até esta, para cada nota ligada.
-            const prev = prevOf[hand];
-            if (slot >= 0 && ev.kind === "note" && prev && prev.slot >= 0) {
-                const tied = ev.notes.filter((n) => n.tied);
-                const top = Math.max(...tied.map((n) => n.step));
-                // Uma nota: o lado pela altura. Acorde: a de cima por cima, as outras por baixo.
-                tied.forEach((n) => staff.tie(prev.slot, slot, n.step, tied.length > 1 ? n.step === top : null));
+            // Pauta de cada nota: com MD:/ME: vale a mão; numa mão só (pauta dupla pela
+            // altura), abaixo do Dó central vai para a clave de Fá, como no piano.
+            const handOf = (n) => (info.hands === 2 ? ev.hand || "md" : grand && n.step < 0 ? "me" : "md");
+            // at: notas do mesmo instante (das duas pautas) ficam na mesma vertical.
+            const base = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over, at: ev.at };
+            const parts = {};
+            if (ev.kind === "rest") parts[ev.hand || "md"] = null;
+            else ev.notes.forEach((n) => (parts[handOf(n)] = parts[handOf(n)] || []).push(n));
+            const got = [];
+            for (const [hand, list] of Object.entries(parts)) {
+                const opts = { ...base, hand };
+                let slot = -1;
+                if (!list) slot = staff.pushRest(ev.figure, opts);
+                else list.forEach((n) => {
+                    const index = padForSemi(n.semi);
+                    // A nota ligada não repete o ♯/♭ (vale o da nota onde a ligadura começa).
+                    if (index >= 0) slot = staff.push({ index, step: n.step, acc: n.tied ? "" : n.acc }, ev.figure, 0, slot >= 0, opts);
+                });
+                if (slot < 0) continue;
+                got.push(slot);
+                if (k < songAt) staff.done(slot);
+                // Ligadura: arco da nota anterior da mesma pauta até esta, para cada nota ligada.
+                const prev = prevOf[hand];
+                if (list && prev) {
+                    const tied = list.filter((n) => n.tied);
+                    const top = Math.max(...tied.map((n) => n.step));
+                    // Uma nota: o lado pela altura. Acorde: a de cima por cima, as outras por baixo.
+                    tied.forEach((n) => staff.tie(prev.slot, slot, n.step, tied.length > 1 ? n.step === top : null));
+                }
+                prevOf[hand] = { k, slot };
+                // Quiáltera: colchete com o número em cima das notas do mesmo grupo { … }.
+                if (groups[hand] && ev.tuplet?.id !== groups[hand].id) closeGroup(hand);
+                if (ev.tuplet) {
+                    if (!groups[hand]) groups[hand] = { id: ev.tuplet.id, n: ev.tuplet.n, a: slot, b: slot };
+                    groups[hand].b = slot;
+                }
             }
-            if (slot >= 0) prevOf[hand] = { k, slot };
-            // Quiáltera: colchete com o número em cima das notas do mesmo grupo { … }.
-            if (groups[hand] && ev.tuplet?.id !== groups[hand].id) closeGroup(hand);
-            if (ev.tuplet && slot >= 0) {
-                if (!groups[hand]) groups[hand] = { id: ev.tuplet.id, n: ev.tuplet.n, a: slot, b: slot };
-                groups[hand].b = slot;
-            }
+            slots[k] = got;
         });
         closeGroup("md");
         closeGroup("me");
@@ -1185,8 +1208,7 @@
                     const holdMs = (n.hold || ev.frac) * 4 * quarter;
                     light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
                 });
-                const slot = songSlots[events.indexOf(ev)];
-                if (slot >= 0) { staff.light(slot, on); staff.done(slot); }
+                (songSlots[events.indexOf(ev)] || []).forEach((slot) => { staff.light(slot, on); staff.done(slot); });
             });
             const main = moment.find((ev) => ev.hand !== "me") || moment[0];
             setFigure(main.figure);

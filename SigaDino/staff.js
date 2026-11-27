@@ -484,7 +484,8 @@
                 if (!mode) return -1;
                 const e = typeof entry === "number" ? { index: entry } : entry;
                 const last = notes[notes.length - 1];
-                const grow = chord && last && !last.rest;
+                // Acorde cresce só na mesma clave; a nota da outra pauta vai na mesma coluna (at).
+                const grow = chord && last && !last.rest && last.clef === this._clefOf(opts.hand);
                 const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
                 const dotted = grow ? last.dotted : Number(opts.dotted) || 0; // 0, 1 ou 2 pontos
