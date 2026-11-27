@@ -243,7 +243,7 @@
         };
 
         /** Cabeça de uma nota (sem haste nem acidente) com o centro em (x, y). */
-        const headSvg = (pad, step, acc, x, y, figureName, size) => {
+        const headSvg = (pad, step, acc, x, y, figureName, size, spelled = false) => {
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const { rx, ry, tilt, plain } = size;
             const breve = fig.breve ? `<path d="M${f(x - rx - 2.4)} ${y - 7}v14M${f(x - rx - 4.8)} ${y - 7}v14M${f(x + rx + 2.4)} ${y - 7}v14M${f(x + rx + 4.8)} ${y - 7}v14"
@@ -263,7 +263,18 @@
             }
             // ♯/♭ já aparece fora da figura: dentro vai só o nome da nota natural (Dó♯ → Dó).
             const naturals = mode.pads.filter((p) => !p.sharp);
-            const name = acc ? nameOf(naturals[((step % 7) + 7) % 7] || pad) : nameOf(pad);
+            const natIdx = ((step % 7) + 7) % 7;
+            let name;
+            if (acc) name = nameOf(naturals[natIdx] || pad);
+            else if (spelled) {
+                // Música (a nota sabe a linha/espaço): nome como está escrito — com a armadura de
+                // Ré♭ maior, a tecla preta Sol♯/Lá♭ no lugar do Lá vira "Lá♭" (não "Sol♯").
+                const semi = ((Math.round(12 * Math.log2(pad.freq / 261.63)) % 12) + 12) % 12;
+                let d = semi - [0, 2, 4, 5, 7, 9, 11][natIdx];
+                if (d > 6) d -= 12;
+                if (d < -6) d += 12;
+                name = nameOf(naturals[natIdx] || pad) + (d > 0 ? "♯".repeat(d) : "♭".repeat(-d));
+            } else name = nameOf(pad);
             const rot = tilt ? ` transform="rotate(${tilt} ${x} ${y})"` : "";
             const fill = fig.hollow ? tint(color, 0.72) : color;
             const ink = fig.hollow ? "#1d1b22" : lum(color) > 0.6 ? "#1d1b22" : "#fff";
@@ -288,7 +299,7 @@
             const edge = edgeOf(size.rx, size.ry, size.tilt);
             const seen = new Set();
             const items = entries
-                .map((e) => ({ ...e, pad: mode.pads[e.index], ...placeOf(e) }))
+                .map((e) => ({ ...e, pad: mode.pads[e.index], ...placeOf(e), spelled: e.step != null }))
                 .filter((it) => it.pad && !seen.has(`${it.step}${it.acc}`) && seen.add(`${it.step}${it.acc}`))
                 .sort((a, b) => a.step - b.step || (a.acc ? 1 : 0) - (b.acc ? 1 : 0));
             if (!items.length) return { html: "<g class=\"note\"></g>", extraLeft: 0, extraRight: 0 };
@@ -321,7 +332,7 @@
                     if (up) maxX = Math.max(maxX, sx + 10);
                 }
             }
-            items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, cl.y(it.step), figureName, size)));
+            items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, cl.y(it.step), figureName, size, it.spelled)));
             // Ponto de aumento (1 ou 2): à direita, no espaço (nota de linha sobe meio espaço).
             const dots = Number(dotted) || 0;
             if (dots) {

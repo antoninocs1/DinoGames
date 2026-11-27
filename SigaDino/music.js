@@ -438,9 +438,9 @@ Fim
 Observação: Esta transcrição apresenta o tema principal da melodia completo, com dezesseis compassos e o acorde final, com base na pauta superior da partitura da página 3 (compassos 1 a 8) e na continuação do tema (compassos 9 a 16). Não representa o acompanhamento da pauta inferior do piano.
 `;
 
-    // Igual ao arquivo "Clair_de_Lune_notas.txt" (os 8 primeiros compassos, as duas mãos).
+    // Igual ao arquivo "Clair_de_Lune_notas.txt" (os 14 compassos da 1ª página, as duas mãos).
     const CLAIR = `Música: Clair de Lune – Claude Debussy
-Transcrição em texto: os 8 primeiros compassos (as duas mãos)
+Transcrição em texto: os 14 compassos da 1ª página (as duas mãos)
 
 Referência: Suite bergamasque, 3º movimento, 1ª edição (E. Fromont, Paris, 1905),
 página 14 — partitura em domínio público (IMSLP #83536).
@@ -451,7 +451,7 @@ Andamento: semínima. = 52
 
 Convenção utilizada:
 MD = mão direita (melodia); MD2 = 2ª voz da mão direita (notas longas por baixo)
-ME = mão esquerda
+ME = mão esquerda; ME2 = 2ª voz da mão esquerda (o baixo, a partir do compasso 10)
 Com o Tom de Ré♭ maior, B, E, A, D e G já são bemóis; A♮ = Lá natural.
 [s…] = espera em silêncio (só para a 2ª voz começar no lugar certo)
 {2 …} = duína: 2 colcheias no tempo de 3; ~ = ligadura
@@ -460,46 +460,90 @@ Compasso 1:
 MD:  [p1/8]; [p1/8]; 2F[n1/8], 2A[n1/8]~ 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
 MD2: [s1/2.]; [s1/4.];
 ME:  [p1/4]; F[n1/8], A[n1/8]~ F[n1/2.], A[n1/2.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 2:
 MD:  2D[n1/8], 2F[n1/8]; 2C[n1/8], 2E[n1/8]; 2D[n1/8], 2F[n1/8]; 2C[n1/2.], 2E[n1/2.]~
 MD2: [s1/2.]; [s1/4.];
 ME:  G[n1/2.], A♮[n1/2.]~ G[n1/4.], A[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 3:
 MD:  2C[n1/8], 2E[n1/8]; B[n1/8], 2D[n1/8]; 2C[n1/8], 2E[n1/8]; {2 2D[n1/8]; 2F[n1/8]~} {2 2F[n1/8]; 2D[n1/8]~}
 MD2: [s1/4.]; A[n1/2.];
 ME:  F[n1/2.], A[n1/2.]~ F[n1/4.], A[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 4:
 MD:  B[n1/8], 2D[n1/8]; A[n1/8], 2C[n1/8]; B[n1/8], 2D[n1/8]; A[n1/2.], 2C[n1/2.]~
 MD2: [s1/2.]; [s1/4.];
 ME:  E[n1/2.], G[n1/2.]~ E[n1/4.], G[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 5:
 MD:  2C[n1/8]; B[n1/8]; 2C[n1/8]; B[n1/8]; 2E[n1/8]; B[n1/8]; A[n1/8]; B[n1/8]; A[n1/8]~
 MD2: G[n1/2.]; G[n1/4.];
 ME:  C[n1/2.], E[n1/2.]; C[n1/4.], E[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 6:
 MD:  A[n1/8]; G[n1/8]; A[n1/8]; G[n1/4.]; F[n1/4.];
 MD2: E[n1/2.]; E[n1/4.];
 ME:  0B[n1/2.], C[n1/2.]; 0A♮[n1/4.], C[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 7 (a mão esquerda passa para a clave de Fá):
 MD:  G[n1/8]; F[n1/8]; G[n1/8]; F[n1/8]; B[n1/8]; F[n1/8]; E[n1/8]; F[n1/8]; E[n1/8]~
 MD2: D[n1/2.]; D[n1/4.];
 ME:  0A[n1/2.], 0B[n1/2.]; 0G[n1/4.], 0B[n1/4.];
+ME2: [s1/2.]; [s1/4.];
 
 Compasso 8:
 MD:  E[n1/8]; D[n1/8]; E[n1/8]; D[n1/4.]; C[n1/4.];
 MD2: 0B[n1/2.]; 0A[n1/4.];
 ME:  0E[n1/2.], 0A[n1/2.]; {2 0E[n1/8], 0G[n1/8]; -1A[n1/8];}
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 9 (volta o tema do começo; a mão esquerda faz um arpejo):
+MD:  [p1/8]; [p1/8]; 2F[n1/8], 2A[n1/8]~ 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
+MD2: [s1/2.]; [s1/4.];
+ME:  -1D[n1/8], -1A[n1/8]; 0F[n1/8], 0A[n1/8]; F[n1/8], A[n1/8]~ F[n1/2.], A[n1/2.];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 10:
+MD:  2D[n1/8], 2F[n1/8]; 2E[n1/8]; 2F[n1/8]; 2E[n1/2.]~
+MD2: [p1/8]; G[n1/4], B[n1/4]; F[n1/2.], A[n1/2.];
+ME:  [p1/8]; 0D[n1/4], 0G[n1/4], 0B[n1/4], D[n1/4]~ 0D[n1/2.], 0G[n1/2.], 0B[n1/2.], D[n1/2.];
+ME2: -1G[n1/2.], 0D[n1/2.]; [s1/4.];
+
+Compasso 11:
+MD:  A[n1/8], 2E[n1/8]; D[n1/8], 2D[n1/8]; E[n1/8], 2E[n1/8]; A[n1/4.], 2D[n1/4.], 2A[n1/4.]; F[n1/4.], 2D[n1/4.], 2F[n1/4.]~
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8]; 0F[n1/4], 0A[n1/4]; D[n1/4.], F[n1/4.]; 0A[n1/4.], D[n1/4.];
+ME2: -1F[n1/2.], 0D[n1/2.]; [s1/4.];
+
+Compasso 12:
+MD:  2F[n1/8]; 2E[n1/8]; 2F[n1/8]; 2E[n1/4.]; 2D[n1/4.]~
+MD2: [p1/8]; G[n1/4], B[n1/4]; F[n1/2.], A[n1/2.];
+ME:  [p1/8]; 0D[n1/4], 0G[n1/4], 0B[n1/4], D[n1/4]~ 0D[n1/2.], 0G[n1/2.], 0B[n1/2.], D[n1/2.];
+ME2: -1G[n1/2.], 0D[n1/2.]; [s1/4.];
+
+Compasso 13 (Dó♭ na mão esquerda: Lá♭ menor sobre o Lá♭ grave):
+MD:  A[n1/8], 2D[n1/8]; E[n1/8], 2D[n1/8]; E[n1/8], 2E[n1/8]; {2 B[n1/8], 2B[n1/8]; A[n1/8], 2A[n1/8]~} {2 A[n1/8], 2A[n1/8]; F[n1/8], 2F[n1/8]~}
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8]; 0F[n1/4], C♭[n1/4]; C♭[n1/4.], E[n1/4.], F[n1/4.]~ C♭[n1/8], E[n1/8], F[n1/8]; [p1/8]; [p1/8];
+ME2: -1A[n1/2.]~ -1A[n1/4.]~
+
+Compasso 14:
+MD:  2F[n1/8]; 2E[n1/8]; 2F[n1/8]; {2 2E[n1/8]; 2D[n1/8]~} {2 2D[n1/8]; B[n1/8];}
+MD2: [p1/8]; F[n1/4], B[n1/4]~ F[n1/2.], A[n1/2.];
+ME:  [p1/8]; 0F[n1/4], 0B[n1/4], E[n1/4]~ {2 0E[n1/8], 0B[n1/8], E[n1/8]; D[n1/8]~} D[n1/4.];
+ME2: -1A[n1/2.]~ -1A[n1/4.];
 
 Fim
 
-Observação: a peça continua (72 compassos no total); aqui estão só os 8 primeiros, a
-parte mais conhecida. As duas vozes da mão direita foram separadas em MD e MD2; na
+Observação: a peça continua (72 compassos no total); aqui estão os 14 compassos da
+1ª página (a primeira parte, antes do "Tempo rubato"), a parte mais conhecida. As duas vozes da mão direita foram separadas em MD e MD2; na
 partitura, a mão esquerda está na clave de Sol até o compasso 6 — aqui ela fica sempre
 na clave de Fá da pauta dupla (por isso as linhas suplementares em cima).
 `;

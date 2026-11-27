@@ -60,6 +60,30 @@
             if (this.ctx.state === "suspended") this.ctx.resume();
             return this.ctx;
         },
+        // Folga (s) ao agendar cada nota: agendar exatamente em "agora" pode cair no passado
+        // e cortar o começo da nota (principalmente a 1ª, com o áudio acabando de ligar).
+        LEAD: 0.03,
+        /**
+         * Espera o áudio estar pronto antes de uma música: liga o AudioContext (resume é
+         * assíncrono), espera o arquivo do som gravado carregar e, na 1ª vez, deixa a
+         * saída de som "acordar" (alguns aparelhos perdem os primeiros milissegundos).
+         */
+        async ready() {
+            const ctx = this.ensure();
+            if (!ctx) return;
+            const waking = ctx.state !== "running" || !this.warm;
+            if (ctx.state !== "running") { try { await ctx.resume(); } catch { /* sem som */ } }
+            const opt = SOUNDS[this.timbre];
+            if (opt?.type === "sample") {
+                this.load(this.timbre);
+                try { await this.buffers[opt.file]; } catch { /* usa o som suave */ }
+            }
+            if (waking) {
+                this.warm = true;
+                this.tone(440, 0.05, { gain: 0.00001 }); // nota muda: liga a saída de som
+                await new Promise((r) => setTimeout(r, 150));
+            }
+        },
         /** Uma nota com envelope macio (sem estalos). */
         /**
          * Eco de igreja: um "convolver" com uma resposta gerada (ruído que vai
@@ -89,7 +113,7 @@
         tone(freq, seconds, { wave = "sine", gain = 0.12, delay = 0, attack = 0.03, decay = false, raw = false, ring = 0, release = 0.06, reverb = 0 } = {}) {
             const ctx = this.ensure();
             if (!ctx || !this.enabled) return;
-            const t = ctx.currentTime + delay;
+            const t = ctx.currentTime + delay + this.LEAD;
             const end = t + Math.max(0.12, seconds);
             const osc = ctx.createOscillator();
             const g = ctx.createGain();
@@ -131,7 +155,7 @@
             const ctx = this.ensure();
             const buffer = this.buffers[opt.file];
             if (!ctx || !this.enabled || !(buffer instanceof AudioBuffer)) return false;
-            const t = ctx.currentTime;
+            const t = ctx.currentTime + this.LEAD;
             const src = ctx.createBufferSource();
             src.buffer = buffer;
             src.playbackRate.value = freq * Math.pow(2, opt.octave || 0) / opt.base;
@@ -1193,7 +1217,12 @@
             infoText(parsed),
             outside ? "Notas fora do teclado acendem a mesma nota em outra oitava (escolha Teclado: Automático ou Piano)." : "",
         ].filter(Boolean).join(" ");
-        await sleep(250);
+        // Espera o som ficar pronto (áudio ligado, arquivo carregado): sem isso a 1ª nota
+        // às vezes saía muda.
+        sound.timbre = prefs.timbre;
+        await sound.ready();
+        if (id !== songRun) return;
+        await sleep(120);
         const startAt = events[k0].at;
         // Instantes: todos os eventos que começam juntos (as duas mãos) tocam de uma vez;
         // espera até o próximo instante.
