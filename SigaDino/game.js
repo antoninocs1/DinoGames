@@ -445,7 +445,6 @@
     const staff = window.SigaDinoStaff.createStaff($("staff"));
 
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
-    ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
     const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true };
@@ -455,6 +454,18 @@
     delete saved.look; // o desenho agora vem do modo (campo "look" em modes.js)
     const prefs = Object.assign({}, DEFAULTS, saved, { v: 2 });
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
+    /**
+     * Modelo valendo agora: o piano (freeOnly) só existe no Tocar livre e no Executar
+     * música; no jogo de memória vira o teclado de 24 notas (a escolha fica guardada).
+     */
+    const modeId = () => (MODES[prefs.mode].freeOnly && prefs.play === "memoria" ? "teclado24" : prefs.mode);
+    /** Lista do Modelo conforme o jogo (o piano some no "Siga a sequência"). */
+    const renderModeOptions = () => {
+        const list = enabledModes.filter(([, m]) => !m.freeOnly || prefs.play !== "memoria");
+        ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
+        ui.mode.value = modeId();
+    };
+    renderModeOptions();
     const records = storage.get(RECORDS_KEY) || {};
 
     // Oitavas que a música do editor usa (0 = a do Dó central, 1 = a de cima, −1 = a de baixo…).
@@ -466,12 +477,15 @@
     const musicMode = () => {
         if (prefs.teclado === "24") return MODES.teclado24;
         if (prefs.teclado === "60") return MODES.piano60;
-        const lo = Math.max(-3, Math.min(0, songOctaves[0])), hi = Math.min(3, Math.max(1, songOctaves[1]));
+        // Automático: parte do Modelo (2 oitavas, ou 5 com o Piano) e cresce até caber a música.
+        const [lo0, hi0] = MODES[prefs.mode].freeOnly ? MODES[prefs.mode].octaves : [0, 1];
+        const lo = Math.max(-3, Math.min(lo0, songOctaves[0])), hi = Math.min(3, Math.max(hi0, songOctaves[1]));
+        if (lo === -2 && hi === 2) return MODES.piano60;
         return lo === 0 && hi === 1 ? MODES.teclado24 : window.SIGA_DINO_PIANO(lo, hi);
     };
     /** Modo desenhado: no "Tocar livre" o teclado de 7 notas ganha as teclas pretas (freeMode). */
     const pickMode = () => {
-        const chosen = MODES[prefs.mode];
+        const chosen = MODES[modeId()];
         if (prefs.play === "musica") return musicMode(); // a música precisa das oitavas dela e das pretas
         return (prefs.play === "livre" && MODES[chosen.freeMode]) || chosen;
     };
@@ -494,7 +508,7 @@
     const isFree = () => prefs.play !== "memoria";
     /** "Executar música (notas)": toca o código de notas do editor (é um tocar livre com partitura). */
     const isMusic = () => prefs.play === "musica";
-    const recordKey = () => `${prefs.mode}:${prefs.level}`;
+    const recordKey = () => `${modeId()}:${prefs.level}`;
     const levelName = () => ui.level.options[ui.level.selectedIndex]?.text || "";
 
     // ---------- Desenho ----------
@@ -1527,8 +1541,14 @@
         if (game) resetIdle(message);
         else renderScore();
     };
-    bindSelect(ui.mode, "mode", () => { mode = pickMode(); resetIdle(); build(); });
-    bindSelect(ui.play, "play", () => { mode = pickMode(); resetIdle(); build(); });
+    // Modelo: a lista muda com o jogo, então não usa bindSelect (que trocaria o piano
+    // guardado pelo 1º da lista no jogo de memória).
+    ui.mode.addEventListener("change", () => {
+        prefs.mode = ui.mode.value;
+        storage.set(PREFS_KEY, prefs);
+        mode = pickMode(); resetIdle(); build();
+    });
+    bindSelect(ui.play, "play", () => { renderModeOptions(); mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     bindSelect(ui.staffOpt, "staff", () => build());
     bindSelect(ui.pautaOpt, "pauta", () => renderSong()); // clave de Sol, pauta dupla ou automática

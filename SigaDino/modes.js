@@ -29,6 +29,7 @@
                         com que ela acende
      freeMode  modo usado no "Tocar livre" (ex.: o teclado de 7 notas vira o
                de 12, para as teclas pretas também tocarem)
+     freeOnly  true = só no "Tocar livre" e no "Executar música" (o piano grande)
    ===================================================================== */
 (() => {
     "use strict";
@@ -165,8 +166,9 @@
             pads: CHROMATIC_24,
         },
 
-        // Piano de 5 oitavas (Dó grave, -1C, até o Si agudo, 3B): só no Executar música.
-        piano60: pianoMode(-2, 2),
+        // Piano de 5 oitavas (Dó grave, -1C, até o Si agudo, 3B). freeOnly: aparece no
+        // Modelo só no Tocar livre e no Executar música (no jogo de memória vira o de 24 notas).
+        piano60: { ...pianoMode(-2, 2), title: "Piano (5 oitavas)", enabled: true, freeOnly: true },
 
         // As mesmas 7 notas no disco. Para liberar, troque enabled para true.
         notas7: {
