@@ -166,8 +166,10 @@
             pads: CHROMATIC_24,
         },
 
-        // Piano de 5 oitavas (Dó grave, -1C, até o Si agudo, 3B). freeOnly: aparece no
+        // Piano de 3 oitavas: a de baixo do Dó central e as 2 do teclado de 24 notas (0C a 2B). freeOnly: aparece no
         // Modelo só no Tocar livre e no Executar música (no jogo de memória vira o de 24 notas).
+        piano36: { ...pianoMode(-1, 1), title: "Piano (3 oitavas)", enabled: true, freeOnly: true },
+        // Piano de 5 oitavas (Dó grave, -1C, até o Si agudo, 3B).
         piano60: { ...pianoMode(-2, 2), title: "Piano (5 oitavas)", enabled: true, freeOnly: true },
 
         // As mesmas 7 notas no disco. Para liberar, troque enabled para true.

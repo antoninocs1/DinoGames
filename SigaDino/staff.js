@@ -84,6 +84,12 @@
             <path d="M-4.6 5.4C1 2.6 4.6 -0.4 4.2 -3.4C3.8 -6.4 -0.4 -6.6 -4 -3.2V-1.2C-1 -4.2 1.9 -4.4 2 -2.6C2.1 -0.6 -0.6 1.8 -4 3.6Z" fill="${INK}"/>
         </g>`;
 
+    /** Bequadro (♮): duas hastes desencontradas e duas barras inclinadas. */
+    const naturalSvg = (x, y) => `<g class="acc" transform="translate(${f(x)} ${f(y)}) scale(${ACC_SCALE})">
+            <path d="M-3 -12V5M3 -5V12" fill="none" stroke="${INK}" stroke-width="1.3"/>
+            <path d="M-3 -3.2L3 -5.8V-3L-3 -0.4ZM-3 4.4L3 1.8V4.6L-3 7.2Z" fill="${INK}"/>
+        </g>`;
+
     /** Bandeirolas na ponta da haste (sx, tip): para baixo se a haste sobe, para cima se desce. */
     const flagsSvg = (sx, tip, n, up) => {
         const d = up ? 1 : -1;
@@ -175,6 +181,7 @@
         let endBar = null;       // barra dupla do fim da música
         let x0 = X0;             // x da 1ª nota (mais à direita com a fórmula de compasso)
         let meter = "";          // fórmula de compasso desenhada depois da clave ("4/4")
+        let keyCount = 0;        // armadura: sustenidos (+) ou bemóis (−) depois da clave
         let grand = false;       // pauta dupla (clave de Sol + clave de Fá)
         let deep = false;        // espaço para notas abaixo do Dó central (só a clave de Sol)
         let col = null;          // coluna atual: { at, x, right, extraRight, count, barEl }
@@ -182,7 +189,7 @@
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
-            <defs><clipPath id="staff-clip"><rect x="0" y="-60" width="${W_WIDE}" height="${BASS_BOTTOM + 120}"/></clipPath></defs>
+            <defs><clipPath id="staff-clip"><rect x="0" y="-400" width="${W_WIDE}" height="1000"/></clipPath></defs>
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
                 `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
@@ -192,14 +199,17 @@
                 <line class="system" x1="2" x2="2" y1="0" y2="${BASS_BOTTOM}"/>
                 ${BASS_CLEF}
             </g>
+            <g class="keysig"></g>
             <g class="meter"></g>
             <text class="staff-title" text-anchor="middle"></text>
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
         const titleEl = svg.querySelector(".staff-title");
         const meterEl = svg.querySelector(".meter");
+        const keyEl = svg.querySelector(".keysig");
         const bassEl = svg.querySelector(".bass-staff");
         let view = { top: -20, bottom: 76 }; // área do desenho sem o título
+        let range = null;        // { lo, hi } steps das notas (teclado ou música) para caber tudo
         let title = "";
         /** Ajusta a área do desenho: com título, ganha uma faixa em cima para o nome da música. */
         const applyView = () => {
@@ -207,7 +217,8 @@
             const height = view.bottom - top;
             svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
             svg.style.aspectRatio = `${W} / ${height}`;
-            document.body.style.setProperty("--sh", String(height / W));
+            // O CSS limita a altura do pentagrama (max-height); a conta do layout usa o mesmo teto.
+            document.body.style.setProperty("--sh", String(Math.min(height / W, 0.42)));
             titleEl.textContent = title;
             titleEl.setAttribute("x", W / 2);
             titleEl.setAttribute("y", top + 13);
@@ -221,7 +232,9 @@
             if (entry.step != null) return { step: entry.step, acc: entry.acc || "" };
             const index = entry.index;
             const pads = mode.pads;
-            const naturalBefore = pads.slice(0, index + 1).filter((p) => !p.sharp).length - 1;
+            // O teclado começa no Dó da oitava da 1ª tecla (piano: −2 = Dó2, step −14).
+            const base = (pads[0].octave || 0) * 7;
+            const naturalBefore = base + pads.slice(0, index + 1).filter((p) => !p.sharp).length - 1;
             const pad = pads[index];
             if (!pad.sharp) return { step: naturalBefore, acc: "" };
             return flats && pad.flat
@@ -266,7 +279,7 @@
          * As cabeças ficam empilhadas na mesma vertical, também numa segunda (notas vizinhas,
          * como Dó e Ré); os acidentes se escalonam para a esquerda.
          */
-        const chordSvg = (entries, x, figureName, dotted = 0, clefName = "sol") => {
+        const chordSvg = (entries, x, figureName, dotted = 0, clefName = "sol", stemDir = "") => {
             const cl = CLEFS[clefName] || CLEFS.sol;
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const plain = look !== "nome"; // cabeça de partitura, sem nome dentro
@@ -281,7 +294,8 @@
             if (!items.length) return { html: "<g class=\"note\"></g>", extraLeft: 0, extraRight: 0 };
             const low = items[0].step, high = items[items.length - 1].step;
             // Haste: manda a nota mais longe da 3ª linha (Si na clave de Sol, Ré na de Fá).
-            const up = (cl.mid - low) >= (high - cl.mid);
+            // Duas vozes na mesma pauta: a voz 1 com a haste para cima, a voz 2 para baixo.
+            const up = stemDir === "up" ? true : stemDir === "down" ? false : (cl.mid - low) >= (high - cl.mid);
             // Todas na mesma vertical (side 0), até as vizinhas (Dó e Ré).
             const shiftX = 2 * edge.half - 1.6;
             for (const it of items) it.side = 0;
@@ -330,7 +344,8 @@
                 [...it.acc].forEach((sign) => {
                     const w = (sign === "♯" ? 10 : 8) * ACC_SCALE;
                     ax -= w / 2;
-                    parts.push(sign === "♯" ? sharpSvg(ax, cl.y(it.step)) : flatSvg(ax, cl.y(it.step)));
+                    const draw = sign === "♯" ? sharpSvg : sign === "♮" ? naturalSvg : flatSvg;
+                    parts.push(draw(ax, cl.y(it.step)));
                     left = Math.min(left, ax - w / 2);
                     ax -= w / 2 + 1;
                 });
@@ -408,51 +423,95 @@
                 deep = !!opts.deep;
                 grand = !!opts.grand;
                 bassEl.style.display = grand ? "" : "none";
-                view = { top: wide ? -34 : -20, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 };
+                // Faixa de notas do teclado: do Dó da 1ª oitava ao Si da última.
+                const whites = mode.pads.filter((p) => !p.sharp).length;
+                const lo = (mode.pads[0].octave || 0) * 7;
+                range = { lo, hi: lo + whites - 1 };
+                view = this._fit({ top: wide ? -34 : -20, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 });
                 title = "";
                 applyView();
-                meter = "?"; // força redesenhar (as duas pautas)
-                this.setMeter("");
-                this.clear();
+                meter = "";
+                keyCount = 0;
+                this._header();
             },
             /** Liga ou desliga a pauta dupla (clave de Sol em cima e clave de Fá embaixo). */
             setGrand(on) {
                 if (!!on === grand) return;
                 grand = !!on;
                 bassEl.style.display = grand ? "" : "none";
-                view = { ...view, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 };
+                view = this._fit({ top: view.top, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 });
                 applyView();
-                const m = meter;
-                meter = "?";
-                this.setMeter(m);
-                this.clear();
+                this._header(); // armadura e fórmula também na pauta de baixo
             },
             get grand() { return grand; },
+            /**
+             * Faixa das notas (step: 0 = Dó central) que precisa caber no desenho: as notas
+             * com muitas linhas suplementares (piano, mão esquerda grave) aparecem inteiras.
+             */
+            setRange(lo, hi) {
+                if (!Number.isFinite(lo) || !Number.isFinite(hi)) return;
+                range = { lo, hi };
+                const next = this._fit({ top: view.top, bottom: view.bottom }, true);
+                if (next.top === view.top && next.bottom === view.bottom) return;
+                view = next;
+                applyView();
+            },
+            /** Aumenta a área (em cima e embaixo) até caber a faixa de notas com as hastes. */
+            _fit(v, fromRange = false) {
+                const base = { top: Math.min(v.top, -20), bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 };
+                if (!fromRange) Object.assign(base, v);
+                if (!range) return base;
+                const MARGIN = 26; // haste e bandeirolas
+                // Agudas: na clave de Sol. Graves: na de Fá (pauta dupla) ou na de Sol.
+                const top = Math.min(base.top, CLEFS.sol.y(range.hi) - MARGIN);
+                const low = grand ? CLEFS.fa.y(Math.min(range.lo, -10)) : CLEFS.sol.y(range.lo);
+                const bottom = Math.max(base.bottom, low + MARGIN);
+                return { top: Math.floor(top), bottom: Math.ceil(bottom) };
+            },
             /** Fórmula de compasso ("4/4", "3/4"…, "C" = 4/4 ou "¢" = 2/2) logo depois da clave; "" tira. */
             setMeter(text = "") {
                 const t = String(text).trim();
-                const cx = 50;
-                /** Fórmula numa pauta cuja 5ª linha fica em y = base. */
-                const meterAt = (base) => {
-                    const g = (inner) => base ? `<g transform="translate(0 ${base})">${inner}</g>` : inner;
-                    if (mt) return g(`<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>`);
-                    return g(sym === "C" ? cSym : sym === "¢" ? cSym + cut : "");
-                };
                 const mt = t.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
-                const sym = /^(C|¢)$/.test(t) ? t : "";
-                const next = mt ? `${mt[1]}/${mt[2]}` : sym;
+                const next = mt ? `${mt[1]}/${mt[2]}` : /^(C|¢)$/.test(t) ? t : "";
                 if (next === meter) return;
                 meter = next;
-                x0 = meter ? X0 + METER_W : X0;
-                SLOTS = slotsFor(W, x0);
-                // Número de cima na metade de cima da pauta, o de baixo na metade de baixo.
+                this._header();
+            },
+            /** Armadura depois da clave: n > 0 sustenidos, n < 0 bemóis (ex.: −5 = Ré♭ maior). */
+            setKey(n = 0) {
+                const next = Math.max(-7, Math.min(7, Math.round(Number(n) || 0)));
+                if (next === keyCount) return;
+                keyCount = next;
+                this._header();
+            },
+            /** Desenha armadura e fórmula (nas duas pautas da pauta dupla) e acerta onde a 1ª nota começa. */
+            _header() {
+                // Posição de cada acidente da armadura na clave de Sol (step); na de Fá, 2 oitavas abaixo.
+                const SHARP_STEPS = [10, 7, 11, 8, 5, 9, 6], FLAT_STEPS = [6, 9, 5, 8, 4, 7, 3];
+                const KEY_X = 40, KEY_DX = 7;
+                const n = Math.abs(keyCount);
+                const keyW = n ? n * KEY_DX + 4 : 0;
+                const keyAt = (cl, shift) => (keyCount > 0 ? SHARP_STEPS : FLAT_STEPS).slice(0, n).map((st, i) =>
+                    (keyCount > 0 ? sharpSvg : flatSvg)(KEY_X + 3 + i * KEY_DX, cl.y(st - shift))).join("");
+                keyEl.innerHTML = n ? keyAt(CLEFS.sol, 0) + (grand ? keyAt(CLEFS.fa, 14) : "") : "";
+                const cx = 50 + keyW;
+                const mt = meter.match(/^(\d{1,2})\/(\d{1,2})$/);
+                const sym = /^(C|¢)$/.test(meter) ? meter : "";
                 // C (tempo comum) e ¢ (tempo cortado): um "C" desenhado no meio da pauta; o ¢ ganha o traço vertical.
                 const cSym = `<path class="meter-c" d="M${cx + 6.5} 16.5C${cx + 5} 12.6 ${cx + 1.4} 11.6 ${cx - 1.2} 12C${cx - 6.6} 12.8 ${cx - 8.6} 18.4 ${cx - 8.6} 24
                     C${cx - 8.6} 30.4 ${cx - 5.4} 36 ${cx} 36C${cx + 3.6} 36 ${cx + 6.2} 33.6 ${cx + 7.4} 30.4C${cx + 4.6} 33 ${cx + 2.6} 33.6 ${cx + 0.8} 33.4
                     C${cx - 2.6} 33 ${cx - 4} 29.4 ${cx - 4} 24C${cx - 4} 18.8 ${cx - 2.8} 14.4 ${cx} 14.2C${cx + 1.8} 14.1 ${cx + 2.2} 15.4 ${cx + 1.4} 16.4
                     C${cx + 0.4} 17.8 ${cx + 1.6} 20 ${cx + 3.6} 19.8C${cx + 5.6} 19.6 ${cx + 7} 18.4 ${cx + 6.5} 16.5Z" fill="${INK}"/>`;
                 const cut = `<line x1="${cx + 0.6}" x2="${cx + 0.6}" y1="6" y2="42" stroke="${INK}" stroke-width="1.6"/>`;
+                /** Fórmula numa pauta cuja 5ª linha fica em y = base. Número de cima na metade de cima. */
+                const meterAt = (base) => {
+                    const g = (inner) => (base ? `<g transform="translate(0 ${base})">${inner}</g>` : inner);
+                    if (mt) return g(`<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>`);
+                    return g(sym === "C" ? cSym : sym === "¢" ? cSym + cut : "");
+                };
                 meterEl.innerHTML = meter ? meterAt(0) + (grand ? meterAt(BASS_TOP) : "") : "";
+                x0 = X0 + keyW + (meter ? METER_W : 0);
+                SLOTS = slotsFor(W, x0);
                 this.clear();
             },
             /** Nome da música, centralizado em cima do pentagrama ("" tira). */
@@ -485,20 +544,21 @@
                 const e = typeof entry === "number" ? { index: entry } : entry;
                 const last = notes[notes.length - 1];
                 // Acorde cresce só na mesma clave; a nota da outra pauta vai na mesma coluna (at).
-                const grow = chord && last && !last.rest && last.clef === this._clefOf(opts.hand);
+                const grow = chord && last && !last.rest && last.clef === this._clefOf(opts.hand) && (last.stem || "") === (opts.stem || "");
                 const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
                 const dotted = grow ? last.dotted : Number(opts.dotted) || 0; // 0, 1 ou 2 pontos
                 const bar = grow ? !!last.bar : !!opts.bar;
                 const over = grow ? !!last.over : !!opts.over;
                 const clef = grow ? last.clef : this._clefOf(opts.hand);
-                const probe = chordSvg(pads, 0, figure, dotted, clef);
+                const stem = grow ? last.stem : opts.stem || "";
+                const probe = chordSvg(pads, 0, figure, dotted, clef, stem);
                 const x = this._columnX(probe.extraLeft, bar, opts.at, grow);
-                const drawn = chordSvg(pads, x, figure, dotted, clef);
-                return this._place(drawn, x, { pads, figure, dotted, bar, over, clef }, grow, ms, opts.scroll !== false);
+                const drawn = chordSvg(pads, x, figure, dotted, clef, stem);
+                return this._place(drawn, x, { pads, figure, dotted, bar, over, clef, stem }, grow, ms, opts.scroll !== false);
             },
             /** Clave da mão: na pauta dupla a mão esquerda ("me") vai para a clave de Fá. */
-            _clefOf(hand) { return grand && hand === "me" ? "fa" : "sol"; },
+            _clefOf(hand) { return grand && String(hand || "").startsWith("me") ? "fa" : "sol"; },
             /**
              * x da nota. Mesmo instante (at) da coluna atual = mesma vertical; senão, uma
              * coluna nova logo depois da anterior, com folga se uma das duas for larga

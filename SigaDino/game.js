@@ -477,10 +477,12 @@
     const musicMode = () => {
         if (prefs.teclado === "24") return MODES.teclado24;
         if (prefs.teclado === "60") return MODES.piano60;
+        if (prefs.teclado === "36") return MODES.piano36;
         // Automático: parte do Modelo (2 oitavas, ou 5 com o Piano) e cresce até caber a música.
         const [lo0, hi0] = MODES[prefs.mode].freeOnly ? MODES[prefs.mode].octaves : [0, 1];
         const lo = Math.max(-3, Math.min(lo0, songOctaves[0])), hi = Math.min(3, Math.max(hi0, songOctaves[1]));
         if (lo === -2 && hi === 2) return MODES.piano60;
+        if (lo === -1 && hi === 1) return MODES.piano36;
         return lo === 0 && hi === 1 ? MODES.teclado24 : window.SIGA_DINO_PIANO(lo, hi);
     };
     /** Modo desenhado: no "Tocar livre" o teclado de 7 notas ganha as teclas pretas (freeMode). */
@@ -577,7 +579,7 @@
     const setupStaff = () => {
         const on = staffOn();
         ui.fieldStaff.hidden = mode.look !== "teclado";
-        ui.fieldPauta.hidden = !on || !isMusic(); // pauta dupla: só no Executar música
+        ui.fieldPauta.hidden = !on || !isFree(); // pauta dupla: no Tocar livre e no Executar música
         ui.fieldTeclado.hidden = !isMusic();
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
@@ -907,8 +909,8 @@
     };
 
     let freeAt = 0;        // coluna do pentagrama no Tocar livre (acorde = mesma coluna)
-    /** Pauta dupla no Tocar livre: quando o teclado tem oitavas abaixo do Dó central (piano). */
-    const freeGrand = () => isFree() && !isMusic() && mode.pads.some((p) => p.octave < 0);
+    /** Pauta dupla no Tocar livre: só quando escolhida na opção Pauta ("Sol e Fá"). */
+    const freeGrand = () => isFree() && !isMusic() && prefs.pauta === "dupla";
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i, source = "") => {
         light(i, 420);
@@ -1045,6 +1047,10 @@
         const info = MUSIC.parse(mu.text.value);
         staff.setGrand(wantGrand(info)); // ME: no texto → clave de Fá embaixo (na opção Automática)
         staff.setTitle(info.title); // linha "Música: …" do texto
+        staff.setKey(info.key);     // "Tom: Ré♭ maior" → armadura depois da clave
+        // Notas da música com linhas suplementares: o desenho cresce para caberem inteiras.
+        const steps = info.events.flatMap((ev) => (ev.kind === "note" ? ev.notes.map((n) => n.step) : []));
+        if (steps.length) staff.setRange(Math.min(...steps), Math.max(...steps));
         staff.setMeter(info.meter); // "Compasso: 4/4" → fórmula de compasso depois da clave
         staff.clear();
         const slots = [];          // posição no pentagrama de cada nota/pausa do texto
@@ -1059,15 +1065,18 @@
         songEvents.forEach((ev, k) => {
             // Pauta de cada nota: com MD:/ME: vale a mão; numa mão só (pauta dupla pela
             // altura), abaixo do Dó central vai para a clave de Fá, como no piano.
-            const handOf = (n) => (info.hands === 2 ? ev.hand || "md" : grand && n.step < 0 ? "me" : "md");
+            const voice2 = (ev.hand || "").endsWith("2") ? "2" : "";
+            const handOf = (n) => (info.hands === 2 ? ev.hand || "md" : (grand && n.step < 0 ? "me" : "md") + voice2);
+            // Duas vozes na mesma pauta: a 1ª com a haste para cima, a 2ª para baixo.
+            const stemOf = (hand) => (hand.endsWith("2") ? "down" : info.voices.includes(`${hand}2`) ? "up" : "");
             // at: notas do mesmo instante (das duas pautas) ficam na mesma vertical.
             const base = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over, at: ev.at };
             const parts = {};
-            if (ev.kind === "rest") parts[ev.hand || "md"] = null;
+            if (ev.kind === "rest") { if (!ev.hidden) parts[ev.hand || "md"] = null; } // [s…]: espera sem desenho
             else ev.notes.forEach((n) => (parts[handOf(n)] = parts[handOf(n)] || []).push(n));
             const got = [];
             for (const [hand, list] of Object.entries(parts)) {
-                const opts = { ...base, hand };
+                const opts = { ...base, hand, stem: stemOf(hand) };
                 let slot = -1;
                 if (!list) slot = staff.pushRest(ev.figure, opts);
                 else list.forEach((n) => {
@@ -1120,7 +1129,7 @@
         const fig = window.SigaDinoStaff.FIGURES[ev.figure]?.title.toLowerCase() || "";
         const dot = ev.dots === 2 ? " com ponto duplo" : ev.dots ? " pontuada" : "";
         const where = ev.measure ? `, compasso ${ev.measure}` : "";
-        const who = ev.hand === "me" ? "ME " : "";
+        const who = { md2: "MD2 ", me: "ME ", me2: "ME2 " }[ev.hand] || "";
         if (ev.kind === "rest") return `${who}pausa de ${fig}${dot}${where}`;
         return `${who}${ev.notes.map((n) => n.label).join(" + ")} (${fig}${dot}${where})`;
     };
@@ -1319,14 +1328,18 @@
         catch { saveSongAs(); }
     };
 
-    // Um botão para cada música de exemplo guardada no código (music.js).
-    mu.example.innerHTML = MUSIC.EXAMPLES.map((e) =>
-        `<button class="btn example" type="button" data-id="${e.id}" title="Carregar a música de exemplo ${e.title}">🎼 ${e.short || e.title}</button>`).join("");
-    mu.example.addEventListener("click", (event) => {
-        const ex = MUSIC.EXAMPLES.find((e) => e.id === event.target.closest("[data-id]")?.dataset.id);
+    // Lista das músicas guardadas no jogo (music.js): escolher carrega no editor.
+    mu.example.innerHTML = `<select id="song-pick" aria-label="Músicas do jogo" title="Carregar uma música guardada no jogo">
+        <option value="">🎼 Músicas…</option>
+        ${MUSIC.EXAMPLES.map((e) => `<option value="${e.id}">${e.title}</option>`).join("")}
+    </select>`;
+    const songPick = $("song-pick");
+    songPick.addEventListener("change", () => {
+        const ex = MUSIC.EXAMPLES.find((e) => e.id === songPick.value);
+        songPick.value = "";
         if (ex && okToReplace()) {
             setSongText(ex.text, ex.file);
-            setStatus(`Exemplo “${ex.title}” carregado. Toque em ▶ Tocar. 🎼`, "turn");
+            setStatus(`Música “${ex.title}” carregada. Toque em ▶ Tocar. 🎼`, "turn");
         }
     });
 
@@ -1573,7 +1586,7 @@
     bindSelect(ui.play, "play", () => { renderModeOptions(); mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     bindSelect(ui.staffOpt, "staff", () => build());
-    bindSelect(ui.pautaOpt, "pauta", () => renderSong()); // clave de Sol, pauta dupla ou automática
+    bindSelect(ui.pautaOpt, "pauta", () => (isMusic() ? renderSong() : build())); // clave de Sol, pauta dupla ou automática
     bindSelect(ui.tecladoOpt, "teclado", () => { stopSong(); mode = pickMode(); build(); }); // oitavas do teclado
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
 
