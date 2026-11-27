@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.053">
-    <link rel="stylesheet" href="style.css?v=1.053">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.054">
+    <link rel="stylesheet" href="style.css?v=1.054">
 </head>
 <body>
     <main class="app">
@@ -153,7 +153,7 @@
                                 </tbody>
                             </table>
                             <table>
-                                <thead><tr><th>Código</th><th>Figura</th><th>Pausa</th></tr></thead>
+                                <thead><tr><th>Código</th><th>Figura (tempos no 4/4)</th><th>Pausa</th></tr></thead>
                                 <tbody>
                                     <tr><td><code>[n2]</code></td><td>Breve (8 tempos)</td><td><code>[p2]</code></td></tr>
                                     <tr><td><code>[n1]</code></td><td>Semibreve (4 tempos)</td><td><code>[p1]</code></td></tr>
@@ -173,16 +173,33 @@
                                 <li><strong>Sustenido</strong> (sobe ½ tom): <code>F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <code>Bb[n1/4]</code></li>
                                 <li><strong>Oitava</strong>: o número antes da nota diz qual Dó do pentagrama — <code>C[n1]</code> ou <code>1C[n1]</code> é o Dó central (1º Dó); <code>2C[n1]</code> é o Dó de cima (2º Dó); <code>0G[n1/2]</code> é o Sol abaixo do Dó central.</li>
                                 <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
-                                <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code></li>
+                                <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code> = semínima pontuada (1½ tempo); <code>[p1/2.]</code> = pausa de mínima pontuada.</li>
+                                <li><strong>Ponto duplo</strong> (vale 1 vez e ¾): <code>E[n1/2..]</code> = mínima com ponto duplo (3½ tempos no 4/4).</li>
                                 <li><strong>Nome da música</strong>: escreva uma linha <code>Música: Nome da música</code> — o nome aparece em cima do pentagrama.</li>
-                                <li><strong>Andamento</strong>: escreva <code>semínima = 160</code> no texto (ou mude no ♩ =): 160 semínimas por minuto.</li>
-                                <li><strong>Compassos</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele.</li>
-                                <li><strong>Fórmula de compasso</strong>: uma linha <code>Compasso: 4/4</code> (com dois-pontos) mostra o 4/4 logo depois da clave (vale 3/4, 2/4, 6/8…).</li>
+                                <li><strong>Andamento</strong>: escreva <code>semínima = 160</code> no texto (ou mude no ♩ =): 160 semínimas por minuto. Vale dizer outra figura: <code>mínima = 80</code>, <code>colcheia = 200</code>, <code>semínima. = 60</code> (pontuada). Só o número (<code>Andamento: 120</code>) conta os tempos do compasso: no 2/2, 120 mínimas por minuto.</li>
+                                <li><strong>Fórmula de compasso</strong>: uma linha <code>Compasso: x1/x2</code> (com dois-pontos), logo no começo, mostra a fórmula depois da clave. <strong>x1</strong> = quantos tempos tem o compasso; <strong>x2</strong> = a figura que vale <strong>um tempo</strong> (1 semibreve, 2 mínima, 4 semínima, 8 colcheia, 16 semicolcheia).</li>
+                                <li><strong>Compassos automáticos</strong>: com a fórmula, o jogo soma a duração das notas e põe a <strong>barra de compasso</strong> sozinho quando o compasso enche; as linhas do texto servem só para organizar. Uma nota (ou pausa) que <strong>não cabe</strong> no que sobra do compasso fica com <strong>contorno vermelho</strong> no pentagrama e aparece um aviso embaixo do editor (o último compasso incompleto também avisa).</li>
+                            </ul>
+                            <table>
+                                <thead><tr><th>Escreva</th><th>Compasso</th><th>Cabe em cada compasso</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>Compasso: 4/4</code> ou <code>Compasso: C</code></td><td>Quaternário (tempo comum, C)</td><td>4 semínimas = 1 semibreve</td></tr>
+                                    <tr><td><code>Compasso: 3/4</code></td><td>Ternário</td><td>3 semínimas = 1 mínima pontuada</td></tr>
+                                    <tr><td><code>Compasso: 2/4</code></td><td>Binário</td><td>2 semínimas = 1 mínima</td></tr>
+                                    <tr><td><code>Compasso: 2/2</code> ou <code>Compasso: ¢</code></td><td>Binário, alla breve (tempo cortado, ¢)</td><td>2 mínimas = 1 semibreve</td></tr>
+                                    <tr><td><code>Compasso: 6/8</code></td><td>Composto (6 colcheias)</td><td>6 colcheias = 2 semínimas pontuadas</td></tr>
+                                </tbody>
+                            </table>
+                            <p>Exemplo em 3/4 (as barras aparecem sozinhas a cada 3 tempos):<br>
+                                <code>Compasso: 3/4</code><br>
+                                <code>C[n1/4]; E[n1/4]; G[n1/4]; G[n1/2.]; E[n1/4.]; D[n1/8]; C[n1/4];</code></p>
+                            <ul>
+                                <li><strong>Sem fórmula de compasso</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele.</li>
                                 <li><strong>Fim</strong>: uma linha <code>Fim</code> (ou <code>:Fim</code>) depois da última nota põe as <strong>duas barras do fim</strong> da música.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
                                 <li>No editor valem <strong>Ctrl+Z</strong> (desfazer), <strong>Ctrl+Y</strong> (refazer), <strong>Ctrl+C</strong> (copiar), <strong>Ctrl+X</strong> (recortar), <strong>Ctrl+V</strong> ou <strong>Ctrl+P</strong> (colar) e <strong>Ctrl+S</strong> (salvar).</li>
-                                <li>Títulos, “Compasso 1:” e outros textos são ignorados (só marcam o compasso); <code>//</code> começa um comentário.</li>
+                                <li>Títulos, “Compasso 1:” e outros textos são ignorados (sem fórmula de compasso, só marcam o compasso); <code>//</code> começa um comentário.</li>
                                 <li>Ao tocar, as teclas do piano e as notas do pentagrama acendem. Use <strong>Abrir</strong>, <strong>Salvar</strong> e <strong>Salvar como…</strong> para guardar as suas músicas em arquivos .txt; o texto também fica guardado neste aparelho.</li>
                                 <li>O botão <strong>Ode à Alegria</strong> carrega a música de exemplo (Beethoven), guardada no jogo, para tocar ou usar de modelo.</li>
                             </ul>
@@ -248,12 +265,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.053"></script>
-    <script src="sounds.js?v=1.053"></script>
-    <script src="modes.js?v=1.053"></script>
-    <script src="engine.js?v=1.053"></script>
-    <script src="staff.js?v=1.053"></script>
-    <script src="music.js?v=1.053"></script>
-    <script src="game.js?v=1.053"></script>
+    <script src="../assets/combobox.js?v=1.054"></script>
+    <script src="sounds.js?v=1.054"></script>
+    <script src="modes.js?v=1.054"></script>
+    <script src="engine.js?v=1.054"></script>
+    <script src="staff.js?v=1.054"></script>
+    <script src="music.js?v=1.054"></script>
+    <script src="game.js?v=1.054"></script>
 </body>
 </html>

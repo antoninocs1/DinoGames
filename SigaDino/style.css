@@ -145,6 +145,8 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 /* Já tocada: um pouco apagada; acesa: brilha na cor da tecla; acertada: forte. */
 .staff .note { opacity: .6; transition: opacity .2s; }
 .staff .note.done { opacity: 1; }
+/* Nota/pausa que não cabe no compasso (fórmula de compasso): contorno vermelho. */
+.staff .note.over .head { filter: drop-shadow(0 0 1.5px #e11d48) drop-shadow(0 0 3px #e11d48); }
 .staff .note.lit { opacity: 1; transition: none; }
 .staff .note.lit .head { transform: scale(1.22); filter: drop-shadow(0 0 3px var(--c)) drop-shadow(0 0 6px var(--c)); transition: none; }
 .staff .note.pop { animation: surge .25s ease-out; }

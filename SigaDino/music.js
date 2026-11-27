@@ -9,17 +9,28 @@
      [p1/4]; p[1/4];   pausa (aqui de semínima)
      C[n1], E[n1], G[n1];   separadas por vírgula = acorde (tocam juntas)
      E[n1/4.];         ponto de aumento (vale 1 vez e meia)
+     E[n1/4..];        ponto duplo (vale 1 vez e três quartos)
    Separadas por ponto e vírgula (ou em linhas diferentes) = uma depois da outra.
    Oitava: 1 (ou nada) = do Dó central ao Si; 2 = a de cima; 0 = a de baixo.
    Figuras: [n2] breve, [n1] semibreve, [n1/2] mínima, [n1/4] semínima,
    [n1/8] colcheia, [n1/16] semicolcheia, [n1/32] fusa, [n1/64] semifusa,
    [n1/128] quartifusa.
-   Barra de compasso: nota que começa uma linha nova, ou vem depois de "Compasso"
-   ou de "|", ganha a barra antes dela no pentagrama (e a música termina com a barra dupla).
+   Fórmula de compasso: "Compasso: x1/x2" (com dois-pontos), ex. 4/4, 3/4, 2/2, 6/8.
+     x1 = quantos tempos cabem no compasso; x2 = a figura que vale um tempo
+     (1 semibreve, 2 mínima, 4 semínima, 8 colcheia, 16 semicolcheia).
+     Cada compasso aceita x1/x2 de semibreve: 4/4 = 1 semibreve, 3/4 = mínima pontuada,
+     2/2 = 1 semibreve, 6/8 = mínima pontuada. "Compasso: C" = 4/4 (tempo comum) e
+     "Compasso: ¢" = 2/2 (tempo cortado, alla breve) — aparecem com o símbolo.
+     Com a fórmula, as barras de compasso saem da duração das notas (as linhas do
+     texto só organizam a leitura) e a nota que não cabe no que sobra do compasso
+     fica marcada no pentagrama e gera um aviso.
+   Sem a fórmula: nota que começa uma linha nova, ou vem depois de "Compasso"
+   ou de "|", ganha a barra antes dela no pentagrama.
    Texto que não é nota (títulos, "Compasso 1:", |) é ignorado; "//" começa um
-   comentário até o fim da linha. "Andamento: semínima = 160" define a velocidade.
+   comentário até o fim da linha. "Andamento: semínima = 160" define a velocidade
+   (vale também "mínima = 80", "colcheia = 200", "semínima. = 60"); só o número
+   ("Andamento: 120") conta tempos da figura da fórmula de compasso (x2).
    "Música: Nome da música" dá o título, mostrado em cima do pentagrama.
-   "Compasso: 4/4" (com dois-pontos) põe a fórmula de compasso depois da clave.
    Uma linha "Fim" (ou ":Fim") põe a barra dupla de fim depois da última nota.
    ===================================================================== */
 (() => {
@@ -39,8 +50,8 @@
     const plain = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
     // Nota: [oitava colada, ex. 2C] letra/nome [acidente] [n num / den .]   — pausa: [p1/4] ou p[1/4]
-    const NOTE_RE = String.raw`(?<![\p{L}\d])(\d?)(D[óo]|R[ée]|Mi|F[áa]|Sol|L[áa]|Si|[A-G])\s*(##|#|♯|bb|b|♭)?\s*\[\s*n\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\]`;
-    const REST_RE = String.raw`(?<!\p{L})(?:p\s*\[\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\]|\[\s*p\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.?)\s*\])`;
+    const NOTE_RE = String.raw`(?<![\p{L}\d])(\d?)(D[óo]|R[ée]|Mi|F[áa]|Sol|L[áa]|Si|[A-G])\s*(##|#|♯|bb|b|♭)?\s*\[\s*n\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.{0,2})\s*\]`;
+    const REST_RE = String.raw`(?<!\p{L})(?:p\s*\[\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.{0,2})\s*\]|\[\s*p\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.{0,2})\s*\])`;
     const TOKEN = new RegExp(`${NOTE_RE}|${REST_RE}`, "giu");
     const CODE_LIKE = /\[\s*[np][^\]]*\]/giu; // parece código, mas não foi entendido
 
@@ -65,16 +76,17 @@
             const isNote = m[2] !== undefined;
             const num = Number(isNote ? m[4] : m[7] ?? m[10]);
             const den = Number((isNote ? m[5] : m[8] ?? m[11]) || 1);
-            const dotted = (isNote ? m[6] : m[9] ?? m[12]) === ".";
+            const dots = ((isNote ? m[6] : m[9] ?? m[12]) || "").length; // 0, 1 (ponto) ou 2 (ponto duplo)
+            const dotted = dots > 0;
             const base = num / den;
             const figure = figureOf(base);
             if (!figure || !num) { warnings.push(`figura desconhecida em “${m[0].trim()}”`); lastEnd = to; continue; }
-            const frac = base * (dotted ? 1.5 : 1);
+            const frac = base * (dots === 2 ? 1.75 : dots ? 1.5 : 1);
             const gap = lastEnd >= 0 ? text.slice(lastEnd, from) : "";
             lastEnd = to;
             // Linha nova, "Compasso" ou "|" antes desta nota = começa outro compasso.
             const bar = events.length > 0 && /\n|compasso|\|/i.test(gap);
-            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, bar, from, to }); continue; }
+            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, dots, bar, from, to }); continue; }
 
             const word = plain(m[2]);
             const letter = word.length === 1 ? LETTERS.indexOf(word.toUpperCase()) : NAMES[word];
@@ -92,10 +104,10 @@
             if (prev && prev.kind === "note" && /^\s*,\s*$/.test(gap)) {
                 prev.notes.push(note);
                 prev.to = to;
-                if (frac > prev.frac) Object.assign(prev, { frac, figure, dotted });
+                if (frac > prev.frac) Object.assign(prev, { frac, figure, dotted, dots });
                 continue;
             }
-            events.push({ kind: "note", notes: [note], frac, figure, dotted, bar, from, to });
+            events.push({ kind: "note", notes: [note], frac, figure, dotted, dots, bar, from, to });
         }
         // Códigos com colchetes que não viraram nota nem pausa (letra errada, etc.).
         let c;
@@ -111,14 +123,92 @@
             const word = text.slice(lineStart, at).match(/(\S*)\s*$/)[1];
             warnings.push(`não entendi “${(word + c[0]).trim()}”`);
         }
-        const tempoMatch = text.match(/sem[ií]nima\s*=\s*(\d{2,3})/i) || text.match(/(?:andamento|bpm|tempo)\s*[:=]?\s*(\d{2,3})/i);
-        const tempo = tempoMatch ? Math.min(240, Math.max(30, Number(tempoMatch[1]))) : 0;
         const titleMatch = text.match(/^[ \t]*m[úu]sica[ \t]*:[ \t]*(.+?)[ \t]*$/im);
         const title = titleMatch ? titleMatch[1] : "";
-        const meterMatch = text.match(/compasso[ \t]*:[ \t]*(\d{1,2})[ \t]*\/[ \t]*(\d{1,2})/i);
-        const meter = meterMatch ? `${meterMatch[1]}/${meterMatch[2]}` : "";
+        const meterInfo = readMeter(text);
+        const meter = meterInfo ? meterInfo.text : "";
+        if (meterInfo) measureBars(events, meterInfo, warnings);
+        const tempo = readTempo(text, meterInfo);
         const end = /^[ \t]*:?[ \t]*fim[ \t]*[:.!]?[ \t]*$/im.test(text) || /:[ \t]*fim(?![\p{L}\d])/iu.test(text);
         return { events, tempo, warnings, title, meter, end };
+    };
+
+    /**
+     * "Compasso: 3/4", "Compasso: C" (= 4/4) ou "Compasso: ¢" (= 2/2).
+     * Devolve { text, beats, unit } — text é o que o pentagrama desenha ("3/4", "C" ou "¢").
+     */
+    const readMeter = (text) => {
+        const num = text.match(/compasso[ \t]*:[ \t]*(\d{1,2})[ \t]*\/[ \t]*(\d{1,2})/i);
+        if (num) {
+            const beats = Number(num[1]), unit = Number(num[2]);
+            // x2 tem que ser uma figura: 1, 2, 4, 8, 16, 32, 64 (potência de 2).
+            if (beats > 0 && unit > 0 && unit <= 64 && (unit & (unit - 1)) === 0) return { text: `${beats}/${unit}`, beats, unit };
+            return null;
+        }
+        const sym = text.match(/compasso[ \t]*:[ \t]*(¢|₵|C[ \t]*\||C[ \t]+cortado|C)[ \t]*(?:$|\/\/|[(;,.-])/im);
+        if (!sym) return null;
+        return /^C$/i.test(sym[1]) ? { text: "C", beats: 4, unit: 4 } : { text: "¢", beats: 2, unit: 2 };
+    };
+
+    // Durações em unidades inteiras (1 semibreve = 512), para somar sem erro de arredondamento:
+    // até a quartifusa com ponto duplo dá número inteiro.
+    const UNIT = 512;
+    const unitsOf = (frac) => Math.round(frac * UNIT);
+    /** 384 → "3/4" (fração da semibreve), para os avisos. */
+    const fracText = (u) => {
+        const g = (x, y) => (y ? g(y, x % y) : x);
+        const d = g(u, UNIT);
+        return UNIT / d === 1 ? String(u / d) : `${u / d}/${UNIT / d}`;
+    };
+
+    /**
+     * Com fórmula de compasso: soma a duração das notas e põe a barra quando o compasso
+     * enche (x1 tempos da figura 1/x2). As quebras de linha do texto deixam de valer como barra.
+     * Nota que passa do que sobra no compasso: marca over = true e avisa; o compasso
+     * seguinte começa depois dela. Cada evento ganha measure (número do compasso, de 1).
+     */
+    const measureBars = (events, { beats, unit, text }, warnings) => {
+        const cap = unitsOf(beats / unit);
+        let used = 0, measure = 1;
+        events.forEach((ev, k) => {
+            ev.bar = k > 0 && used === 0;
+            ev.measure = measure;
+            const len = unitsOf(ev.frac);
+            if (used + len > cap) {
+                ev.over = true;
+                const what = ev.kind === "rest" ? "a pausa" : `a nota ${ev.notes.map((n) => n.label).join("+")}`;
+                warnings.push(len > cap
+                    ? `compasso ${measure}: ${what} (${fracText(len)}) é maior que o compasso ${text} (${fracText(cap)})`
+                    : `compasso ${measure}: ${what} (${fracText(len)}) não cabe, só sobra ${fracText(cap - used)} no ${text}`);
+                used = 0;
+                measure++;
+                return;
+            }
+            used += len;
+            if (used === cap) { used = 0; measure++; }
+        });
+        if (used > 0) warnings.push(`último compasso (${measure}) incompleto: tem ${fracText(used)} de ${fracText(cap)}`);
+    };
+
+    /**
+     * Andamento em semínimas por minuto (o ♩ = do jogo).
+     * "semínima = 160", "mínima = 80", "colcheia pontuada = 60", "semínima. = 60"
+     * dizem a figura; só o número ("Andamento: 120") conta o tempo da fórmula (x2).
+     */
+    const BEAT_FIG = { semibreve: 1, minima: 1 / 2, seminima: 1 / 4, colcheia: 1 / 8, semicolcheia: 1 / 16 };
+    const readTempo = (text, meterInfo) => {
+        const byFig = text.match(/(?<!\p{L})(semibreve|semicolcheia|sem[ií]nima|m[ií]nima|colcheia)(\s*(?:\.|pontuada))?\s*=\s*(\d{1,3})/iu);
+        let fig, n;
+        if (byFig) {
+            fig = BEAT_FIG[plain(byFig[1])] * (byFig[2] ? 1.5 : 1);
+            n = Number(byFig[3]);
+        } else {
+            const bare = text.match(/(?:andamento|bpm|tempo)\s*[:=]?\s*(\d{2,3})/i);
+            if (!bare) return 0;
+            n = Number(bare[1]);
+            fig = meterInfo ? 1 / meterInfo.unit : 1 / 4;
+        }
+        return Math.min(240, Math.max(30, Math.round(n * fig * 4))); // figura do tempo → semínimas por minuto
     };
 
     // ---------- Exemplos ----------

@@ -972,6 +972,11 @@
     };
     const freqOfSemi = (semi) => +(261.63 * Math.pow(2, semi / 12)).toFixed(2);
     const countText = (n) => `${n} ${n === 1 ? "nota/pausa lida" : "notas/pausas lidas"}.`;
+    /** Contagem + avisos da leitura (nota que não cabe no compasso, código não entendido…). */
+    const infoText = ({ events, warnings }) => [
+        countText(events.length),
+        warnings.length ? `Aviso: ${warnings.slice(0, 3).join("; ")}${warnings.length > 3 ? ` (e mais ${warnings.length - 3})` : ""}.` : "",
+    ].filter(Boolean).join(" ");
 
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
@@ -981,10 +986,11 @@
         staff.setMeter(info.meter); // "Compasso: 4/4" → fórmula de compasso depois da clave
         staff.clear();
         songEvents.forEach((ev, k) => {
-            if (ev.kind === "rest") staff.pushRest(ev.figure, { scroll: false, dotted: ev.dotted, bar: ev.bar });
+            const opts = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over };
+            if (ev.kind === "rest") staff.pushRest(ev.figure, opts);
             else ev.notes.forEach((n, j) => {
                 const index = padForSemi(n.semi);
-                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, { scroll: false, dotted: ev.dotted, bar: ev.bar });
+                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, opts);
             });
             if (k < songAt) staff.done(k);
         });
@@ -1007,8 +1013,10 @@
 
     const describe = (ev) => {
         const fig = window.SigaDinoStaff.FIGURES[ev.figure]?.title.toLowerCase() || "";
-        if (ev.kind === "rest") return `pausa de ${fig}`;
-        return `${ev.notes.map((n) => n.label).join(" + ")} (${fig}${ev.dotted ? " pontuada" : ""})`;
+        const dot = ev.dots === 2 ? " com ponto duplo" : ev.dots ? " pontuada" : "";
+        const where = ev.measure ? `, compasso ${ev.measure}` : "";
+        if (ev.kind === "rest") return `pausa de ${fig}${dot}${where}`;
+        return `${ev.notes.map((n) => n.label).join(" + ")} (${fig}${dot}${where})`;
     };
 
     /** Lê o editor, desenha a pauta e toca nota por nota (teclas e pentagrama acendem). */
@@ -1020,7 +1028,8 @@
         stopSong();
         sound.ensure();
         sound.load(prefs.timbre);
-        const { events, tempo, warnings } = MUSIC.parse(mu.text.value);
+        const parsed = MUSIC.parse(mu.text.value);
+        const { events, tempo } = parsed;
         if (tempo && tempo !== song.textTempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
         songEvents = events;
         if (!events.length) {
@@ -1059,8 +1068,7 @@
             return p && semiOf(p) !== n.semi;
         }));
         mu.info.textContent = [
-            countText(events.length),
-            warnings.length ? `Aviso: ${warnings.slice(0, 3).join("; ")}${warnings.length > 3 ? "…" : ""}.` : "",
+            infoText(parsed),
             outside ? "Notas fora do teclado acendem a mesma nota em outra oitava." : "",
         ].filter(Boolean).join(" ");
         await sleep(250);
@@ -1100,11 +1108,11 @@
         song.name = name;
         song.handle = handle;
         song.dirty = false;
-        const { events, tempo } = MUSIC.parse(text);
-        if (tempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
-        songEvents = events;
+        const parsed = MUSIC.parse(text);
+        if (parsed.tempo) { mu.tempo.value = parsed.tempo; song.textTempo = parsed.tempo; }
+        songEvents = parsed.events;
         renderSong();
-        mu.info.textContent = countText(events.length);
+        mu.info.textContent = infoText(parsed);
         showName();
         rememberSong();
     };
@@ -1203,10 +1211,10 @@
         typing = setTimeout(() => {
             rememberSong();
             if (songPlaying()) return;
-            const { events } = MUSIC.parse(mu.text.value);
-            songEvents = events;
+            const parsed = MUSIC.parse(mu.text.value);
+            songEvents = parsed.events;
             renderSong();
-            mu.info.textContent = countText(events.length);
+            mu.info.textContent = infoText(parsed);
         }, 400);
     });
     pasteShortcut(mu.text);
@@ -1316,10 +1324,10 @@
     // Texto inicial: o último que estava no editor, ou a Ode à Alegria.
     mu.text.value = savedSong?.text ?? MUSIC.EXAMPLES[0].text;
     {
-        const { events, tempo } = MUSIC.parse(mu.text.value);
-        songEvents = events;
-        if (tempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
-        mu.info.textContent = countText(events.length);
+        const parsed = MUSIC.parse(mu.text.value);
+        songEvents = parsed.events;
+        if (parsed.tempo) { mu.tempo.value = parsed.tempo; song.textTempo = parsed.tempo; }
+        mu.info.textContent = infoText(parsed);
     }
     showName();
     updatePlayButton();

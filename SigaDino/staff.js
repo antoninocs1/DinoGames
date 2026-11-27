@@ -234,7 +234,7 @@
          * As cabeças ficam empilhadas na mesma vertical, também numa segunda (notas vizinhas,
          * como Dó e Ré); os acidentes se escalonam para a esquerda.
          */
-        const chordSvg = (entries, x, figureName, dotted = false) => {
+        const chordSvg = (entries, x, figureName, dotted = 0) => {
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const plain = look !== "nome"; // cabeça de partitura, sem nome dentro
             const m = plain ? monoOf(figureName) : null;
@@ -275,14 +275,15 @@
                 }
             }
             items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, yOf(it.step), figureName, size)));
-            // Ponto de aumento: à direita, no espaço (nota de linha sobe meio espaço).
-            if (dotted) {
+            // Ponto de aumento (1 ou 2): à direita, no espaço (nota de linha sobe meio espaço).
+            const dots = Number(dotted) || 0;
+            if (dots) {
                 const dx = maxX + 4;
-                items.forEach((it) => {
+                for (let d = 0; d < dots; d++) items.forEach((it) => {
                     const dy = it.step % 2 === 0 ? -SP / 2 : 0;
-                    parts.push(`<circle class="dot" cx="${f(dx)}" cy="${f(yOf(it.step) + dy)}" r="2" fill="${INK}"/>`);
+                    parts.push(`<circle class="dot" cx="${f(dx + d * 5)}" cy="${f(yOf(it.step) + dy)}" r="2" fill="${INK}"/>`);
                 });
-                maxX = dx + 2;
+                maxX = dx + (dots - 1) * 5 + 2;
             }
             // Acidentes: de cima para baixo, cada um na 1ª coluna (da direita) onde não esbarra em outro.
             const cols = [];
@@ -314,13 +315,15 @@
 
         /** Pausa numa posição da pauta. */
         const restHtml = (x, figureName, dotted) => {
-            const dot = dotted ? `<circle class="dot" cx="${f(x + 9)}" cy="18" r="2" fill="${INK}"/>` : "";
+            const dots = Number(dotted) || 0;
+            let dot = "";
+            for (let d = 0; d < dots; d++) dot += `<circle class="dot" cx="${f(x + 9 + d * 5)}" cy="18" r="2" fill="${INK}"/>`;
             return {
                 html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6">${restSvg(x, figureName)}${dot}</g></g>`,
                 extraLeft: 0,
-                extraRight: dotted ? 4 : 0,
+                extraRight: dots ? 4 + (dots - 1) * 5 : 0,
                 leftEdge: x - 7,
-                rightEdge: x + (dotted ? 11 : 7),
+                rightEdge: x + (dots ? 11 + (dots - 1) * 5 : 7),
             };
         };
 
@@ -367,17 +370,26 @@
                 this.setMeter("");
                 this.clear();
             },
-            /** Fórmula de compasso ("4/4", "3/4"…) logo depois da clave; "" tira. */
+            /** Fórmula de compasso ("4/4", "3/4"…, "C" = 4/4 ou "¢" = 2/2) logo depois da clave; "" tira. */
             setMeter(text = "") {
-                const mt = String(text).match(/^\s*(\d{1,2})\s*\/\s*(\d{1,2})\s*$/);
-                const next = mt ? `${mt[1]}/${mt[2]}` : "";
+                const t = String(text).trim();
+                const mt = t.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
+                const sym = /^(C|¢)$/.test(t) ? t : "";
+                const next = mt ? `${mt[1]}/${mt[2]}` : sym;
                 if (next === meter) return;
                 meter = next;
                 x0 = meter ? X0 + METER_W : X0;
                 SLOTS = slotsFor(W, x0);
                 const cx = 50;
                 // Número de cima na metade de cima da pauta, o de baixo na metade de baixo.
-                meterEl.innerHTML = meter ? `<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>` : "";
+                // C (tempo comum) e ¢ (tempo cortado): um "C" desenhado no meio da pauta; o ¢ ganha o traço vertical.
+                const cSym = `<path class="meter-c" d="M${cx + 6.5} 16.5C${cx + 5} 12.6 ${cx + 1.4} 11.6 ${cx - 1.2} 12C${cx - 6.6} 12.8 ${cx - 8.6} 18.4 ${cx - 8.6} 24
+                    C${cx - 8.6} 30.4 ${cx - 5.4} 36 ${cx} 36C${cx + 3.6} 36 ${cx + 6.2} 33.6 ${cx + 7.4} 30.4C${cx + 4.6} 33 ${cx + 2.6} 33.6 ${cx + 0.8} 33.4
+                    C${cx - 2.6} 33 ${cx - 4} 29.4 ${cx - 4} 24C${cx - 4} 18.8 ${cx - 2.8} 14.4 ${cx} 14.2C${cx + 1.8} 14.1 ${cx + 2.2} 15.4 ${cx + 1.4} 16.4
+                    C${cx + 0.4} 17.8 ${cx + 1.6} 20 ${cx + 3.6} 19.8C${cx + 5.6} 19.6 ${cx + 7} 18.4 ${cx + 6.5} 16.5Z" fill="${INK}"/>`;
+                const cut = `<line x1="${cx + 0.6}" x2="${cx + 0.6}" y1="6" y2="42" stroke="${INK}" stroke-width="1.6"/>`;
+                meterEl.innerHTML = mt ? `<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>`
+                    : sym === "C" ? cSym : sym === "¢" ? cSym + cut : "";
                 this.clear();
             },
             /** Nome da música, centralizado em cima do pentagrama ("" tira). */
@@ -411,15 +423,16 @@
                 const grow = chord && last && !last.rest;
                 const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
-                const dotted = grow ? last.dotted : !!opts.dotted;
+                const dotted = grow ? last.dotted : Number(opts.dotted) || 0; // 0, 1 ou 2 pontos
                 const bar = grow ? !!last.bar : !!opts.bar;
+                const over = grow ? !!last.over : !!opts.over;
                 // Posição: logo depois da anterior, com folga se um dos dois for largo
                 // (cabeça do outro lado da haste, acidentes escalonados).
                 const prev = grow ? notes[notes.length - 2] : last;
                 const probe = chordSvg(pads, 0, figure, dotted);
                 const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft + (bar ? BAR_GAP : 0) : x0 + probe.extraLeft;
                 const drawn = chordSvg(pads, x, figure, dotted);
-                return this._place(drawn, x, { pads, figure, dotted, bar }, grow, ms, opts.scroll !== false);
+                return this._place(drawn, x, { pads, figure, dotted, bar, over }, grow, ms, opts.scroll !== false);
             },
             /** Pausa (sem som): ocupa uma posição da pauta como uma nota. */
             pushRest(figureName, opts = {}) {
@@ -427,8 +440,8 @@
                 const prev = notes[notes.length - 1];
                 const bar = !!opts.bar;
                 const x = prev ? prev.x + DX + prev.extraRight + (bar ? BAR_GAP : 0) : x0;
-                const drawn = restHtml(x, figureName, !!opts.dotted);
-                return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar }, false, 0, opts.scroll !== false);
+                const drawn = restHtml(x, figureName, Number(opts.dotted) || 0);
+                return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar, over: !!opts.over }, false, 0, opts.scroll !== false);
             },
             _place(drawn, x, data, grow, ms, scroll) {
                 const last = notes[notes.length - 1];
@@ -456,6 +469,8 @@
                     layer.insertAdjacentHTML("beforeend", drawn.html);
                     const el = layer.lastElementChild;
                     if (scroll) el.classList.add("pop");
+                    // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
+                    if (data.over) el.classList.add("over");
                     notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge });
                 }
                 if (!scroll) return slot;
