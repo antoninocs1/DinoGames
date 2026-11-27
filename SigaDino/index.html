@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.054">
-    <link rel="stylesheet" href="style.css?v=1.054">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.055">
+    <link rel="stylesheet" href="style.css?v=1.055">
 </head>
 <body>
     <main class="app">
@@ -175,6 +175,8 @@
                                 <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
                                 <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code> = semínima pontuada (1½ tempo); <code>[p1/2.]</code> = pausa de mínima pontuada.</li>
                                 <li><strong>Ponto duplo</strong> (vale 1 vez e ¾): <code>E[n1/2..]</code> = mínima com ponto duplo (3½ tempos no 4/4).</li>
+                                <li><strong>Ligadura</strong> (<code>~</code> depois da nota): <code>F[n1/2.]~ F[n1/4];</code> — a segunda nota, de mesma altura, <strong>não é tocada de novo</strong>: só continua soando (aqui, mínima pontuada + semínima). Serve para a nota <strong>passar da barra de compasso</strong>, como na partitura. Em acordes, o <code>~</code> vai depois do acorde e liga as notas iguais: <code>F[n1/2], Ab[n1/2]~ F[n1/4], Ab[n1/4];</code>. A nota ligada não repete o ♯/♭ no pentagrama.</li>
+                                <li><strong>Quiálteras</strong> (notas entre chaves <code>{ }</code>): <code>{3 C[n1/8]; D[n1/8]; E[n1/8];}</code> = <strong>tercina</strong>, 3 colcheias no tempo de 2. <code>{2 F[n1/8]; Ab[n1/8];}</code> = <strong>duína</strong>, 2 colcheias no tempo de 3 (comum no 6/8 e no 9/8). Para outras, escreva <code>{n:m …}</code> = n notas no tempo de m da mesma figura, por exemplo <code>{5:4 C[n1/16]; D[n1/16]; E[n1/16]; F[n1/16]; G[n1/16];}</code>. O pentagrama mostra o colchete com o número em cima das notas.</li>
                                 <li><strong>Nome da música</strong>: escreva uma linha <code>Música: Nome da música</code> — o nome aparece em cima do pentagrama.</li>
                                 <li><strong>Andamento</strong>: escreva <code>semínima = 160</code> no texto (ou mude no ♩ =): 160 semínimas por minuto. Vale dizer outra figura: <code>mínima = 80</code>, <code>colcheia = 200</code>, <code>semínima. = 60</code> (pontuada). Só o número (<code>Andamento: 120</code>) conta os tempos do compasso: no 2/2, 120 mínimas por minuto.</li>
                                 <li><strong>Fórmula de compasso</strong>: uma linha <code>Compasso: x1/x2</code> (com dois-pontos), logo no começo, mostra a fórmula depois da clave. <strong>x1</strong> = quantos tempos tem o compasso; <strong>x2</strong> = a figura que vale <strong>um tempo</strong> (1 semibreve, 2 mínima, 4 semínima, 8 colcheia, 16 semicolcheia).</li>
@@ -265,12 +267,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.054"></script>
-    <script src="sounds.js?v=1.054"></script>
-    <script src="modes.js?v=1.054"></script>
-    <script src="engine.js?v=1.054"></script>
-    <script src="staff.js?v=1.054"></script>
-    <script src="music.js?v=1.054"></script>
-    <script src="game.js?v=1.054"></script>
+    <script src="../assets/combobox.js?v=1.055"></script>
+    <script src="sounds.js?v=1.055"></script>
+    <script src="modes.js?v=1.055"></script>
+    <script src="engine.js?v=1.055"></script>
+    <script src="staff.js?v=1.055"></script>
+    <script src="music.js?v=1.055"></script>
+    <script src="game.js?v=1.055"></script>
 </body>
 </html>

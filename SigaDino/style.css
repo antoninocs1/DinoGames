@@ -138,6 +138,9 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 /* Barra de compasso (atravessa as 5 linhas). */
 .staff .bar { stroke: #1d1b22; stroke-width: 1.4; transition: opacity .15s; }
 .staff .bar.gone { opacity: 0; }
+.staff .tie, .staff .tuplet { transition: opacity .15s; }
+.staff .tie.gone, .staff .tuplet.gone { opacity: 0; }
+.staff .tuplet text { font: italic 700 10px/1 Georgia, "Times New Roman", serif; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
 .staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
 .staff .acc { pointer-events: none; }
 .staff .head text { font-weight: 800; text-anchor: middle; dominant-baseline: central; font-family: inherit; }

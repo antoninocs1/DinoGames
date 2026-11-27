@@ -303,7 +303,11 @@
                 });
             });
             const mono = plain ? " mono" : "";
+            // Ponto mais alto do desenho (cabeça de cima ou ponta da haste para cima).
+            const stemTop = fig.stem && up ? yOf(high) - (STEM + Math.max(0, (fig.flags || 0) - 2) * 6.5) : Infinity;
+            const top = Math.min(yOf(high) - size.ry - 2, stemTop);
             return {
+                top,
                 html: `<g class="note${mono}" data-figure="${figureName}">${parts.join("")}</g>`,
                 // Quanto o acorde passa de uma nota comum (com um ♯) para cada lado: vira espaço extra.
                 extraLeft: Math.max(0, x - left - (edge.half + 11)),
@@ -320,6 +324,7 @@
             for (let d = 0; d < dots; d++) dot += `<circle class="dot" cx="${f(x + 9 + d * 5)}" cy="18" r="2" fill="${INK}"/>`;
             return {
                 html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6">${restSvg(x, figureName)}${dot}</g></g>`,
+                top: 6,
                 extraLeft: 0,
                 extraRight: dots ? 4 + (dots - 1) * 5 : 0,
                 leftEdge: x - 7,
@@ -344,6 +349,7 @@
                 const gone = m.x - shift < x0 - 6;
                 m.el.classList.toggle("gone", gone);
                 m.barEl?.classList.toggle("gone", gone);
+                m.extras?.forEach((x) => x.classList.toggle("gone", gone));
             });
         };
 
@@ -457,7 +463,7 @@
                     const el = last.el.nextElementSibling;
                     last.el.remove();
                     el.classList.add(...keep);
-                    Object.assign(last, data, { el, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge });
+                    Object.assign(last, data, { el, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top });
                     if (last.barEl && barX != null) { last.barEl.setAttribute("x1", barX); last.barEl.setAttribute("x2", barX); }
                 } else {
                     slot = first + notes.length;
@@ -471,7 +477,7 @@
                     if (scroll) el.classList.add("pop");
                     // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
                     if (data.over) el.classList.add("over");
-                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge });
+                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [] });
                 }
                 if (!scroll) return slot;
                 scrollTo(slot);
@@ -481,10 +487,40 @@
                     clearTimeout(old.off);
                     old.el.remove();
                     old.barEl?.remove();
+                    old.extras?.forEach((x) => x.remove());
                     first++;
                 }
                 if (ms) this.light(slot, ms);
                 return slot;
+            },
+            /**
+             * Ligadura (arco) entre a nota da posição a e a da posição b, na altura step.
+             * O arco fica do lado oposto à haste: embaixo das notas graves, em cima das agudas.
+             * up = true/false força o lado (no acorde, a nota de cima liga por cima).
+             */
+            tie(a, b, step, up = null) {
+                const from = notes[a - first], to = notes[b - first];
+                if (!from || !to) return;
+                const below = up == null ? step < 6 : !up;
+                const d = below ? 1 : -1;
+                const y = yOf(step) + d * 6;
+                const x1 = from.x + 6, x2 = to.x - 6;
+                const mid = (x1 + x2) / 2;
+                const h = Math.min(9, 4 + (x2 - x1) / 12); // arco mais alto quando é mais comprido
+                layer.insertAdjacentHTML("beforeend", `<path class="tie" d="M${f(x1)} ${f(y)}Q${f(mid)} ${f(y + d * h * 1.25)} ${f(x2)} ${f(y)}` +
+                    `Q${f(mid)} ${f(y + d * h)} ${f(x1)} ${f(y)}Z" fill="${INK}" stroke="${INK}" stroke-width=".6" stroke-linejoin="round"/>`);
+                to.extras.push(layer.lastElementChild);
+            },
+            /** Quiáltera: colchete com o número n em cima das notas das posições a até b. */
+            tuplet(a, b, n) {
+                const from = notes[a - first], to = notes[b - first];
+                if (!from || !to) return;
+                const group = notes.slice(a - first, b - first + 1);
+                const y = Math.min(-6, ...group.map((m) => m.top)) - 6;
+                const x1 = from.x - 7, x2 = to.x + 9, mid = (x1 + x2) / 2;
+                layer.insertAdjacentHTML("beforeend", `<g class="tuplet"><path d="M${f(x1)} ${f(y + 4)}V${f(y)}H${f(mid - 5)}M${f(mid + 5)} ${f(y)}H${f(x2)}V${f(y + 4)}"` +
+                    ` fill="none" stroke="${INK}" stroke-width="1"/><text x="${f(mid)}" y="${f(y)}">${n}</text></g>`);
+                to.extras.push(layer.lastElementChild);
             },
             /** Barra dupla de fim (fina + grossa) depois da última nota. */
             finish() {

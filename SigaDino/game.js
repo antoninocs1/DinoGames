@@ -985,15 +985,35 @@
         staff.setTitle(info.title); // linha "Música: …" do texto
         staff.setMeter(info.meter); // "Compasso: 4/4" → fórmula de compasso depois da clave
         staff.clear();
+        const slots = [];          // posição no pentagrama de cada nota/pausa do texto
+        let group = null;          // quiáltera aberta: { id, n, a, b }
+        const closeGroup = () => { if (group && group.a >= 0) staff.tuplet(group.a, group.b, group.n); group = null; };
         songEvents.forEach((ev, k) => {
             const opts = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over };
-            if (ev.kind === "rest") staff.pushRest(ev.figure, opts);
+            let slot = -1;
+            if (ev.kind === "rest") slot = staff.pushRest(ev.figure, opts);
             else ev.notes.forEach((n, j) => {
                 const index = padForSemi(n.semi);
-                if (index >= 0) staff.push({ index, step: n.step, acc: n.acc }, ev.figure, 0, j > 0, opts);
+                // A nota ligada não repete o ♯/♭ (vale o da nota onde a ligadura começa).
+                if (index >= 0) slot = staff.push({ index, step: n.step, acc: n.tied ? "" : n.acc }, ev.figure, 0, slot >= 0, opts);
             });
-            if (k < songAt) staff.done(k);
+            slots[k] = slot;
+            if (slot >= 0 && k < songAt) staff.done(slot);
+            // Ligadura: arco da nota anterior até esta, para cada nota ligada.
+            if (slot >= 0 && ev.kind === "note" && slots[k - 1] >= 0) {
+                const tied = ev.notes.filter((n) => n.tied);
+                const top = Math.max(...tied.map((n) => n.step));
+                // Uma nota: o lado pela altura. Acorde: a de cima por cima, as outras por baixo.
+                tied.forEach((n) => staff.tie(slots[k - 1], slot, n.step, tied.length > 1 ? n.step === top : null));
+            }
+            // Quiáltera: colchete com o número em cima das notas do mesmo grupo { … }.
+            if (group && ev.tuplet?.id !== group.id) closeGroup();
+            if (ev.tuplet && slot >= 0) {
+                if (!group) group = { id: ev.tuplet.id, n: ev.tuplet.n, a: slot, b: slot };
+                group.b = slot;
+            }
         });
+        closeGroup();
         if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
     };
 
@@ -1080,7 +1100,11 @@
             const on = Math.max(60, ms * 0.9);          // um respiro entre as notas
             if (ev.kind === "note") ev.notes.forEach((n) => {
                 const i = padForSemi(n.semi);
-                if (i >= 0) light(i, on, freqOfSemi(n.semi));
+                // Nota ligada à anterior: não toca de novo (continua soando). Começando
+                // por ela (do cursor), toca o que sobra da ligadura.
+                if (i < 0 || (n.tied && k > k0)) return;
+                const holdMs = (n.hold || ev.frac) * 4 * quarter;
+                light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
             });
             staff.light(k, on);
             staff.done(k);

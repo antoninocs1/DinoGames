@@ -10,6 +10,12 @@
      C[n1], E[n1], G[n1];   separadas por vírgula = acorde (tocam juntas)
      E[n1/4.];         ponto de aumento (vale 1 vez e meia)
      E[n1/4..];        ponto duplo (vale 1 vez e três quartos)
+     F[n1/2.]~ F[n1/4];   ligadura (~ depois da nota ou do acorde): a nota seguinte de
+                       mesma altura não é tocada de novo, só continua soando
+                       (serve para a nota passar da barra de compasso)
+     {3 C[n1/8]; D[n1/8]; E[n1/8];}   quiáltera: 3 notas no tempo de 2 (tercina)
+     {2 C[n1/8]; D[n1/8];}            duína: 2 colcheias no tempo de 3
+     {5:4 …}           n:m = n notas no tempo de m da mesma figura
    Separadas por ponto e vírgula (ou em linhas diferentes) = uma depois da outra.
    Oitava: 1 (ou nada) = do Dó central ao Si; 2 = a de cima; 0 = a de baixo.
    Figuras: [n2] breve, [n1] semibreve, [n1/2] mínima, [n1/4] semínima,
@@ -54,6 +60,11 @@
     const REST_RE = String.raw`(?<!\p{L})(?:p\s*\[\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.{0,2})\s*\]|\[\s*p\s*(\d+)(?:\s*\/\s*(\d+))?\s*(\.{0,2})\s*\])`;
     const TOKEN = new RegExp(`${NOTE_RE}|${REST_RE}`, "giu");
     const CODE_LIKE = /\[\s*[np][^\]]*\]/giu; // parece código, mas não foi entendido
+    // Quiáltera: "{3 …}" ou "{n:m …}" (o m colado nos dois-pontos e seguido de espaço, para
+    // "{3: 2C[n1/8]…" continuar sendo o Dó de cima).
+    const TUPLET = /\{\s*(\d{1,2})(?::(\d{1,2})(?=\s))?[^{}]*\}/g;
+    /** Tempo padrão de cada quiáltera: 3 no tempo de 2, 2 no tempo de 3… */
+    const TUPLET_DEFAULT = { 2: 3, 3: 2, 4: 3, 5: 4, 6: 4, 7: 4, 9: 8 };
 
     /**
      * Lê o texto e devolve { events, tempo, warnings }.
@@ -69,6 +80,16 @@
         const used = [];
         let lastEnd = -1;
         let m;
+        // Quiálteras: "{3 …}", "{2 …}" ou "{n:m …}" (n notas no tempo de m).
+        const groups = [];
+        let g;
+        TUPLET.lastIndex = 0;
+        while ((g = TUPLET.exec(text))) {
+            const n = Number(g[1]);
+            const mm = Number(g[2] || TUPLET_DEFAULT[n] || 0);
+            if (!n || !mm) { warnings.push(`quiáltera “{${g[1]}” sem o tempo: escreva {${g[1]}:m …}`); continue; }
+            groups.push({ from: g.index, to: g.index + g[0].length, n, m: mm, id: groups.length });
+        }
         TOKEN.lastIndex = 0;
         while ((m = TOKEN.exec(text))) {
             const from = m.index, to = from + m[0].length;
@@ -81,12 +102,16 @@
             const base = num / den;
             const figure = figureOf(base);
             if (!figure || !num) { warnings.push(`figura desconhecida em “${m[0].trim()}”`); lastEnd = to; continue; }
-            const frac = base * (dots === 2 ? 1.75 : dots ? 1.5 : 1);
+            const group = groups.find((gr) => from > gr.from && to < gr.to);
+            const frac = base * (dots === 2 ? 1.75 : dots ? 1.5 : 1) * (group ? group.m / group.n : 1);
+            const tuplet = group ? { id: group.id, n: group.n, m: group.m } : null;
             const gap = lastEnd >= 0 ? text.slice(lastEnd, from) : "";
             lastEnd = to;
+            // "~" logo depois da nota anterior = ligadura para a próxima (resolvida no fim).
+            if (/^\s*~/.test(gap) && events.length) events[events.length - 1].tieNext = true;
             // Linha nova, "Compasso" ou "|" antes desta nota = começa outro compasso.
             const bar = events.length > 0 && /\n|compasso|\|/i.test(gap);
-            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, dots, bar, from, to }); continue; }
+            if (!isNote) { events.push({ kind: "rest", frac, figure, dotted, dots, tuplet, bar, from, to }); continue; }
 
             const word = plain(m[2]);
             const letter = word.length === 1 ? LETTERS.indexOf(word.toUpperCase()) : NAMES[word];
@@ -101,14 +126,17 @@
             };
             const prev = events[events.length - 1];
             // Vírgula entre duas notas = acorde (soam juntas; vale a figura mais longa).
-            if (prev && prev.kind === "note" && /^\s*,\s*$/.test(gap)) {
+            if (prev && prev.kind === "note" && /^\s*~?\s*,\s*$/.test(gap)) {
                 prev.notes.push(note);
                 prev.to = to;
                 if (frac > prev.frac) Object.assign(prev, { frac, figure, dotted, dots });
                 continue;
             }
-            events.push({ kind: "note", notes: [note], frac, figure, dotted, dots, bar, from, to });
+            events.push({ kind: "note", notes: [note], frac, figure, dotted, dots, tuplet, bar, from, to });
         }
+        // "~" depois da última nota do texto também vale (ligadura que não leva a nada: avisa).
+        if (events.length && /^\s*~/.test(text.slice(lastEnd))) events[events.length - 1].tieNext = true;
+        resolveTies(events, warnings);
         // Códigos com colchetes que não viraram nota nem pausa (letra errada, etc.).
         let c;
         CODE_LIKE.lastIndex = 0;
@@ -134,6 +162,38 @@
     };
 
     /**
+     * Ligaduras: a nota da próxima posição com a mesma altura (semi) vira continuação
+     * (tied = true, não toca de novo). A nota que começa a ligadura ganha hold = duração
+     * somada de toda a cadeia (fração da semibreve), usada para o som durar até o fim.
+     */
+    const resolveTies = (events, warnings) => {
+        events.forEach((ev, k) => {
+            if (!ev.tieNext) return;
+            const next = events[k + 1];
+            const what = ev.kind === "rest" ? "pausa" : ev.notes.map((n) => n.label).join("+");
+            if (ev.kind !== "note" || !next || next.kind !== "note") {
+                warnings.push(`ligadura em ${what} sem nota igual logo depois`);
+                ev.tieNext = false;
+                return;
+            }
+            let any = false;
+            next.notes.forEach((n) => {
+                if (ev.notes.some((p) => p.semi === n.semi)) { n.tied = true; any = true; }
+            });
+            if (!any) { warnings.push(`ligadura em ${what}: a nota seguinte não é a mesma`); ev.tieNext = false; }
+        });
+        for (let k = events.length - 1; k >= 0; k--) {
+            const ev = events[k];
+            if (ev.kind !== "note") continue;
+            const next = events[k + 1];
+            ev.notes.forEach((n) => {
+                const cont = ev.tieNext && next.notes.find((q) => q.tied && q.semi === n.semi);
+                n.hold = ev.frac + (cont ? cont.hold : 0);
+            });
+        }
+    };
+
+    /**
      * "Compasso: 3/4", "Compasso: C" (= 4/4) ou "Compasso: ¢" (= 2/2).
      * Devolve { text, beats, unit } — text é o que o pentagrama desenha ("3/4", "C" ou "¢").
      */
@@ -150,9 +210,9 @@
         return /^C$/i.test(sym[1]) ? { text: "C", beats: 4, unit: 4 } : { text: "¢", beats: 2, unit: 2 };
     };
 
-    // Durações em unidades inteiras (1 semibreve = 512), para somar sem erro de arredondamento:
-    // até a quartifusa com ponto duplo dá número inteiro.
-    const UNIT = 512;
+    // Durações em unidades inteiras, para somar sem erro de arredondamento: 1 semibreve =
+    // 512 × 2520 (a quartifusa com ponto duplo e as quiálteras de 2 a 9 dão número inteiro).
+    const UNIT = 512 * 2520;
     const unitsOf = (frac) => Math.round(frac * UNIT);
     /** 384 → "3/4" (fração da semibreve), para os avisos. */
     const fracText = (u) => {
