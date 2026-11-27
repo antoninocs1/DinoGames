@@ -1,6 +1,6 @@
 // Service worker do DinoGames: deixa os jogos disponíveis offline e permite instalar como app.
 // Ao alterar arquivos do projeto, aumente CACHE_VERSION para que os usuários recebam a atualização.
-const CACHE_VERSION = "dinogames-v1.056";
+const CACHE_VERSION = "dinogames-v1.057";
 
 const APP_FILES = [
     "./",

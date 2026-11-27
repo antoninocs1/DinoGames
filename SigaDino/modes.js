@@ -83,6 +83,44 @@
     }));
     const CHROMATIC_24 = [...CHROMATIC, ...chromatic(UPPER_NOTES, ["s", "x", "h", "j", "v"]).map((p) => ({ ...p, octave: 1 }))];
 
+    /**
+     * Uma oitava cromática (12 teclas) oct oitavas acima (+) ou abaixo (−) do Dó central,
+     * com as mesmas cores; sem teclas do computador (só toque/clique).
+     */
+    const octaveAt = (oct) => chromatic(
+        RAINBOW_NOTES.map((pad) => ({ ...pad, freq: +(pad.freq * Math.pow(2, oct)).toFixed(2), keys: [] })),
+        [],
+    ).map((p) => ({ ...p, keys: [], octave: oct }));
+
+    /**
+     * Piano da oitava lo até a hi (0 = a do Dó central, 1 = a de cima, −1 = a de baixo…).
+     * As 2 oitavas do meio (0 e 1) são as do teclado de 24 notas, com as teclas do
+     * computador; o Dó central ganha a marca center.
+     */
+    const pianoPads = (lo, hi) => {
+        const pads = [];
+        for (let oct = lo; oct <= hi; oct++) {
+            if (oct === 0) pads.push(...CHROMATIC.map((p, i) => (i === 0 ? { ...p, center: true } : p)));
+            else if (oct === 1) pads.push(...CHROMATIC_24.slice(12));
+            else pads.push(...octaveAt(oct));
+        }
+        return pads;
+    };
+    /** Modo de piano (look teclado) da oitava lo até a hi, guardado para não recriar. */
+    const pianoCache = {};
+    const pianoMode = (lo, hi) => {
+        const id = `${lo}:${hi}`;
+        return pianoCache[id] || (pianoCache[id] = {
+            title: `Piano (${hi - lo + 1} oitavas)`,
+            enabled: false,
+            look: "teclado",
+            labels: true,
+            octaves: [lo, hi],
+            pads: pianoPads(lo, hi),
+        });
+    };
+    window.SIGA_DINO_PIANO = pianoMode;
+
     window.SIGA_DINO_LEGEND = RAINBOW_NOTES; // Nota - Letra - Cor
 
     window.SIGA_DINO_MODES = {
@@ -126,6 +164,9 @@
             labels: true,
             pads: CHROMATIC_24,
         },
+
+        // Piano de 5 oitavas (Dó grave, -1C, até o Si agudo, 3B): só no Executar música.
+        piano60: pianoMode(-2, 2),
 
         // As mesmas 7 notas no disco. Para liberar, troque enabled para true.
         notas7: {

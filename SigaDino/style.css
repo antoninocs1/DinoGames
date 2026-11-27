@@ -82,6 +82,7 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
 
 /* Aceso: a luz vem de dentro do vidro, o botão afunda um pouquinho e brilha em volta. */
 .pad.lit { transform: scale(.975); transition: none; }
+.center-mark { fill: #1d1b22; opacity: .55; pointer-events: none; } /* Dó central no piano */
 .pad.lit .face { fill: var(--lit); filter: drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 16px var(--glow)); transition: none; }
 .pad.lit .shade { opacity: .45; }
 .pad.lit .gloss { opacity: .9; }

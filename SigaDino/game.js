@@ -318,7 +318,8 @@
             const whites = mode.pads.filter((p) => !p.sharp).length;
             const hasSharps = whites < mode.pads.length;
             // Até 7 brancas: teclas de 27; com 2 oitavas (14 brancas) ficam mais finas e o corpo alarga.
-            const keyW = whites > 7 ? 23 : 27, gap = keyW * 0.096, bw = keyW * 0.56, bh = 47;
+            // Piano (3 oitavas ou mais): teclas ainda mais finas.
+            const keyW = whites > 28 ? 18 : whites > 14 ? 20 : whites > 7 ? 23 : 27, gap = keyW * 0.096, bw = keyW * 0.56, bh = 47;
             const keysW = whites * keyW;
             const W = Math.max(210, keysW + 32);
             const k = keyW / 27; // escala dos rótulos
@@ -334,7 +335,9 @@
                 const x = x0 + white++ * keyW + gap / 2;
                 const w = keyW - gap;
                 const shape = `path d="${keyPath(x, top, w, keyH, 2.5, 8)}"`;
-                return { shape, label: mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5 * k) : "" };
+                // Dó central: uma bolinha no pé da tecla, para achar o meio do piano.
+                const mark = pad.center ? `<circle class="center-mark" cx="${f(x + w / 2)}" cy="${top + keyH - 4.5}" r="${f(1.8 * k)}"/>` : "";
+                return { shape, label: (mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5 * k) : "") + mark };
             });
             // Teclas pretas de enfeite entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
             const blacks = hasSharps ? "" : [0, 1, 3, 4, 5].filter((i) => i < whites - 1).map((i) => {
@@ -437,7 +440,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
 
@@ -445,7 +448,7 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", names: "nome", legend: true };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -454,10 +457,22 @@
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
     const records = storage.get(RECORDS_KEY) || {};
 
+    // Oitavas que a música do editor usa (0 = a do Dó central, 1 = a de cima, −1 = a de baixo…).
+    let songOctaves = [0, 1];
+    /**
+     * Teclado do Executar música: 2 oitavas, piano de 5 oitavas ou (automático) as 2
+     * oitavas do meio aumentadas para baixo e para cima até caber a música (de −3 a 3).
+     */
+    const musicMode = () => {
+        if (prefs.teclado === "24") return MODES.teclado24;
+        if (prefs.teclado === "60") return MODES.piano60;
+        const lo = Math.max(-3, Math.min(0, songOctaves[0])), hi = Math.min(3, Math.max(1, songOctaves[1]));
+        return lo === 0 && hi === 1 ? MODES.teclado24 : window.SIGA_DINO_PIANO(lo, hi);
+    };
     /** Modo desenhado: no "Tocar livre" o teclado de 7 notas ganha as teclas pretas (freeMode). */
     const pickMode = () => {
         const chosen = MODES[prefs.mode];
-        if (prefs.play === "musica") return MODES.teclado24; // a música precisa das 2 oitavas e das pretas
+        if (prefs.play === "musica") return musicMode(); // a música precisa das oitavas dela e das pretas
         return (prefs.play === "livre" && MODES[chosen.freeMode]) || chosen;
     };
     let mode = pickMode();
@@ -549,6 +564,7 @@
         const on = staffOn();
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.fieldPauta.hidden = !on || !isMusic(); // pauta dupla: só no Executar música
+        ui.fieldTeclado.hidden = !isMusic();
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
         document.body.classList.toggle("free-keys", isFree() && !isMusic() && mode.pads.some((p) => p.letter));
@@ -564,7 +580,7 @@
     };
 
     const renderKeys = () => {
-        const list = mode.pads.map((p) => `${p.keys[0].toUpperCase()} ${noteName(p)}`).join(" · ");
+        const list = mode.pads.filter((p) => p.keys.length).map((p) => `${p.keys[0].toUpperCase()} ${noteName(p)}`).join(" · ");
         ui.keys.textContent = isFree()
             ? `Toque à vontade ou use o teclado: ${list} · M som`
             : `Toque nos botões ou use o teclado: ${list} · Enter joga · P pausa · R repete · Esc para · M som`;
@@ -979,6 +995,21 @@
         warnings.length ? `Aviso: ${warnings.slice(0, 3).join("; ")}${warnings.length > 3 ? ` (e mais ${warnings.length - 3})` : ""}.` : "",
     ].filter(Boolean).join(" ");
 
+    /**
+     * Guarda as oitavas da música e, no teclado automático, troca o teclado quando
+     * a música passa a precisar de mais (ou de menos) oitavas. Devolve true se redesenhou.
+     */
+    const syncKeyboard = (info) => {
+        const semis = info.events.flatMap((ev) => (ev.kind === "note" ? ev.notes.map((n) => n.semi) : []));
+        songOctaves = semis.length ? [Math.floor(Math.min(...semis) / 12), Math.floor(Math.max(...semis) / 12)] : [0, 1];
+        if (!isMusic()) return false;
+        const next = pickMode();
+        if (next === mode) return false;
+        mode = next;
+        build();
+        return true;
+    };
+
     /** Pauta dupla (clave de Sol + Fá): escolhida, ou automática quando o texto tem a mão esquerda. */
     const wantGrand = (info) => prefs.pauta === "dupla" || (prefs.pauta !== "sol" && info.hands === 2);
     let songSlots = [];        // posição no pentagrama de cada evento (-1 = não desenhado)
@@ -1070,6 +1101,7 @@
         const { events, tempo } = parsed;
         if (tempo && tempo !== song.textTempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
         songEvents = events;
+        syncKeyboard(parsed); // teclado automático: as oitavas que a música usa
         if (!events.length) {
             renderSong();
             setStatus("Não achei notas no editor. Exemplo: E[n1/4]; F[n1/4]; G[n1/2]; — veja a Ajuda.", "soft");
@@ -1113,7 +1145,7 @@
         }));
         mu.info.textContent = [
             infoText(parsed),
-            outside ? "Notas fora do teclado acendem a mesma nota em outra oitava." : "",
+            outside ? "Notas fora do teclado acendem a mesma nota em outra oitava (escolha Teclado: Automático ou Piano)." : "",
         ].filter(Boolean).join(" ");
         await sleep(250);
         const startAt = events[k0].at;
@@ -1171,7 +1203,7 @@
         const parsed = MUSIC.parse(text);
         if (parsed.tempo) { mu.tempo.value = parsed.tempo; song.textTempo = parsed.tempo; }
         songEvents = parsed.events;
-        renderSong();
+        if (!syncKeyboard(parsed)) renderSong();
         mu.info.textContent = infoText(parsed);
         showName();
         rememberSong();
@@ -1273,7 +1305,7 @@
             if (songPlaying()) return;
             const parsed = MUSIC.parse(mu.text.value);
             songEvents = parsed.events;
-            renderSong();
+            if (!syncKeyboard(parsed)) renderSong();
             mu.info.textContent = infoText(parsed);
         }, 400);
     });
@@ -1323,12 +1355,12 @@
     tr.text.value = freeSaved.text ?? oldEvents.map((ev, k) =>
         `${k && ev.br ? "\n" : k ? " " : ""}${ev.notes.map((n) => `${n}[n${FRAC_CODE[ev.fig] || "1/4"}]`).join(", ")};`).join("");
 
-    /** Código da tecla: letra com # ou b (conforme ♯/♭ escolhido) e "2" na oitava de cima. */
+    /** Código da tecla: letra com # ou b (conforme ♯/♭ escolhido) e o número da oitava (2 = a de cima). */
     const codeOf = (pad) => {
         if (!pad.letter) return "";
         const flat = prefs.accidental === "bemol" && pad.flatLetter;
         const letter = (flat ? pad.flatLetter : pad.letter).replace("♯", "#").replace("♭", "b");
-        return `${pad.octave ? "2" : ""}${letter}`;
+        return `${pad.octave ? pad.octave + 1 : ""}${letter}`; // oitava 1 (a de cima) = "2C", −1 = "0C"…
     };
     const renderFree = () => {
         const empty = !tr.text.value.trim();
@@ -1388,6 +1420,9 @@
         songEvents = parsed.events;
         if (parsed.tempo) { mu.tempo.value = parsed.tempo; song.textTempo = parsed.tempo; }
         mu.info.textContent = infoText(parsed);
+        const semis = parsed.events.flatMap((ev) => (ev.kind === "note" ? ev.notes.map((n) => n.semi) : []));
+        if (semis.length) songOctaves = [Math.floor(Math.min(...semis) / 12), Math.floor(Math.max(...semis) / 12)];
+        mode = pickMode(); // o desenho (build) vem no fim do arquivo
     }
     showName();
     updatePlayButton();
@@ -1497,6 +1532,7 @@
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     bindSelect(ui.staffOpt, "staff", () => build());
     bindSelect(ui.pautaOpt, "pauta", () => renderSong()); // clave de Sol, pauta dupla ou automática
+    bindSelect(ui.tecladoOpt, "teclado", () => { stopSong(); mode = pickMode(); build(); }); // oitavas do teclado
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
 
     // Legenda: Nota - Letra - Cor (aberta ou fechada fica salva).
