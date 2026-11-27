@@ -477,6 +477,7 @@
         staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
+    const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"), keyPx: 0 };
 
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
@@ -596,7 +597,73 @@
         renderScore();
         setInputEnabled(phase === "input" || phase === "free");
         if (phase === "free") { setCount("♪"); setHubText(isMusic() ? "MÚSICA" : "LIVRE"); }
+        fitKeyboard(true);
+        renderOptsSummary();
     };
+
+    // ---------- Celular: teclado com teclas largas, rolando para os lados ----------
+    const MIN_KEY = 34; // largura mínima (px) da tecla branca no celular: cabe o dedo
+    const phoneScreen = window.matchMedia("(max-width: 860px), (pointer: coarse)");
+    // Celular deitado: falta altura, não largura — o piano inteiro continua cabendo na largura.
+    const shortLandscape = window.matchMedia("(orientation: landscape) and (max-height: 520px)");
+    /** Liga a rolagem quando as teclas ficariam finas demais para o dedo (piano grande no celular). */
+    const fitKeyboard = (center = false) => {
+        const was = document.body.classList.contains("kb-wide");
+        let wide = false, need = 0;
+        if (mode.look === "teclado" && phoneScreen.matches && !shortLandscape.matches) {
+            const whites = mode.pads.filter((p) => !p.sharp).length;
+            const keyW = whites > 28 ? 18 : whites > 14 ? 20 : whites > 7 ? 23 : 27; // o mesmo de LOOKS.teclado
+            const vw = Number(ui.device.getAttribute("viewBox").split(" ")[2]);
+            const avail = kb.scroll.clientWidth;
+            need = Math.ceil((vw * MIN_KEY) / keyW);
+            wide = avail > 0 && need > avail + 2;
+            kb.keyPx = wide ? MIN_KEY : (avail * keyW) / vw;
+        }
+        document.body.classList.toggle("kb-wide", wide);
+        kb.nav.hidden = !wide;
+        if (!wide) return;
+        document.body.style.setProperty("--kbw", `${need}px`);
+        syncKbRange();
+        if (center || !was) {
+            // Começa mostrando o Dó central (a bolinha) no meio.
+            const i = Math.max(0, mode.pads.findIndex((p) => p.center || (!p.octave && p.letter === "C")));
+            keepKeyVisible(i, true);
+        }
+    };
+    const syncKbRange = () => {
+        const max = Math.max(0, kb.scroll.scrollWidth - kb.scroll.clientWidth);
+        kb.range.max = String(max);
+        kb.range.value = String(kb.scroll.scrollLeft);
+    };
+    /** Rola o teclado para a tecla i ficar à vista (center: no meio). */
+    const keepKeyVisible = (i, center = false) => {
+        if (!document.body.classList.contains("kb-wide") || !padEls[i]) return;
+        const r = padEls[i].getBoundingClientRect(), s = kb.scroll.getBoundingClientRect();
+        const margin = 40;
+        if (!center && r.left >= s.left + margin && r.right <= s.right - margin) return;
+        const left = kb.scroll.scrollLeft + (r.left + r.width / 2) - (s.left + s.width / 2);
+        kb.scroll.scrollTo({ left, behavior: center ? "auto" : "smooth" });
+    };
+    kb.scroll.addEventListener("scroll", () => { kb.range.value = String(kb.scroll.scrollLeft); }, { passive: true });
+    kb.range.addEventListener("input", () => { kb.scroll.scrollLeft = Number(kb.range.value); });
+    const octavePx = () => kb.keyPx * 7 || 200;
+    kb.left.addEventListener("click", () => kb.scroll.scrollBy({ left: -octavePx(), behavior: "smooth" }));
+    kb.right.addEventListener("click", () => kb.scroll.scrollBy({ left: octavePx(), behavior: "smooth" }));
+    let fitTimer = 0;
+    window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitKeyboard(false), 150); });
+
+    // ---------- Celular em pé: opções recolhidas em "⚙ Opções" ----------
+    const optsBtn = $("btn-opts");
+    const renderOptsSummary = () => {
+        const sel = (el) => (el && !el.closest("[hidden]") ? el.options[el.selectedIndex]?.text : "");
+        $("opts-sum").textContent = [sel(ui.play), sel(ui.mode)].filter(Boolean).join(" · ");
+    };
+    optsBtn.addEventListener("click", () => {
+        const open = !document.body.classList.contains("opts-open");
+        document.body.classList.toggle("opts-open", open);
+        optsBtn.setAttribute("aria-expanded", String(open));
+        if (!open) setTimeout(() => fitKeyboard(false), 50);
+    });
 
     // ---------- Pentagrama (só nos modelos de teclado) ----------
     const staffOn = () => mode.look === "teclado" && prefs.staff !== "0"; // "1" cor com nome, "3" só cor, "2" só preto
@@ -706,6 +773,7 @@
     const light = (i, ms, freq = padFreq(i)) => {
         const el = padEls[i];
         if (!el) return;
+        if (songPlaying()) keepKeyVisible(i);
         el.classList.add("lit");
         sound.pad(freq, ms / 1000);
         clearTimeout(el._off);
@@ -1121,6 +1189,19 @@
     // Abaixo do Fá de baixo (Mi, step −5: 3 linhas suplementares na clave de Sol) vale a pauta dupla.
     const GRAND_STEP = -5;
     let songSlots = [];        // posições no pentagrama de cada evento (uma por pauta)
+    const FIGS = window.SigaDinoStaff.FIGURES;
+    /**
+     * Tempo do compasso (fração da semibreve) para agrupar as colcheias: composto (6/8, 9/8,
+     * 12/8) = 3 colcheias; 2/2 e ¢ = mínima; os outros (e sem fórmula) = semínima.
+     */
+    const beatOf = (meter) => {
+        const m = /^(\d{1,2})\/(\d{1,2})$/.exec(meter === "C" ? "4/4" : meter === "¢" ? "2/2" : String(meter || ""));
+        if (!m) return 1 / 4;
+        const beats = Number(m[1]), unit = Number(m[2]);
+        if (unit >= 8 && beats % 3 === 0) return 3 / unit; // 3/8, 6/8, 9/8, 12/8
+        if (unit >= 8) return 2 / unit;                    // 5/8, 7/8…: de 2 em 2
+        return unit <= 2 ? 1 / 2 : 1 / 4;
+    };
 
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
@@ -1137,13 +1218,25 @@
         const slots = [];          // posição no pentagrama de cada nota/pausa do texto
         const prevOf = {};         // último evento desenhado de cada mão: { k, slot }
         const groups = {};         // quiáltera aberta de cada mão: { id, n, a, b }
+        const tuplets = [];        // colchetes das quiálteras (desenhados depois das barras de colcheia)
         const closeGroup = (hand) => {
             const g = groups[hand];
-            if (g && g.a >= 0) staff.tuplet(g.a, g.b, g.n);
+            if (g && g.a >= 0) tuplets.push([g.a, g.b, g.n]);
             groups[hand] = null;
         };
+        // Barras de colcheia: colcheias (e menores) seguidas da mesma voz, no mesmo tempo do
+        // compasso (3 colcheias no 6/8 e no 9/8, uma semínima no 4/4) ou na mesma quiáltera.
+        const beatU = Math.round(beatOf(info.meter) * MUSIC.UNIT);
+        const runs = {};           // grupo aberto de cada voz: { key, slots }
+        const beams = [];
+        const flush = (hand) => {
+            if (runs[hand]?.slots.length > 1) beams.push(runs[hand].slots);
+            runs[hand] = null;
+        };
+        let curKey = info.key;     // armadura valendo (troca com uma linha "Tom:" no meio do texto)
         const grand = staff.grand;
         songEvents.forEach((ev, k) => {
+            if (ev.key != null && ev.key !== curKey) { staff.keyChange(ev.key); curKey = ev.key; }
             // Pauta de cada nota: com MD:/ME: vale a mão; numa mão só (pauta dupla pela
             // altura), abaixo do Dó central vai para a clave de Fá, como no piano.
             const voice2 = (ev.hand || "").endsWith("2") ? "2" : "";
@@ -1177,6 +1270,13 @@
                     tied.forEach((n) => staff.tie(prev.slot, slot, n.step, tied.length > 1 ? n.step === top : null));
                 }
                 prevOf[hand] = { k, slot };
+                const len = Math.round(ev.frac * MUSIC.UNIT);
+                const beat = ev.tuplet ? `t${ev.tuplet.id}` : `b${Math.floor(ev.at / beatU)}`;
+                const lastBeat = ev.tuplet ? beat : `b${Math.floor((ev.at + len - 1) / beatU)}`;
+                if (list && FIGS[ev.figure]?.flags && beat === lastBeat) {
+                    if (runs[hand]?.key === beat) runs[hand].slots.push(slot);
+                    else { flush(hand); runs[hand] = { key: beat, slots: [slot] }; }
+                } else flush(hand);
                 // Quiáltera: colchete com o número em cima das notas do mesmo grupo { … }.
                 if (groups[hand] && ev.tuplet?.id !== groups[hand].id) closeGroup(hand);
                 if (ev.tuplet) {
@@ -1186,8 +1286,10 @@
             }
             slots[k] = got;
         });
-        closeGroup("md");
-        closeGroup("me");
+        Object.keys(groups).forEach(closeGroup);
+        Object.keys(runs).forEach(flush);
+        beams.forEach((list) => staff.beam(list));
+        tuplets.forEach(([a, b, n]) => staff.tuplet(a, b, n));
         songSlots = slots;
         if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
         // Teclas tocadas depois da música seguem o compasso dela, a partir de onde ela terminou.
@@ -1364,7 +1466,10 @@
         return (nat ? noteName(nat) : "") + (d > 0 ? "♯".repeat(d) : "♭".repeat(-d));
     };
     const clearHints = () => padEls.forEach((el) => el?.classList.remove("hint"));
-    const showHints = (list) => list.forEach((i) => padEls[i]?.classList.add("hint"));
+    const showHints = (list) => {
+        list.forEach((i) => padEls[i]?.classList.add("hint"));
+        if (list.length) keepKeyVisible(list[0]);
+    };
     /** Espera as teclas do momento (acorde: todas, em qualquer ordem). false = parou. */
     const waitKeys = (need, hold) => new Promise((resolve) => Object.assign(practice, { need, hold, got: new Set(), resolve, wrongHere: 0 }));
 

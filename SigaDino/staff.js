@@ -169,6 +169,13 @@
      * Cria o pentagrama dentro de um <svg>.
      * @param {SVGSVGElement} svg
      */
+    // Posição de cada acidente da armadura na clave de Sol (step); na de Fá, 2 oitavas abaixo.
+    const SHARP_STEPS = [10, 7, 11, 8, 5, 9, 6], FLAT_STEPS = [6, 9, 5, 8, 4, 7, 3];
+    const KEY_DX = 7;
+    /** Os ♯/♭ da armadura (count > 0 sustenidos, < 0 bemóis) a partir de x, numa clave. */
+    const keySigSvg = (count, x, cl, shift) => (count > 0 ? SHARP_STEPS : FLAT_STEPS).slice(0, Math.abs(count)).map((st, i) =>
+        (count > 0 ? sharpSvg : flatSvg)(x + 3 + i * KEY_DX, cl.y(st - shift))).join("");
+
     const createStaff = (svg) => {
         let mode = null;
         let nameOf = (pad) => pad.name;
@@ -186,6 +193,9 @@
         let deep = false;        // espaço para notas abaixo do Dó central (só a clave de Sol)
         let col = null;          // coluna atual: { at, x, right, extraRight, count, barEl }
         let prevCol = null;      // coluna anterior (a barra de compasso fica entre as duas)
+        let afterKey = false;    // acabou de trocar a armadura (a próxima coluna não ganha barra)
+        let keyNow = 0;          // armadura valendo para a próxima nota (muda com keyChange)
+        let keyShown = 0;        // armadura desenhada depois da clave (a da 1ª nota à vista)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
@@ -314,6 +324,7 @@
             const minX = x - edge.half - wing + Math.min(0, ...items.map((it) => it.side * shiftX));
             let maxX = x + edge.half + wing + Math.max(0, ...items.map((it) => it.side * shiftX));
             const parts = [];
+            let stemInfo = null;
             // Linhas suplementares: Dó de baixo (0), Lá de baixo (-2)… e Lá/Si/… de cima (12, 14).
             const ledger = (l) => parts.push(`<line class="ledger" x1="${f(minX - 7 + wing)}" x2="${f(maxX + 7 - wing)}" y1="${cl.y(l)}" y2="${cl.y(l)}"/>`);
             for (let l = cl.bottom - 2; l >= low; l -= 2) ledger(l);
@@ -327,6 +338,11 @@
                 const y1 = up ? cl.y(low) + edge.dy : cl.y(high) - edge.dy;
                 const y2 = up ? cl.y(high) - len : cl.y(low) + len;
                 parts.push(`<line class="stem" x1="${f(sx)}" x2="${f(sx)}" y1="${f(y1)}" y2="${f(y2)}"/>`);
+                // Para a barra de colcheia: os dois lados possíveis da haste e as cabeças das pontas.
+                stemInfo = {
+                    xUp: x + edge.half - 0.8, xDown: x - edge.half + 0.8, yLow: cl.y(low), yHigh: cl.y(high),
+                    dy: edge.dy, flags, up, forced: stemDir === "up" || stemDir === "down", mid: cl.mid, low, high,
+                };
                 if (flags) {
                     parts.push(flagsSvg(sx - 0.4, y2, flags, up));
                     if (up) maxX = Math.max(maxX, sx + 10);
@@ -367,6 +383,7 @@
             const top = Math.min(cl.y(high) - size.ry - 2, stemTop);
             return {
                 top,
+                stemInfo,
                 html: `<g class="note${mono}" data-figure="${figureName}">${parts.join("")}</g>`,
                 // Quanto o acorde passa de uma nota comum (com um ♯) para cada lado: vira espaço extra.
                 extraLeft: Math.max(0, x - left - (edge.half + 11)),
@@ -393,6 +410,11 @@
             };
         };
 
+        /** Armadura depois da clave (nas duas pautas da pauta dupla). */
+        const drawKey = (count) => {
+            keyShown = count;
+            keyEl.innerHTML = count ? keySigSvg(count, 40, CLEFS.sol, 0) + (grand ? keySigSvg(count, 40, CLEFS.fa, 14) : "") : "";
+        };
         /** Rola as notas para a nota "focus" (índice) ficar à vista. */
         const scrollTo = (focus) => {
             const n = notes[focus - first];
@@ -412,6 +434,10 @@
                 m.barEl?.classList.toggle("gone", gone);
                 m.extras?.forEach((x) => x.classList.toggle("gone", gone));
             });
+            // Depois de uma troca de tom, a armadura do começo da pauta passa a ser a nova.
+            const seen = notes.find((m) => !m.el.classList.contains("gone"));
+            const k = seen ? seen.key ?? keyCount : keyCount;
+            if (k !== keyShown) drawKey(k);
         };
 
         return {
@@ -497,14 +523,10 @@
             },
             /** Desenha armadura e fórmula (nas duas pautas da pauta dupla) e acerta onde a 1ª nota começa. */
             _header() {
-                // Posição de cada acidente da armadura na clave de Sol (step); na de Fá, 2 oitavas abaixo.
-                const SHARP_STEPS = [10, 7, 11, 8, 5, 9, 6], FLAT_STEPS = [6, 9, 5, 8, 4, 7, 3];
-                const KEY_X = 40, KEY_DX = 7;
+                const KEY_X = 40;
                 const n = Math.abs(keyCount);
                 const keyW = n ? n * KEY_DX + 4 : 0;
-                const keyAt = (cl, shift) => (keyCount > 0 ? SHARP_STEPS : FLAT_STEPS).slice(0, n).map((st, i) =>
-                    (keyCount > 0 ? sharpSvg : flatSvg)(KEY_X + 3 + i * KEY_DX, cl.y(st - shift))).join("");
-                keyEl.innerHTML = n ? keyAt(CLEFS.sol, 0) + (grand ? keyAt(CLEFS.fa, 14) : "") : "";
+                drawKey(keyCount);
                 const cx = 50 + keyW;
                 const mt = meter.match(/^(\d{1,2})\/(\d{1,2})$/);
                 const sym = /^(C|¢)$/.test(meter) ? meter : "";
@@ -535,6 +557,9 @@
             clear() {
                 endBar = null;
                 col = prevCol = null;
+                afterKey = false;
+                keyNow = keyCount;
+                if (keyShown !== keyCount) drawKey(keyCount);
                 notes = [];
                 first = 0;
                 shift = 0;
@@ -559,14 +584,14 @@
                 const pads = grow ? [...last.pads, e] : [e];
                 const figure = grow ? last.figure : figureName;
                 const dotted = grow ? last.dotted : Number(opts.dotted) || 0; // 0, 1 ou 2 pontos
-                const bar = grow ? !!last.bar : !!opts.bar;
+                const bar = (grow ? !!last.bar : !!opts.bar) && !this._noBar(opts.at);
                 const over = grow ? !!last.over : !!opts.over;
                 const clef = grow ? last.clef : this._clefOf(opts.hand);
                 const stem = grow ? last.stem : opts.stem || "";
                 const probe = chordSvg(pads, 0, figure, dotted, clef, stem);
                 const x = this._columnX(probe.extraLeft, bar, opts.at, grow);
                 const drawn = chordSvg(pads, x, figure, dotted, clef, stem);
-                return this._place(drawn, x, { pads, figure, dotted, bar, over, clef, stem }, grow, ms, opts.scroll !== false);
+                return this._place(drawn, x, { pads, figure, dotted, bar, over, clef, stem, stemInfo: drawn.stemInfo }, grow, ms, opts.scroll !== false);
             },
             /** Clave da mão: na pauta dupla a mão esquerda ("me") vai para a clave de Fá. */
             _clefOf(hand) { return grand && String(hand || "").startsWith("me") ? "fa" : "sol"; },
@@ -585,13 +610,41 @@
                 if (col && at != null && at === col.at) { col.count++; return col.x; }
                 const x = col ? col.x + DX + col.extraRight + extraLeft + (bar ? BAR_GAP : 0) : x0 + extraLeft;
                 prevCol = col;
-                col = { at, x, right: -Infinity, extraRight: 0, count: 1, barEl: null };
+                col = { at, x, right: -Infinity, extraRight: 0, count: 1, barEl: null, noBar: afterKey };
+                afterKey = false;
                 return x;
+            },
+            /** A coluna logo depois de uma troca de armadura já tem a barra dupla: sem outra barra. */
+            _noBar(at) { return afterKey || (!!col && col.noBar && at != null && at === col.at); },
+            /**
+             * Troca de armadura no meio da música: barra dupla e os novos ♯/♭ nas duas pautas,
+             * ocupando um lugar na pauta (rola e some como uma nota).
+             */
+            keyChange(count) {
+                if (!mode) return -1;
+                const n = Math.abs(count);
+                const left = (col ? Math.max(col.right, col.x + 8) : x0 - 14) + 9;
+                const yEnd = grand ? BASS_BOTTOM : BOTTOM;
+                const start = left + 6;
+                const end = start + Math.max(1, n) * KEY_DX + 2;
+                const html = `<g class="note keychange"><line class="bar" x1="${f(left)}" x2="${f(left)}" y1="0" y2="${yEnd}"/>` +
+                    `<line class="bar" x1="${f(left + 3)}" x2="${f(left + 3)}" y1="0" y2="${yEnd}"/>` +
+                    keySigSvg(count, start, CLEFS.sol, 0) + (grand ? keySigSvg(count, start, CLEFS.fa, 14) : "") + `</g>`;
+                layer.insertAdjacentHTML("beforeend", html);
+                const el = layer.lastElementChild;
+                el.classList.add("done");
+                const slot = first + notes.length;
+                notes.push({ el, x: left, pads: [], rest: true, figure: "", extras: [], extraRight: 0, rightEdge: end, top: 0, clef: "sol", key: count });
+                keyNow = count;
+                prevCol = col;
+                col = { at: {}, x: end + 10 - DX, right: end, extraRight: 0, count: 1, barEl: null };
+                afterKey = true;
+                return slot;
             },
             /** Pausa (sem som): ocupa uma posição da pauta como uma nota. */
             pushRest(figureName, opts = {}) {
                 if (!mode) return -1;
-                const bar = !!opts.bar;
+                const bar = !!opts.bar && !this._noBar(opts.at);
                 const clef = this._clefOf(opts.hand);
                 const x = this._columnX(0, bar, opts.at, false);
                 const drawn = restHtml(x, figureName, Number(opts.dotted) || 0, clef);
@@ -632,7 +685,7 @@
                     if (scroll) el.classList.add("pop");
                     // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
                     if (data.over) el.classList.add("over");
-                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [] });
+                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [], key: keyNow });
                     if (barEl) col.barEl = barEl;
                     col.right = Math.max(col.right, drawn.rightEdge);
                     col.extraRight = Math.max(col.extraRight, drawn.extraRight);
@@ -669,6 +722,67 @@
                 layer.insertAdjacentHTML("beforeend", `<path class="tie" d="M${f(x1)} ${f(y)}Q${f(mid)} ${f(y + d * h * 1.25)} ${f(x2)} ${f(y)}` +
                     `Q${f(mid)} ${f(y + d * h)} ${f(x1)} ${f(y)}Z" fill="${INK}" stroke="${INK}" stroke-width=".6" stroke-linejoin="round"/>`);
                 to.extras.push(layer.lastElementChild);
+            },
+            /**
+             * Barra de colcheia: liga as hastes das notas das posições da lista (colcheias e
+             * menores do mesmo tempo e da mesma voz). As bandeirolas somem, todas as hastes vão
+             * para o mesmo lado e terminam na barra; semicolcheia ganha a 2ª barra (ou um toco).
+             */
+            beam(list) {
+                const items = list.map((i) => notes[i - first]).filter((n) => n?.stemInfo?.flags);
+                if (items.length < 2 || items.some((n) => n.clef !== items[0].clef)) return;
+                const infos = items.map((n) => n.stemInfo);
+                // Lado das hastes: o da voz (1ª para cima, 2ª para baixo) ou pela nota mais longe da linha do meio.
+                const forced = infos.find((it) => it.forced);
+                const mid = infos[0].mid;
+                const low = Math.min(...infos.map((it) => it.low)), high = Math.max(...infos.map((it) => it.high));
+                const up = forced ? forced.up : (mid - low) >= (high - mid);
+                const levels = Math.max(...infos.map((it) => it.flags));
+                const xs = infos.map((it) => (up ? it.xUp : it.xDown));
+                const tip = (it) => (up ? it.yHigh - STEM : it.yLow + STEM);
+                const x1 = xs[0], xn = xs[xs.length - 1];
+                let slope = xn > x1 ? (tip(infos[infos.length - 1]) - tip(infos[0])) / (xn - x1) : 0;
+                slope = Math.max(-0.16, Math.min(0.16, slope));
+                let y0 = tip(infos[0]);
+                // Haste mínima (mais comprida com 2 ou mais barras): a barra sobe (ou desce) se preciso.
+                const minStem = 25 + (levels - 1) * 7;
+                infos.forEach((it, k) => {
+                    const yAt = y0 + slope * (xs[k] - x1);
+                    if (up && yAt > it.yHigh - minStem) y0 -= yAt - (it.yHigh - minStem);
+                    if (!up && yAt < it.yLow + minStem) y0 += it.yLow + minStem - yAt;
+                });
+                const lineY = (x) => y0 + slope * (x - x1);
+                items.forEach((n, k) => {
+                    const it = infos[k];
+                    const stem = n.el.querySelector(".stem");
+                    if (stem) {
+                        const yStart = up ? it.yLow + it.dy : it.yHigh - it.dy;
+                        stem.setAttribute("x1", f(xs[k])); stem.setAttribute("x2", f(xs[k]));
+                        stem.setAttribute("y1", f(yStart)); stem.setAttribute("y2", f(lineY(xs[k])));
+                    }
+                    n.el.querySelector(".flag")?.remove();
+                    n.top = Math.min(n.top, lineY(xs[k]) - 2);
+                });
+                const T = 4.6, GAP = 7;
+                const bar = (xa, xb, level) => {
+                    const off = (level - 1) * GAP * (up ? 1 : -1);
+                    const ya = lineY(xa) + off, yb = lineY(xb) + off, t = up ? T : -T;
+                    return `M${f(xa)} ${f(ya)}L${f(xb)} ${f(yb)}L${f(xb)} ${f(yb + t)}L${f(xa)} ${f(ya + t)}Z`;
+                };
+                let d = bar(x1 - 0.6, xn + 0.6, 1);
+                for (let level = 2; level <= levels; level++) {
+                    infos.forEach((it, k) => {
+                        if (it.flags < level) return;
+                        const next = infos[k + 1], prev = infos[k - 1];
+                        if (next && next.flags >= level) d += bar(xs[k] - 0.6, xs[k + 1] + 0.6, level);
+                        else if (!(prev && prev.flags >= level)) {
+                            // Sozinha neste nível: um toco para o lado da vizinha.
+                            d += k === 0 ? bar(xs[k] - 0.6, xs[k] + 8, level) : bar(xs[k] - 8, xs[k] + 0.6, level);
+                        }
+                    });
+                }
+                layer.insertAdjacentHTML("beforeend", `<path class="beam" d="${d}" fill="${INK}"/>`);
+                items[items.length - 1].extras.push(layer.lastElementChild);
             },
             /** Quiáltera: colchete com o número n em cima das notas das posições a até b. */
             tuplet(a, b, n) {

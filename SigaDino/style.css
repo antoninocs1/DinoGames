@@ -56,7 +56,16 @@ h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .01em; }
     flex: 1; display: grid; grid-template-columns: minmax(0, 1fr);
     align-items: start; gap: 14px; max-width: 1180px; width: 100%; margin: 0 auto;
 }
-.stage { display: grid; place-items: center; min-width: 0; }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; min-width: 0; }
+/* Teclado: no celular o piano grande fica com teclas largas e rola para os lados (kb-wide). */
+.kb-scroll { width: 100%; display: grid; place-items: center; min-width: 0; }
+body.kb-wide .kb-scroll { display: flex; justify-content: flex-start; place-items: start; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-bottom: 4px; }
+body.kb-wide .kb-scroll .device[data-look="teclado"] { flex: 0 0 auto; width: var(--kbw) !important; max-width: none; margin: 0; filter: none; }
+.kb-nav { display: flex; align-items: center; gap: 8px; width: 100%; }
+.kb-nav .btn { padding: 7px 10px; font-size: 13px; white-space: nowrap; }
+.kb-nav input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.opts-toggle { display: none; }
+.opts-sum { font-weight: 500; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- Aparelho (SVG) ---------- */
 .device {
@@ -192,7 +201,8 @@ body.music-play #field-mode { display: none; }
 body.music-play .staff-clear { display: none; }
 .music-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .music-head h2 { margin: 0; }
-.song-name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+.song-name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; min-width: 0; }
+.free-notes .song-name { white-space: normal; max-width: 100%; }
 .music-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .music-tools .btn { padding: 7px 10px; font-size: 13px; }
 .song-tempo { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: var(--muted); }
@@ -300,6 +310,19 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
     .device { width: min(100%, 520px, calc(100vh - 220px)); }
     .device[data-look="teclado"] { width: 100%; }
     .status { min-height: 52px; font-size: 14px; }
+}
+/* Celular em pé: as opções ficam em "⚙ Opções" (o pentagrama e o teclado aparecem logo). */
+@media (max-width: 560px) {
+    .bar { gap: 8px; }
+    .brand-mark { width: 36px; height: 36px; }
+    h1 { font-size: 22px; }
+    .opts-toggle { display: flex; align-items: baseline; gap: 6px; width: 100%; max-width: 100%; justify-content: flex-start; padding: 9px 12px; font-size: 14px; }
+    body:not(.opts-open) .settings { display: none; }
+    .opts-open .opts-sum { display: none; }
+    .app { padding: 8px 8px 14px; gap: 8px; }
+    .staff-foot { flex-wrap: wrap; }
+    .free-notes .music-tools .btn { flex: 1 1 auto; }
+    .music-tools .btn { padding: 7px 8px; }
 }
 @media (min-width: 561px) and (max-width: 860px) {
     .settings { grid-template-columns: repeat(4, 1fr); }
