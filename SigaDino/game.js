@@ -437,7 +437,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
 
@@ -445,7 +445,7 @@
     ui.mode.innerHTML = enabledModes.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", names: "nome", legend: true };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", names: "nome", legend: true };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -548,11 +548,12 @@
     const setupStaff = () => {
         const on = staffOn();
         ui.fieldStaff.hidden = mode.look !== "teclado";
+        ui.fieldPauta.hidden = !on || !isMusic(); // pauta dupla: só no Executar música
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
         document.body.classList.toggle("free-keys", isFree() && !isMusic() && mode.pads.some((p) => p.letter));
         staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome",
-            { lead: isMusic(), deep: isMusic() });
+            { lead: isMusic(), deep: isMusic(), grand: isMusic() && wantGrand(MUSIC.parse(mu.text.value)) });
         if (isMusic()) { setFigure("seminima"); renderSong(); return; }
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
@@ -978,42 +979,58 @@
         warnings.length ? `Aviso: ${warnings.slice(0, 3).join("; ")}${warnings.length > 3 ? ` (e mais ${warnings.length - 3})` : ""}.` : "",
     ].filter(Boolean).join(" ");
 
+    /** Pauta dupla (clave de Sol + Fá): escolhida, ou automática quando o texto tem a mão esquerda. */
+    const wantGrand = (info) => prefs.pauta === "dupla" || (prefs.pauta !== "sol" && info.hands === 2);
+    let songSlots = [];        // posição no pentagrama de cada evento (-1 = não desenhado)
+
     /** Desenha a música inteira na pauta (as já tocadas ficam fortes). */
     const renderSong = () => {
         if (!isMusic()) return;
         const info = MUSIC.parse(mu.text.value);
+        staff.setGrand(wantGrand(info)); // ME: no texto → clave de Fá embaixo (na opção Automática)
         staff.setTitle(info.title); // linha "Música: …" do texto
         staff.setMeter(info.meter); // "Compasso: 4/4" → fórmula de compasso depois da clave
         staff.clear();
         const slots = [];          // posição no pentagrama de cada nota/pausa do texto
-        let group = null;          // quiáltera aberta: { id, n, a, b }
-        const closeGroup = () => { if (group && group.a >= 0) staff.tuplet(group.a, group.b, group.n); group = null; };
+        const prevOf = {};         // último evento desenhado de cada mão: { k, slot }
+        const groups = {};         // quiáltera aberta de cada mão: { id, n, a, b }
+        const closeGroup = (hand) => {
+            const g = groups[hand];
+            if (g && g.a >= 0) staff.tuplet(g.a, g.b, g.n);
+            groups[hand] = null;
+        };
         songEvents.forEach((ev, k) => {
-            const opts = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over };
+            const hand = ev.hand || "md";
+            // at: notas do mesmo instante (das duas mãos) ficam na mesma vertical.
+            const opts = { scroll: false, dotted: ev.dots, bar: ev.bar, over: ev.over, hand, at: ev.at };
             let slot = -1;
             if (ev.kind === "rest") slot = staff.pushRest(ev.figure, opts);
-            else ev.notes.forEach((n, j) => {
+            else ev.notes.forEach((n) => {
                 const index = padForSemi(n.semi);
                 // A nota ligada não repete o ♯/♭ (vale o da nota onde a ligadura começa).
                 if (index >= 0) slot = staff.push({ index, step: n.step, acc: n.tied ? "" : n.acc }, ev.figure, 0, slot >= 0, opts);
             });
             slots[k] = slot;
             if (slot >= 0 && k < songAt) staff.done(slot);
-            // Ligadura: arco da nota anterior até esta, para cada nota ligada.
-            if (slot >= 0 && ev.kind === "note" && slots[k - 1] >= 0) {
+            // Ligadura: arco da nota anterior da mesma mão até esta, para cada nota ligada.
+            const prev = prevOf[hand];
+            if (slot >= 0 && ev.kind === "note" && prev && prev.slot >= 0) {
                 const tied = ev.notes.filter((n) => n.tied);
                 const top = Math.max(...tied.map((n) => n.step));
                 // Uma nota: o lado pela altura. Acorde: a de cima por cima, as outras por baixo.
-                tied.forEach((n) => staff.tie(slots[k - 1], slot, n.step, tied.length > 1 ? n.step === top : null));
+                tied.forEach((n) => staff.tie(prev.slot, slot, n.step, tied.length > 1 ? n.step === top : null));
             }
+            if (slot >= 0) prevOf[hand] = { k, slot };
             // Quiáltera: colchete com o número em cima das notas do mesmo grupo { … }.
-            if (group && ev.tuplet?.id !== group.id) closeGroup();
+            if (groups[hand] && ev.tuplet?.id !== groups[hand].id) closeGroup(hand);
             if (ev.tuplet && slot >= 0) {
-                if (!group) group = { id: ev.tuplet.id, n: ev.tuplet.n, a: slot, b: slot };
-                group.b = slot;
+                if (!groups[hand]) groups[hand] = { id: ev.tuplet.id, n: ev.tuplet.n, a: slot, b: slot };
+                groups[hand].b = slot;
             }
         });
-        closeGroup();
+        closeGroup("md");
+        closeGroup("me");
+        songSlots = slots;
         if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
     };
 
@@ -1035,8 +1052,9 @@
         const fig = window.SigaDinoStaff.FIGURES[ev.figure]?.title.toLowerCase() || "";
         const dot = ev.dots === 2 ? " com ponto duplo" : ev.dots ? " pontuada" : "";
         const where = ev.measure ? `, compasso ${ev.measure}` : "";
-        if (ev.kind === "rest") return `pausa de ${fig}${dot}${where}`;
-        return `${ev.notes.map((n) => n.label).join(" + ")} (${fig}${dot}${where})`;
+        const who = ev.hand === "me" ? "ME " : "";
+        if (ev.kind === "rest") return `${who}pausa de ${fig}${dot}${where}`;
+        return `${who}${ev.notes.map((n) => n.label).join(" + ")} (${fig}${dot}${where})`;
     };
 
     /** Lê o editor, desenha a pauta e toca nota por nota (teclas e pentagrama acendem). */
@@ -1058,19 +1076,25 @@
             return;
         }
         // Trecho: notas que tocam a seleção; sem seleção, a 1ª nota que termina depois do cursor.
+        // Com as duas mãos, o trecho vale pelo tempo: começa no instante da 1ª nota escolhida
+        // e vai até o fim da última (a outra mão toca junto nesse intervalo).
         let k0 = 0, k1 = events.length;
         let part = "";
+        const U = MUSIC.UNIT;
+        const endOf = (ev) => ev.at + Math.round(ev.frac * U);
         if (fromCursor) {
             const a = mu.text.selectionStart, b = mu.text.selectionEnd;
-            if (b > a) {
-                k0 = events.findIndex((ev) => ev.to > a);
-                k1 = events.findIndex((ev) => ev.from >= b);
-                if (k1 < 0) k1 = events.length;
-                part = "trecho marcado";
-            } else {
-                k0 = events.findIndex((ev) => ev.to > a);
-                part = "do cursor em diante";
-            }
+            const picked = events.filter((ev) => ev.to > a && (b > a ? ev.from < b : true));
+            const first = picked.reduce((m, ev) => (!m || ev.from < m.from ? ev : m), null);
+            if (first) {
+                k0 = events.findIndex((ev) => ev.at >= first.at);
+                if (b > a) {
+                    const stop = Math.max(...picked.map(endOf));
+                    k1 = events.findIndex((ev) => ev.at >= stop);
+                    if (k1 < 0) k1 = events.length;
+                }
+            } else k0 = -1;
+            part = b > a ? "trecho marcado" : "do cursor em diante";
             if (k0 < 0 || k0 >= k1) {
                 renderSong();
                 setStatus(b > a ? "Não há notas no trecho marcado." : "Não há notas depois do cursor. Coloque o cursor antes de uma nota.", "soft");
@@ -1092,27 +1116,39 @@
             outside ? "Notas fora do teclado acendem a mesma nota em outra oitava." : "",
         ].filter(Boolean).join(" ");
         await sleep(250);
-        for (let k = k0; k < k1; k++) {
+        const startAt = events[k0].at;
+        // Instantes: todos os eventos que começam juntos (as duas mãos) tocam de uma vez;
+        // espera até o próximo instante.
+        for (let k = k0; k < k1;) {
             if (id !== songRun) return;
             songAt = k;
-            const ev = events[k];
-            const ms = ev.frac * 4 * quarter;          // semibreve = 4 semínimas
-            const on = Math.max(60, ms * 0.9);          // um respiro entre as notas
-            if (ev.kind === "note") ev.notes.forEach((n) => {
-                const i = padForSemi(n.semi);
-                // Nota ligada à anterior: não toca de novo (continua soando). Começando
-                // por ela (do cursor), toca o que sobra da ligadura.
-                if (i < 0 || (n.tied && k > k0)) return;
-                const holdMs = (n.hold || ev.frac) * 4 * quarter;
-                light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
+            const at = events[k].at;
+            let kEnd = k;
+            while (kEnd < k1 && events[kEnd].at === at) kEnd++;
+            const nextAt = kEnd < k1 ? events[kEnd].at : Math.max(...events.slice(k, kEnd).map(endOf));
+            const wait = (nextAt - at) / U * 4 * quarter; // semibreve = 4 semínimas
+            const moment = events.slice(k, kEnd);
+            moment.forEach((ev) => {
+                const ms = ev.frac * 4 * quarter;
+                const on = Math.max(60, ms * 0.9);      // um respiro entre as notas
+                if (ev.kind === "note") ev.notes.forEach((n) => {
+                    const i = padForSemi(n.semi);
+                    // Nota ligada à anterior: não toca de novo (continua soando). Começando
+                    // por ela (do cursor), toca o que sobra da ligadura.
+                    if (i < 0 || (n.tied && at > startAt)) return;
+                    const holdMs = (n.hold || ev.frac) * 4 * quarter;
+                    light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
+                });
+                const slot = songSlots[events.indexOf(ev)];
+                if (slot >= 0) { staff.light(slot, on); staff.done(slot); }
             });
-            staff.light(k, on);
-            staff.done(k);
-            setFigure(ev.figure);
-            setStatus(`🎵 Tocando ${k + 1} de ${events.length}${part ? ` (${part})` : ""}: ${describe(ev)}`, "turn");
-            const label = ev.kind === "rest" ? "--" : ev.notes[0].label;
+            const main = moment.find((ev) => ev.hand !== "me") || moment[0];
+            setFigure(main.figure);
+            setStatus(`🎵 Tocando ${k + 1} de ${events.length}${part ? ` (${part})` : ""}: ${moment.map(describe).join(" · ")}`, "turn");
+            const label = main.kind === "rest" ? "--" : main.notes[0].label;
             setCount(label.length <= 4 ? label : "♪", label.length > 3 ? 0.78 : 1);
-            await sleep(ms);
+            k = kEnd;
+            await sleep(wait);
         }
         if (id !== songRun) return;
         songAt = -1;
@@ -1460,6 +1496,7 @@
     bindSelect(ui.play, "play", () => { mode = pickMode(); resetIdle(); build(); });
     bindSelect(ui.accidental, "accidental", () => build()); // só troca os nomes
     bindSelect(ui.staffOpt, "staff", () => build());
+    bindSelect(ui.pautaOpt, "pauta", () => renderSong()); // clave de Sol, pauta dupla ou automática
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
 
     // Legenda: Nota - Letra - Cor (aberta ou fechada fica salva).

@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.055">
-    <link rel="stylesheet" href="style.css?v=1.055">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.056">
+    <link rel="stylesheet" href="style.css?v=1.056">
 </head>
 <body>
     <main class="app">
@@ -56,6 +56,14 @@
                         <option value="3">Só cor (sem nome)</option>
                         <option value="2">Só preto (desafio)</option>
                         <option value="0">Esconder</option>
+                    </select>
+                </label>
+                <label class="field" id="field-pauta" hidden>
+                    <span>Pauta</span>
+                    <select id="pauta-opt" aria-label="Pauta da música: clave de sol ou pauta dupla de piano">
+                        <option value="auto">Automática (ME: = dupla)</option>
+                        <option value="sol">Clave de Sol</option>
+                        <option value="dupla">Sol e Fá (piano)</option>
                     </select>
                 </label>
                 <label class="field">
@@ -171,7 +179,7 @@
                                 <li><strong>Vírgula</strong>: notas juntas, formando um <strong>acorde</strong> — <code>C[n1], E[n1], G[n1];</code></li>
                                 <li><strong>Pausa</strong> (silêncio): <code>[p1/4];</code> ou <code>p[1/4];</code></li>
                                 <li><strong>Sustenido</strong> (sobe ½ tom): <code>F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <code>Bb[n1/4]</code></li>
-                                <li><strong>Oitava</strong>: o número antes da nota diz qual Dó do pentagrama — <code>C[n1]</code> ou <code>1C[n1]</code> é o Dó central (1º Dó); <code>2C[n1]</code> é o Dó de cima (2º Dó); <code>0G[n1/2]</code> é o Sol abaixo do Dó central.</li>
+                                <li><strong>Oitava</strong>: o número antes da nota diz qual Dó do pentagrama — <code>C[n1]</code> ou <code>1C[n1]</code> é o Dó central (1º Dó); <code>2C[n1]</code> é o Dó de cima (2º Dó); <code>0G[n1/2]</code> é o Sol abaixo do Dó central. Mais grave ainda (mão esquerda): <code>-1C</code> e <code>-2C</code>, uma e duas oitavas abaixo do <code>0C</code>.</li>
                                 <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
                                 <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code> = semínima pontuada (1½ tempo); <code>[p1/2.]</code> = pausa de mínima pontuada.</li>
                                 <li><strong>Ponto duplo</strong> (vale 1 vez e ¾): <code>E[n1/2..]</code> = mínima com ponto duplo (3½ tempos no 4/4).</li>
@@ -198,6 +206,11 @@
                             <ul>
                                 <li><strong>Sem fórmula de compasso</strong>: cada linha nova (ou o texto “Compasso”, ou <code>|</code>) começa outro compasso, e o pentagrama mostra a <strong>barra de compasso</strong> antes dele.</li>
                                 <li><strong>Fim</strong>: uma linha <code>Fim</code> (ou <code>:Fim</code>) depois da última nota põe as <strong>duas barras do fim</strong> da música.</li>
+                                <li><strong>Duas mãos (piano)</strong>: escreva <code>MD:</code> (mão direita) e <code>ME:</code> (mão esquerda) antes das notas de cada mão — vale também <code>Mão direita:</code> / <code>Mão esquerda:</code>. O que vem depois do marcador é daquela mão até o próximo marcador; sem marcador, tudo é mão direita. As duas mãos tocam <strong>juntas</strong>, cada uma com os seus compassos, ligaduras e quiálteras, e as notas do mesmo instante ficam na mesma vertical do pentagrama. Exemplo:<br>
+                                    <code>Compasso 1:</code><br>
+                                    <code>MD: E[n1/4]; F[n1/4]; G[n1/2];</code><br>
+                                    <code>ME: 0C[n1/2], 0G[n1/2]; -1G[n1/2];</code></li>
+                                <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code>; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
                                 <li>No editor valem <strong>Ctrl+Z</strong> (desfazer), <strong>Ctrl+Y</strong> (refazer), <strong>Ctrl+C</strong> (copiar), <strong>Ctrl+X</strong> (recortar), <strong>Ctrl+V</strong> ou <strong>Ctrl+P</strong> (colar) e <strong>Ctrl+S</strong> (salvar).</li>
@@ -267,12 +280,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.055"></script>
-    <script src="sounds.js?v=1.055"></script>
-    <script src="modes.js?v=1.055"></script>
-    <script src="engine.js?v=1.055"></script>
-    <script src="staff.js?v=1.055"></script>
-    <script src="music.js?v=1.055"></script>
-    <script src="game.js?v=1.055"></script>
+    <script src="../assets/combobox.js?v=1.056"></script>
+    <script src="sounds.js?v=1.056"></script>
+    <script src="modes.js?v=1.056"></script>
+    <script src="engine.js?v=1.056"></script>
+    <script src="staff.js?v=1.056"></script>
+    <script src="music.js?v=1.056"></script>
+    <script src="game.js?v=1.056"></script>
 </body>
 </html>

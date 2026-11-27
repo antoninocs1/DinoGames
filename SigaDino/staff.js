@@ -8,6 +8,9 @@
    A figura acompanha a velocidade:
      semibreve (lenta) → mínima → semínima (rápida)
    Não sabe nada da partida: o jogo chama begin/push/light/done.
+   Pauta dupla (piano): setGrand(true) acrescenta a pauta da clave de Fá embaixo;
+   push/pushRest com hand: "me" desenham nela. Com at (instante da música), as
+   notas do mesmo instante ficam na mesma vertical (coluna) nas duas pautas.
    ===================================================================== */
 (() => {
     "use strict";
@@ -21,6 +24,9 @@
     const BAR_GAP = 12;          // folga a mais quando há barra de compasso antes da nota
     const MAX_NOTES = 120;       // guarda só as últimas (as mais antigas já saíram de vista)
     const METER_W = 18;          // espaço a mais depois da clave quando há fórmula de compasso (4/4)
+    // Pauta dupla: a pauta da clave de Fá começa BASS_TOP abaixo da 5ª linha da clave de Sol.
+    const BASS_TOP = BOTTOM + 60;
+    const BASS_BOTTOM = BASS_TOP + 4 * SP;
     const slotsFor = (w, x0 = X0) => Math.floor((w - x0 - 8) / DX) + 1; // notas que cabem sem rolar
 
     const FIGURES = {
@@ -120,6 +126,15 @@
     const f = (n) => +n.toFixed(2);
     /** y da nota pela posição na escala: 0 = Dó (linha suplementar), 1 = Ré, 2 = Mi (1ª linha)… */
     const yOf = (step) => BOTTOM - (step - 2) * (SP / 2);
+    /**
+     * Geometria de cada clave: y da nota (step 0 = Dó central), 1ª e 5ª linhas, linha do
+     * meio (decide a haste) e o y da 5ª linha (base, para pausas e números).
+     * Clave de Fá: 1ª linha = Sol de baixo (step -10), 5ª = Lá (step -2), Dó central acima dela.
+     */
+    const CLEFS = {
+        sol: { y: yOf, bottom: 2, top: 10, mid: 6, base: 0 },
+        fa: { y: (step) => BASS_BOTTOM - (step + 10) * (SP / 2), bottom: -10, top: -2, mid: -6, base: BASS_TOP },
+    };
 
     const lum = (hex) => {
         const [r, g, b] = [1, 3, 5].map((k) => parseInt(hex.substr(k, 2), 16) / 255);
@@ -138,6 +153,12 @@
         <circle cx="16.8" cy="58.4" r="3.6"/>
     </g>`;
 
+    // Clave de Fá: a bolinha na 4ª linha (a do Fá), a curva e os dois pontos em volta dela.
+    const BASS_CLEF = `<g class="clef bass-clef" transform="translate(5 ${BASS_TOP}) scale(.88)">
+        <path d="M9.6 12.4C8.4 5.2 13 1 18.6 1C25.6 1 29.4 6.4 29.4 13.4C29.4 25.4 20 34.6 6 41.6"/>
+        <circle cx="9.8" cy="12" r="3.8"/><circle cx="35" cy="6.6" r="1.9"/><circle cx="35" cy="17.4" r="1.9"/>
+    </g>`;
+
     /**
      * Cria o pentagrama dentro de um <svg>.
      * @param {SVGSVGElement} svg
@@ -154,19 +175,30 @@
         let endBar = null;       // barra dupla do fim da música
         let x0 = X0;             // x da 1ª nota (mais à direita com a fórmula de compasso)
         let meter = "";          // fórmula de compasso desenhada depois da clave ("4/4")
+        let grand = false;       // pauta dupla (clave de Sol + clave de Fá)
+        let deep = false;        // espaço para notas abaixo do Dó central (só a clave de Sol)
+        let col = null;          // coluna atual: { at, x, right, extraRight, count, barEl }
+        let prevCol = null;      // coluna anterior (a barra de compasso fica entre as duas)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
         svg.innerHTML = `
-            <defs><clipPath id="staff-clip"><rect x="0" y="-60" width="${W_WIDE}" height="160"/></clipPath></defs>
+            <defs><clipPath id="staff-clip"><rect x="0" y="-60" width="${W_WIDE}" height="${BASS_BOTTOM + 120}"/></clipPath></defs>
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
                 `<line x1="2" x2="${W_NORMAL - 2}" y1="${BOTTOM - i * SP}" y2="${BOTTOM - i * SP}"/>`).join("")}</g>
             ${CLEF}
+            <g class="bass-staff" style="display:none">
+                <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
+                    `<line x1="2" x2="${W_NORMAL - 2}" y1="${BASS_BOTTOM - i * SP}" y2="${BASS_BOTTOM - i * SP}"/>`).join("")}</g>
+                <line class="system" x1="2" x2="2" y1="0" y2="${BASS_BOTTOM}"/>
+                ${BASS_CLEF}
+            </g>
             <g class="meter"></g>
             <text class="staff-title" text-anchor="middle"></text>
             <g clip-path="url(#staff-clip)"><g class="staff-notes"></g></g>`;
         const layer = svg.querySelector(".staff-notes");
         const titleEl = svg.querySelector(".staff-title");
         const meterEl = svg.querySelector(".meter");
+        const bassEl = svg.querySelector(".bass-staff");
         let view = { top: -20, bottom: 76 }; // área do desenho sem o título
         let title = "";
         /** Ajusta a área do desenho: com título, ganha uma faixa em cima para o nome da música. */
@@ -234,7 +266,8 @@
          * As cabeças ficam empilhadas na mesma vertical, também numa segunda (notas vizinhas,
          * como Dó e Ré); os acidentes se escalonam para a esquerda.
          */
-        const chordSvg = (entries, x, figureName, dotted = 0) => {
+        const chordSvg = (entries, x, figureName, dotted = 0, clefName = "sol") => {
+            const cl = CLEFS[clefName] || CLEFS.sol;
             const fig = FIGURES[figureName] || FIGURES.semibreve;
             const plain = look !== "nome"; // cabeça de partitura, sem nome dentro
             const m = plain ? monoOf(figureName) : null;
@@ -247,8 +280,8 @@
                 .sort((a, b) => a.step - b.step || (a.acc ? 1 : 0) - (b.acc ? 1 : 0));
             if (!items.length) return { html: "<g class=\"note\"></g>", extraLeft: 0, extraRight: 0 };
             const low = items[0].step, high = items[items.length - 1].step;
-            // Haste: manda a nota mais longe da 3ª linha (Si). Abaixo dela, haste para cima.
-            const up = (6 - low) >= (high - 6);
+            // Haste: manda a nota mais longe da 3ª linha (Si na clave de Sol, Ré na de Fá).
+            const up = (cl.mid - low) >= (high - cl.mid);
             // Todas na mesma vertical (side 0), até as vizinhas (Dó e Ré).
             const shiftX = 2 * edge.half - 1.6;
             for (const it of items) it.side = 0;
@@ -257,31 +290,31 @@
             let maxX = x + edge.half + wing + Math.max(0, ...items.map((it) => it.side * shiftX));
             const parts = [];
             // Linhas suplementares: Dó de baixo (0), Lá de baixo (-2)… e Lá/Si/… de cima (12, 14).
-            const ledger = (l) => parts.push(`<line class="ledger" x1="${f(minX - 7 + wing)}" x2="${f(maxX + 7 - wing)}" y1="${yOf(l)}" y2="${yOf(l)}"/>`);
-            for (let l = 0; l >= low; l -= 2) ledger(l);
-            for (let l = 12; l <= high; l += 2) ledger(l);
+            const ledger = (l) => parts.push(`<line class="ledger" x1="${f(minX - 7 + wing)}" x2="${f(maxX + 7 - wing)}" y1="${cl.y(l)}" y2="${cl.y(l)}"/>`);
+            for (let l = cl.bottom - 2; l >= low; l -= 2) ledger(l);
+            for (let l = cl.top + 2; l <= high; l += 2) ledger(l);
             if (fig.stem) {
                 // A haste encosta na ponta da cabeça inclinada (direita em cima, esquerda embaixo)
                 // e atravessa o acorde todo. Com 3 ou mais bandeirolas ela fica mais comprida.
                 const flags = fig.flags || 0;
                 const len = STEM + Math.max(0, flags - 2) * 6.5;
                 const sx = up ? x + edge.half - 0.8 : x - edge.half + 0.8;
-                const y1 = up ? yOf(low) + edge.dy : yOf(high) - edge.dy;
-                const y2 = up ? yOf(high) - len : yOf(low) + len;
+                const y1 = up ? cl.y(low) + edge.dy : cl.y(high) - edge.dy;
+                const y2 = up ? cl.y(high) - len : cl.y(low) + len;
                 parts.push(`<line class="stem" x1="${f(sx)}" x2="${f(sx)}" y1="${f(y1)}" y2="${f(y2)}"/>`);
                 if (flags) {
                     parts.push(flagsSvg(sx - 0.4, y2, flags, up));
                     if (up) maxX = Math.max(maxX, sx + 10);
                 }
             }
-            items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, yOf(it.step), figureName, size)));
+            items.forEach((it) => parts.push(headSvg(it.pad, it.step, it.acc, x + it.side * shiftX, cl.y(it.step), figureName, size)));
             // Ponto de aumento (1 ou 2): à direita, no espaço (nota de linha sobe meio espaço).
             const dots = Number(dotted) || 0;
             if (dots) {
                 const dx = maxX + 4;
                 for (let d = 0; d < dots; d++) items.forEach((it) => {
                     const dy = it.step % 2 === 0 ? -SP / 2 : 0;
-                    parts.push(`<circle class="dot" cx="${f(dx + d * 5)}" cy="${f(yOf(it.step) + dy)}" r="2" fill="${INK}"/>`);
+                    parts.push(`<circle class="dot" cx="${f(dx + d * 5)}" cy="${f(cl.y(it.step) + dy)}" r="2" fill="${INK}"/>`);
                 });
                 maxX = dx + (dots - 1) * 5 + 2;
             }
@@ -297,15 +330,15 @@
                 [...it.acc].forEach((sign) => {
                     const w = (sign === "♯" ? 10 : 8) * ACC_SCALE;
                     ax -= w / 2;
-                    parts.push(sign === "♯" ? sharpSvg(ax, yOf(it.step)) : flatSvg(ax, yOf(it.step)));
+                    parts.push(sign === "♯" ? sharpSvg(ax, cl.y(it.step)) : flatSvg(ax, cl.y(it.step)));
                     left = Math.min(left, ax - w / 2);
                     ax -= w / 2 + 1;
                 });
             });
             const mono = plain ? " mono" : "";
             // Ponto mais alto do desenho (cabeça de cima ou ponta da haste para cima).
-            const stemTop = fig.stem && up ? yOf(high) - (STEM + Math.max(0, (fig.flags || 0) - 2) * 6.5) : Infinity;
-            const top = Math.min(yOf(high) - size.ry - 2, stemTop);
+            const stemTop = fig.stem && up ? cl.y(high) - (STEM + Math.max(0, (fig.flags || 0) - 2) * 6.5) : Infinity;
+            const top = Math.min(cl.y(high) - size.ry - 2, stemTop);
             return {
                 top,
                 html: `<g class="note${mono}" data-figure="${figureName}">${parts.join("")}</g>`,
@@ -318,13 +351,15 @@
         };
 
         /** Pausa numa posição da pauta. */
-        const restHtml = (x, figureName, dotted) => {
+        const restHtml = (x, figureName, dotted, clefName = "sol") => {
+            const base = (CLEFS[clefName] || CLEFS.sol).base;
             const dots = Number(dotted) || 0;
             let dot = "";
             for (let d = 0; d < dots; d++) dot += `<circle class="dot" cx="${f(x + 9 + d * 5)}" cy="18" r="2" fill="${INK}"/>`;
+            const shiftY = base ? ` transform="translate(0 ${base})"` : "";
             return {
-                html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6">${restSvg(x, figureName)}${dot}</g></g>`,
-                top: 6,
+                html: `<g class="note rest" data-figure="${figureName}"><g class="head" style="--c:#3b82f6"><g${shiftY}>${restSvg(x, figureName)}${dot}</g></g></g>`,
+                top: base + 6,
                 extraLeft: 0,
                 extraRight: dots ? 4 + (dots - 1) * 5 : 0,
                 leftEdge: x - 7,
@@ -369,16 +404,40 @@
                 W = wide ? W_WIDE : W_NORMAL;
                 SLOTS = slotsFor(W, x0);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
-                // deep: espaço para notas abaixo do Dó central.
-                view = { top: wide ? -34 : -20, bottom: opts.deep ? 92 : 76 };
+                // deep: espaço para notas abaixo do Dó central; grand: pauta dupla (clave de Fá embaixo).
+                deep = !!opts.deep;
+                grand = !!opts.grand;
+                bassEl.style.display = grand ? "" : "none";
+                view = { top: wide ? -34 : -20, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 };
                 title = "";
                 applyView();
+                meter = "?"; // força redesenhar (as duas pautas)
                 this.setMeter("");
                 this.clear();
             },
+            /** Liga ou desliga a pauta dupla (clave de Sol em cima e clave de Fá embaixo). */
+            setGrand(on) {
+                if (!!on === grand) return;
+                grand = !!on;
+                bassEl.style.display = grand ? "" : "none";
+                view = { ...view, bottom: grand ? BASS_BOTTOM + 30 : deep ? 92 : 76 };
+                applyView();
+                const m = meter;
+                meter = "?";
+                this.setMeter(m);
+                this.clear();
+            },
+            get grand() { return grand; },
             /** Fórmula de compasso ("4/4", "3/4"…, "C" = 4/4 ou "¢" = 2/2) logo depois da clave; "" tira. */
             setMeter(text = "") {
                 const t = String(text).trim();
+                const cx = 50;
+                /** Fórmula numa pauta cuja 5ª linha fica em y = base. */
+                const meterAt = (base) => {
+                    const g = (inner) => base ? `<g transform="translate(0 ${base})">${inner}</g>` : inner;
+                    if (mt) return g(`<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>`);
+                    return g(sym === "C" ? cSym : sym === "¢" ? cSym + cut : "");
+                };
                 const mt = t.match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);
                 const sym = /^(C|¢)$/.test(t) ? t : "";
                 const next = mt ? `${mt[1]}/${mt[2]}` : sym;
@@ -386,7 +445,6 @@
                 meter = next;
                 x0 = meter ? X0 + METER_W : X0;
                 SLOTS = slotsFor(W, x0);
-                const cx = 50;
                 // Número de cima na metade de cima da pauta, o de baixo na metade de baixo.
                 // C (tempo comum) e ¢ (tempo cortado): um "C" desenhado no meio da pauta; o ¢ ganha o traço vertical.
                 const cSym = `<path class="meter-c" d="M${cx + 6.5} 16.5C${cx + 5} 12.6 ${cx + 1.4} 11.6 ${cx - 1.2} 12C${cx - 6.6} 12.8 ${cx - 8.6} 18.4 ${cx - 8.6} 24
@@ -394,8 +452,7 @@
                     C${cx - 2.6} 33 ${cx - 4} 29.4 ${cx - 4} 24C${cx - 4} 18.8 ${cx - 2.8} 14.4 ${cx} 14.2C${cx + 1.8} 14.1 ${cx + 2.2} 15.4 ${cx + 1.4} 16.4
                     C${cx + 0.4} 17.8 ${cx + 1.6} 20 ${cx + 3.6} 19.8C${cx + 5.6} 19.6 ${cx + 7} 18.4 ${cx + 6.5} 16.5Z" fill="${INK}"/>`;
                 const cut = `<line x1="${cx + 0.6}" x2="${cx + 0.6}" y1="6" y2="42" stroke="${INK}" stroke-width="1.6"/>`;
-                meterEl.innerHTML = mt ? `<text x="${cx}" y="${BOTTOM - 3 * SP}">${mt[1]}</text><text x="${cx}" y="${BOTTOM - SP}">${mt[2]}</text>`
-                    : sym === "C" ? cSym : sym === "¢" ? cSym + cut : "";
+                meterEl.innerHTML = meter ? meterAt(0) + (grand ? meterAt(BASS_TOP) : "") : "";
                 this.clear();
             },
             /** Nome da música, centralizado em cima do pentagrama ("" tira). */
@@ -407,6 +464,7 @@
             },
             clear() {
                 endBar = null;
+                col = prevCol = null;
                 notes = [];
                 first = 0;
                 shift = 0;
@@ -432,29 +490,52 @@
                 const dotted = grow ? last.dotted : Number(opts.dotted) || 0; // 0, 1 ou 2 pontos
                 const bar = grow ? !!last.bar : !!opts.bar;
                 const over = grow ? !!last.over : !!opts.over;
-                // Posição: logo depois da anterior, com folga se um dos dois for largo
-                // (cabeça do outro lado da haste, acidentes escalonados).
-                const prev = grow ? notes[notes.length - 2] : last;
-                const probe = chordSvg(pads, 0, figure, dotted);
-                const x = prev ? prev.x + DX + prev.extraRight + probe.extraLeft + (bar ? BAR_GAP : 0) : x0 + probe.extraLeft;
-                const drawn = chordSvg(pads, x, figure, dotted);
-                return this._place(drawn, x, { pads, figure, dotted, bar, over }, grow, ms, opts.scroll !== false);
+                const clef = grow ? last.clef : this._clefOf(opts.hand);
+                const probe = chordSvg(pads, 0, figure, dotted, clef);
+                const x = this._columnX(probe.extraLeft, bar, opts.at, grow);
+                const drawn = chordSvg(pads, x, figure, dotted, clef);
+                return this._place(drawn, x, { pads, figure, dotted, bar, over, clef }, grow, ms, opts.scroll !== false);
+            },
+            /** Clave da mão: na pauta dupla a mão esquerda ("me") vai para a clave de Fá. */
+            _clefOf(hand) { return grand && hand === "me" ? "fa" : "sol"; },
+            /**
+             * x da nota. Mesmo instante (at) da coluna atual = mesma vertical; senão, uma
+             * coluna nova logo depois da anterior, com folga se uma das duas for larga
+             * (cabeça do outro lado da haste, acidentes escalonados) e na barra de compasso.
+             */
+            _columnX(extraLeft, bar, at, grow) {
+                if (grow && col) {
+                    if (col.count > 1) return col.x; // a outra mão já está nesta coluna
+                    const base = prevCol;
+                    col.x = base ? base.x + DX + base.extraRight + extraLeft + (bar ? BAR_GAP : 0) : x0 + extraLeft;
+                    return col.x;
+                }
+                if (col && at != null && at === col.at) { col.count++; return col.x; }
+                const x = col ? col.x + DX + col.extraRight + extraLeft + (bar ? BAR_GAP : 0) : x0 + extraLeft;
+                prevCol = col;
+                col = { at, x, right: -Infinity, extraRight: 0, count: 1, barEl: null };
+                return x;
             },
             /** Pausa (sem som): ocupa uma posição da pauta como uma nota. */
             pushRest(figureName, opts = {}) {
                 if (!mode) return -1;
-                const prev = notes[notes.length - 1];
                 const bar = !!opts.bar;
-                const x = prev ? prev.x + DX + prev.extraRight + (bar ? BAR_GAP : 0) : x0;
-                const drawn = restHtml(x, figureName, Number(opts.dotted) || 0);
-                return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar, over: !!opts.over }, false, 0, opts.scroll !== false);
+                const clef = this._clefOf(opts.hand);
+                const x = this._columnX(0, bar, opts.at, false);
+                const drawn = restHtml(x, figureName, Number(opts.dotted) || 0, clef);
+                return this._place(drawn, x, { pads: [], figure: figureName, rest: true, bar, over: !!opts.over, clef }, false, 0, opts.scroll !== false);
             },
             _place(drawn, x, data, grow, ms, scroll) {
                 const last = notes[notes.length - 1];
-                const prev = grow ? notes[notes.length - 2] : last;
-                // Barra de compasso: no meio entre a nota anterior e esta (com o ♯/♭ dela).
-                const barX = prev && data.bar ? f((prev.rightEdge + drawn.leftEdge) / 2) : null;
-                const barLine = `<line class="bar" x1="${barX}" x2="${barX}" y1="0" y2="${BOTTOM}"/>`;
+                // Barra de compasso: no meio entre a coluna anterior e esta (com o ♯/♭ dela).
+                // Na pauta dupla ela atravessa as duas pautas, uma vez por coluna.
+                let barX = prevCol && data.bar ? f((prevCol.right + drawn.leftEdge) / 2) : null;
+                if (barX != null && col.barEl && !grow) {
+                    barX = Math.min(barX, Number(col.barEl.getAttribute("x1")));
+                    col.barEl.setAttribute("x1", barX); col.barEl.setAttribute("x2", barX);
+                    barX = null;
+                }
+                const barLine = `<line class="bar" x1="${barX}" x2="${barX}" y1="0" y2="${grand ? BASS_BOTTOM : BOTTOM}"/>`;
                 let slot;
                 if (grow) {
                     slot = first + notes.length - 1;
@@ -465,6 +546,8 @@
                     el.classList.add(...keep);
                     Object.assign(last, data, { el, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top });
                     if (last.barEl && barX != null) { last.barEl.setAttribute("x1", barX); last.barEl.setAttribute("x2", barX); }
+                    col.right = Math.max(col.right, drawn.rightEdge);
+                    col.extraRight = Math.max(col.extraRight, drawn.extraRight);
                 } else {
                     slot = first + notes.length;
                     let barEl = null;
@@ -478,6 +561,9 @@
                     // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
                     if (data.over) el.classList.add("over");
                     notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [] });
+                    if (barEl) col.barEl = barEl;
+                    col.right = Math.max(col.right, drawn.rightEdge);
+                    col.extraRight = Math.max(col.extraRight, drawn.extraRight);
                 }
                 if (!scroll) return slot;
                 scrollTo(slot);
@@ -501,9 +587,10 @@
             tie(a, b, step, up = null) {
                 const from = notes[a - first], to = notes[b - first];
                 if (!from || !to) return;
-                const below = up == null ? step < 6 : !up;
+                const cl = CLEFS[to.clef] || CLEFS.sol;
+                const below = up == null ? step < cl.mid : !up;
                 const d = below ? 1 : -1;
-                const y = yOf(step) + d * 6;
+                const y = cl.y(step) + d * 6;
                 const x1 = from.x + 6, x2 = to.x - 6;
                 const mid = (x1 + x2) / 2;
                 const h = Math.min(9, 4 + (x2 - x1) / 12); // arco mais alto quando é mais comprido
@@ -516,7 +603,8 @@
                 const from = notes[a - first], to = notes[b - first];
                 if (!from || !to) return;
                 const group = notes.slice(a - first, b - first + 1);
-                const y = Math.min(-6, ...group.map((m) => m.top)) - 6;
+                const base = (CLEFS[to.clef] || CLEFS.sol).base;
+                const y = Math.min(base - 6, ...group.filter((m) => m.clef === to.clef).map((m) => m.top)) - 6;
                 const x1 = from.x - 7, x2 = to.x + 9, mid = (x1 + x2) / 2;
                 layer.insertAdjacentHTML("beforeend", `<g class="tuplet"><path d="M${f(x1)} ${f(y + 4)}V${f(y)}H${f(mid - 5)}M${f(mid + 5)} ${f(y)}H${f(x2)}V${f(y + 4)}"` +
                     ` fill="none" stroke="${INK}" stroke-width="1"/><text x="${f(mid)}" y="${f(y)}">${n}</text></g>`);
@@ -527,9 +615,10 @@
                 endBar?.remove();
                 const last = notes[notes.length - 1];
                 if (!last) return;
-                const bx = f(last.rightEdge + 12);
-                layer.insertAdjacentHTML("beforeend", `<g class="end-bar"><line class="bar" x1="${bx}" x2="${bx}" y1="0" y2="${BOTTOM}"/>` +
-                    `<rect x="${f(bx + 3)}" y="0" width="3.6" height="${BOTTOM}" fill="${INK}"/></g>`);
+                const bx = f((col ? col.right : last.rightEdge) + 12);
+                const yEnd = grand ? BASS_BOTTOM : BOTTOM;
+                layer.insertAdjacentHTML("beforeend", `<g class="end-bar"><line class="bar" x1="${bx}" x2="${bx}" y1="0" y2="${yEnd}"/>` +
+                    `<rect x="${f(bx + 3)}" y="0" width="3.6" height="${yEnd}" fill="${INK}"/></g>`);
                 endBar = layer.lastElementChild;
             },
             /** Acende a nota na posição i por ms. */
