@@ -203,6 +203,17 @@ body.music-play .staff-clear { display: none; }
     padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: #ffffff0d; color: var(--text); font: inherit; font-size: 13px; max-width: 210px;
 }
 .song-examples { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+/* Praticar: botão + mão, dica e velocidade */
+.music-practice { padding-top: 2px; }
+.mini-field { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.mini-field select { background: #100e15; }
+/* Praticar: a tecla certa pisca (contorno amarelo) e a próxima nota fica marcada no pentagrama */
+.device .pad.hint .face { stroke: #ffd400; stroke-width: 3.2; animation: dica .75s ease-in-out infinite alternate; }
+@keyframes dica { from { stroke-opacity: .35; } to { stroke-opacity: 1; } }
+.staff .note.next { opacity: 1; }
+.staff .note.next .head { filter: drop-shadow(0 0 2.5px #f59e0b) drop-shadow(0 0 5px #f59e0b); }
+/* Teclas preto e branco (piano de verdade): a tecla branca ganha um contorno fino */
+.device.piano-keys .pad:not(.sharp) .face { stroke: #00000040; stroke-width: .8; }
 .btn.example { border-color: #fdba7466; color: var(--accent-2); }
 .song-examples select {
     padding: 7px 28px 7px 10px; border-radius: 9px; border: 1px solid #fdba7466;

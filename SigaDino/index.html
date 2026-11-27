@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.061">
-    <link rel="stylesheet" href="style.css?v=1.061">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.062">
+    <link rel="stylesheet" href="style.css?v=1.062">
 </head>
 <body>
     <main class="app">
@@ -56,6 +56,26 @@
                         <option value="3">Só cor (sem nome)</option>
                         <option value="2">Só preto (desafio)</option>
                         <option value="0">Esconder</option>
+                    </select>
+                </label>
+                <label class="field" id="field-keys" hidden>
+                    <span>Teclas</span>
+                    <select id="keys-opt" aria-label="Cores das teclas: coloridas ou preto e branco como um piano">
+                        <option value="cor">Coloridas</option>
+                        <option value="pb">Preto e branco</option>
+                        <option value="pbsem">Sem cor e sem nome</option>
+                    </select>
+                </label>
+                <label class="field" id="field-meter" hidden>
+                    <span>Compasso</span>
+                    <select id="meter-opt" aria-label="Fórmula de compasso do Tocar livre">
+                        <option value="">Sem compasso</option>
+                        <option value="4/4">4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="2/4">2/4</option>
+                        <option value="2/2">2/2</option>
+                        <option value="6/8">6/8</option>
+                        <option value="9/8">9/8</option>
                     </select>
                 </label>
                 <label class="field" id="field-teclado" hidden>
@@ -121,7 +141,7 @@
                 <section class="card free-notes" id="free-notes" aria-label="Notas tocadas em código">
                     <div class="music-head">
                         <h2>Notas tocadas (código)</h2>
-                        <span class="song-name">figura pelo ritmo: devagar = [n1], médio = [n1/2], rápido = [n1/4]</span>
+                        <span class="song-name">figura pelo ritmo: devagar = [n1], médio = [n1/2], rápido = [n1/4] — com Compasso, a que couber</span>
                     </div>
                     <textarea id="free-text" class="song-text free-text" spellcheck="false" aria-label="Notas tocadas, no código do Executar música"
                         placeholder="Toque as teclas: as notas aparecem aqui no código, por exemplo E[n1/4]; F[n1/4]; C[n1], E[n1], G[n1];"></textarea>
@@ -148,6 +168,30 @@
                             <input id="song-tempo" type="number" min="30" max="240" step="1" value="160" aria-label="Andamento (semínimas por minuto)">
                         </label>
                         <span class="song-examples" id="song-example" role="group" aria-label="Músicas de exemplo"></span>
+                    </div>
+                    <div class="music-tools music-practice" role="group" aria-label="Praticar a música">
+                        <button class="btn" id="btn-song-practice" type="button" title="A música espera você tocar a tecla certa (com um trecho marcado no texto, ele se repete)">🎹 Praticar</button>
+                        <label class="mini-field"><span>Mão</span>
+                            <select id="practice-hand" aria-label="Mão que você vai tocar ao praticar">
+                                <option value="ambas">As duas</option>
+                                <option value="md">Direita (MD)</option>
+                                <option value="me">Esquerda (ME)</option>
+                            </select>
+                        </label>
+                        <label class="mini-field"><span>Dica</span>
+                            <select id="practice-hint" aria-label="Mostrar a tecla certa ao praticar">
+                                <option value="1">Tecla pisca</option>
+                                <option value="0">Sem dica (só a pauta)</option>
+                            </select>
+                        </label>
+                        <label class="mini-field"><span>Velocidade</span>
+                            <select id="song-speed" aria-label="Velocidade da música ao tocar e praticar">
+                                <option value="1">Normal</option>
+                                <option value="0.75">75%</option>
+                                <option value="0.5">Devagar (50%)</option>
+                                <option value="0.25">Bem devagar (25%)</option>
+                            </select>
+                        </label>
                     </div>
                     <input id="song-file" type="file" accept=".txt,text/plain" hidden>
                     <textarea id="song-text" class="song-text" spellcheck="false" autocomplete="off" aria-label="Notas da música (código)"
@@ -225,10 +269,12 @@
                                 <li><strong>Teclado</strong> (nas opções, em cima): <strong>Automático</strong> parte das 2 oitavas do Dó central e acrescenta oitavas embaixo e em cima até caber a música (de <code>-2C</code> até <code>4B</code>), como um piano; <strong>2 oitavas</strong> é o teclado de 24 notas; <strong>3 oitavas</strong> vai do <code>0C</code> ao <code>2B</code> (a oitava de baixo do Dó central e as 2 de cima); <strong>Piano (5 oitavas)</strong> vai do <code>-1C</code> ao <code>3B</code>. Com o <strong>Modelo: Piano (5 oitavas)</strong>, o Automático parte das 5 oitavas. A bolinha no pé da tecla marca o <strong>Dó central</strong>. As teclas do computador continuam nas 2 oitavas do meio; as outras se tocam com o mouse ou o dedo.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
+                                <li><strong>🎹 Praticar</strong>: a música <strong>espera você</strong>. As teclas da próxima nota piscam e a nota fica marcada no pentagrama; a música só segue quando você toca todas (no acorde, em qualquer ordem). Em <strong>Mão</strong>, escolha praticar a <strong>direita</strong>, a <strong>esquerda</strong> ou <strong>as duas</strong>: a outra mão toca sozinha. <strong>Dica: Sem dica</strong> deixa só a pauta (a tecla certa pisca depois de 2 erros). <strong>Marque um trecho</strong> no texto antes de tocar em Praticar para repetir só ele, sem parar; sem marcação, começa no cursor. No fim aparecem os acertos, os erros e as estrelas.</li>
+                                <li><strong>Velocidade</strong> (100%, 75%, 50%, 25%): deixa a música mais lenta no ▶ Tocar e nas partes que tocam sozinhas no Praticar, sem mudar o ♩ = do texto.</li>
                                 <li>No editor valem <strong>Ctrl+Z</strong> (desfazer), <strong>Ctrl+Y</strong> (refazer), <strong>Ctrl+C</strong> (copiar), <strong>Ctrl+X</strong> (recortar), <strong>Ctrl+V</strong> ou <strong>Ctrl+P</strong> (colar) e <strong>Ctrl+S</strong> (salvar).</li>
                                 <li>Títulos, “Compasso 1:” e outros textos são ignorados (sem fórmula de compasso, só marcam o compasso); <code>//</code> começa um comentário.</li>
                                 <li>Ao tocar, as teclas do piano e as notas do pentagrama acendem. Use <strong>Abrir</strong>, <strong>Salvar</strong> e <strong>Salvar como…</strong> para guardar as suas músicas em arquivos .txt; o texto também fica guardado neste aparelho.</li>
-                                <li>A lista <strong>🎼 Músicas…</strong> carrega as músicas guardadas no jogo — <strong>Ode à Alegria</strong> (Beethoven) e <strong>Clair de Lune</strong> (Debussy, os 14 compassos da 1ª página com as duas mãos) — para tocar ou usar de modelo.</li>
+                                <li>A lista <strong>🎼 Músicas…</strong> carrega as músicas guardadas no jogo — <strong>Ode à Alegria</strong> (Beethoven) e <strong>Clair de Lune</strong> (Debussy, os 36 compassos em Ré♭ maior com as duas mãos) — para tocar ou usar de modelo.</li>
                             </ul>
                         </div>
                     </details>
@@ -281,6 +327,9 @@
                         <li>No <strong>Tocar livre</strong> e no <strong>Executar música</strong>, o Modelo tem também o <strong>Piano (3 oitavas)</strong> e o <strong>Piano (5 oitavas)</strong>, do Dó grave ao Si agudo (no Siga a sequência ele fica de fora: a sequência usa o teclado de 24 notas). No Tocar livre, escolha <strong>Pauta: Sol e Fá (piano)</strong> para as notas abaixo do Dó central aparecerem na clave de Fá; nas outras opções fica só a clave de Sol.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
                         <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Em <strong>Só cor</strong> a nota fica com a cor da tecla, mas sem o nome dentro. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
+                        <li>Em <strong>Teclas</strong>, troque o teclado colorido pelo <strong>preto e branco</strong> de um piano de verdade (com ou sem os nomes nas teclas), para quem já avançou. A tecla acende em azul quando toca.</li>
+                        <li>No <strong>Tocar livre</strong>, escolha o <strong>Compasso</strong> (4/4, 3/4, 2/4, 2/2, 6/8, 9/8): a figura de cada nota se ajusta ao que <strong>cabe</strong> no compasso (no 3/4, a nota longa vira mínima pontuada, nunca semibreve ou breve), a barra aparece quando o compasso enche e as notas em código ficam um compasso por linha.</li>
+                        <li>No <strong>Executar música</strong>, toque em <strong>🎹 Praticar</strong>: a música espera você tocar a tecla certa antes de seguir. Dá para praticar só uma mão, repetir um trecho marcado e diminuir a Velocidade.</li>
                         <li>Em <strong>Nomes</strong>, troque Dó, Ré, Mi… pelas <strong>letras</strong> (C, D, E, F, G, A, B) no teclado e no pentagrama. A <strong>Legenda</strong> mostra a nota, a letra e a cor de cada tecla.</li>
                         <li>Chegue ao <strong>objetivo</strong> para vencer, ou escolha “Sem fim” e bata o seu recorde.</li>
                     </ul>
@@ -293,12 +342,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.061"></script>
-    <script src="sounds.js?v=1.061"></script>
-    <script src="modes.js?v=1.061"></script>
-    <script src="engine.js?v=1.061"></script>
-    <script src="staff.js?v=1.061"></script>
-    <script src="music.js?v=1.061"></script>
-    <script src="game.js?v=1.061"></script>
+    <script src="../assets/combobox.js?v=1.062"></script>
+    <script src="sounds.js?v=1.062"></script>
+    <script src="modes.js?v=1.062"></script>
+    <script src="engine.js?v=1.062"></script>
+    <script src="staff.js?v=1.062"></script>
+    <script src="music.js?v=1.062"></script>
+    <script src="game.js?v=1.062"></script>
 </body>
 </html>

@@ -282,8 +282,18 @@
         return (flat && pad.flat) || pad.short || pad.name;
     };
 
+    /**
+     * Cores das teclas (opção "Teclas"): coloridas, ou preto e branco como um piano de
+     * verdade (para quem já avançou). No preto e branco a tecla acende num azul claro.
+     */
+    const pianoKeys = () => mode.look === "teclado" && prefs.keys !== "cor";
+    const keyColor = (pad) => (!pianoKeys() ? pad.color : pad.sharp ? "#202027" : "#f4f1e8");
+    const litColor = (pad) => (!pianoKeys() ? pad.color : "#4aa8ff");
+    /** Nome escrito na tecla: some no "preto e branco sem nomes". */
+    const labelsOn = (m) => m.labels && !(m.look === "teclado" && prefs.keys === "pbsem");
+
     const label = (pad, x, y, size) => {
-        const ink = pad.sharp ? "#fff" : inkFor(pad.color); // tecla preta: letra branca
+        const ink = pad.sharp ? "#fff" : inkFor(keyColor(pad)); // tecla preta: letra branca
         return `<text class="pad-label" x="${f(x)}" y="${f(y)}" font-size="${size}" fill="${ink}">${noteName(pad)}</text>`;
     };
 
@@ -323,7 +333,7 @@
                 const round = n > 7 ? [7, 4] : [20, 9]; // cantos de fora / de dentro
                 const shape = `path d="${roundedSectorPath(r1, r2, mid - span / 2, mid + span / 2, gap, ...round)}"`;
                 const [lx, ly] = polar((r1 + r2) / 2 + 2, mid);
-                return { shape, label: mode.labels ? label(pad, lx, ly, n > 7 ? 7.5 : 10) : "" };
+                return { shape, label: labelsOn(mode) ? label(pad, lx, ly, n > 7 ? 7.5 : 10) : "" };
             });
             const R = 97;
             return {
@@ -354,14 +364,14 @@
                 if (pad.sharp) {
                     const cx = x0 + white * keyW; // entre a tecla anterior e a próxima
                     const shape = `path d="${keyPath(cx - bw / 2, top - 1, bw, bh, 1.5, 4)}"`;
-                    return { shape, label: mode.labels ? label(pad, cx, top + bh - 7, (noteName(pad).length > 3 ? 4.6 : 5.4) * k) : "" };
+                    return { shape, label: labelsOn(mode) ? label(pad, cx, top + bh - 7, (noteName(pad).length > 3 ? 4.6 : 5.4) * k) : "" };
                 }
                 const x = x0 + white++ * keyW + gap / 2;
                 const w = keyW - gap;
                 const shape = `path d="${keyPath(x, top, w, keyH, 2.5, 8)}"`;
                 // Dó central: uma bolinha no pé da tecla, para achar o meio do piano.
                 const mark = pad.center ? `<circle class="center-mark" cx="${f(x + w / 2)}" cy="${top + keyH - 4.5}" r="${f(1.8 * k)}"/>` : "";
-                return { shape, label: (mode.labels ? label(pad, x + w / 2, top + keyH - 11, 8.5 * k) : "") + mark };
+                return { shape, label: (labelsOn(mode) ? label(pad, x + w / 2, top + keyH - 11, 8.5 * k) : "") + mark };
             });
             // Teclas pretas de enfeite entre dó-ré, ré-mi, fá-sol, sol-lá e lá-si (como no piano).
             const blacks = hasSharps ? "" : [0, 1, 3, 4, 5].filter((i) => i < whites - 1).map((i) => {
@@ -394,19 +404,19 @@
                 <stop offset="1" stop-color="#060608"/>
             </linearGradient>
             <radialGradient id="pl${i}" cx=".5" cy=".55" r=".8">
-                <stop offset="0" stop-color="${shade(pad.color, 0.7)}"/>
-                <stop offset=".5" stop-color="${shade(pad.color, 0.2)}"/>
-                <stop offset="1" stop-color="${shade(pad.color, -0.25)}"/>
+                <stop offset="0" stop-color="${shade(litColor(pad), 0.7)}"/>
+                <stop offset=".5" stop-color="${shade(litColor(pad), 0.2)}"/>
+                <stop offset="1" stop-color="${shade(litColor(pad), -0.25)}"/>
             </radialGradient>` : `
             <radialGradient id="pb${i}" cx=".5" cy=".42" r=".75">
-                <stop offset="0" stop-color="${shade(pad.color, 0.1)}"/>
-                <stop offset=".7" stop-color="${shade(pad.color, -0.08)}"/>
-                <stop offset="1" stop-color="${shade(pad.color, -0.42)}"/>
+                <stop offset="0" stop-color="${shade(keyColor(pad), 0.1)}"/>
+                <stop offset=".7" stop-color="${shade(keyColor(pad), -0.08)}"/>
+                <stop offset="1" stop-color="${shade(keyColor(pad), pianoKeys() ? -0.2 : -0.42)}"/>
             </radialGradient>
             <radialGradient id="pl${i}" cx=".5" cy=".45" r=".75">
-                <stop offset="0" stop-color="${shade(pad.color, 0.8)}"/>
-                <stop offset=".45" stop-color="${shade(pad.color, 0.35)}"/>
-                <stop offset="1" stop-color="${shade(pad.color, -0.05)}"/>
+                <stop offset="0" stop-color="${shade(litColor(pad), 0.8)}"/>
+                <stop offset=".45" stop-color="${shade(litColor(pad), 0.35)}"/>
+                <stop offset="1" stop-color="${shade(litColor(pad), -0.05)}"/>
             </radialGradient>`).join("");
         return `<defs>
             <radialGradient id="g-body" cx=".4" cy=".3" r=".85">
@@ -464,14 +474,14 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
 
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -543,7 +553,7 @@
         const look = LOOKS[lookName](mode);
         const pads = look.pads.map(({ shape, label: text }, i) => {
             const pad = mode.pads[i];
-            const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${pad.color}`;
+            const style = `--base:url(#pb${i});--lit:url(#pl${i});--glow:${litColor(pad)}`;
             return `<g class="pad${pad.sharp ? " sharp" : ""}" data-i="${i}" style="${style}" role="button" tabindex="-1" aria-label="${noteName(pad)}">
                 <clipPath id="cp${i}"><${shape}/></clipPath>
                 <${shape} class="face"/>
@@ -576,6 +586,7 @@
         ui.fieldAccidental.hidden = !mode.pads.some((p) => p.flat);
         ui.fieldNames.hidden = !mode.pads.some((p) => p.letter);
         ui.legend.hidden = mode.look !== "teclado";
+        ui.device.classList.toggle("piano-keys", pianoKeys());
         setupStaff();
         hub.el.addEventListener("click", hubAction);
         hub.el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hubAction(); } });
@@ -591,11 +602,12 @@
     const staffOn = () => mode.look === "teclado" && prefs.staff !== "0"; // "1" cor com nome, "3" só cor, "2" só preto
     const STAFF_LOOKS = { 1: "nome", 2: "preto", 3: "cor" };
 
-    const setFigure = (name) => {
+    const setFigure = (name, dots = 0) => {
         const fig = window.SigaDinoStaff.FIGURES[name];
-        if (isMusic()) { ui.staffFigure.textContent = `Figura: ${fig.title}`; return; }
+        const title = `${fig.title}${dots === 2 ? " com ponto duplo" : dots ? " pontuada" : ""}`;
+        if (isMusic()) { ui.staffFigure.textContent = `Figura: ${title}`; return; }
         ui.staffFigure.textContent = isFree()
-            ? `Figura: ${fig.title} — toque mais rápido para mudar`
+            ? `Figura: ${title} — ${prefs.meter ? `cabe no compasso ${prefs.meter}` : "toque mais rápido para mudar"}`
             : `Figura: ${fig.title}${name === "semibreve" ? " (devagar)" : name === "seminima" ? " (rápido)" : ""}`;
     };
 
@@ -605,12 +617,18 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.fieldPauta.hidden = !on || !isFree(); // pauta dupla: no Tocar livre e no Executar música
         ui.fieldTeclado.hidden = !isMusic();
+        ui.fieldKeys.hidden = mode.look !== "teclado";
+        // Compasso do Tocar livre: as figuras das notas tocadas se ajustam ao que cabe no compasso.
+        ui.fieldMeter.hidden = !(isFree() && !isMusic() && mode.pads.some((p) => p.letter));
         ui.staffBox.hidden = !on;
         document.body.classList.toggle("with-staff", on);
         document.body.classList.toggle("free-keys", isFree() && !isMusic() && mode.pads.some((p) => p.letter));
         staff.setMode(mode, noteName, prefs.accidental === "bemol", STAFF_LOOKS[prefs.staff] || "nome",
             { lead: isMusic(), deep: isMusic(), grand: isMusic() ? wantGrand(MUSIC.parse(mu.text.value)) : freeGrand() });
         if (isMusic()) { setFigure("seminima"); renderSong(); return; }
+        freeFill = 0;
+        freeBar = false;
+        if (isFree()) staff.setMeter(prefs.meter); // "3/4" depois da clave
         const fig = staff.figureFor(E.timing(prefs.level, game?.length || 1).on);
         setFigure(isFree() ? "semibreve" : fig);
         if (!game || phase === "show" || phase === "wait") return;
@@ -933,10 +951,38 @@
     };
 
     let freeAt = 0;        // coluna do pentagrama no Tocar livre (acorde = mesma coluna)
+    let freeFill = 0;      // com compasso: quanto do compasso (em semínimas) as notas já ocupam
+    let freeBar = false;   // o compasso encheu: a próxima nota começa outro (barra antes dela)
+    let freeFit = { figure: "semibreve", dots: 0, q: 4 }; // figura da última nota (o acorde usa a mesma)
+    let songMeterText = ""; // fórmula de compasso da música do editor ("9/8")
+    /** Semínimas que cabem no compasso ("3/4" = 3, "6/8" = 3, "C" = 4); 0 = sem compasso. */
+    const meterQuarters = (text) => {
+        const t = text === "C" ? "4/4" : text === "¢" ? "2/2" : String(text || "");
+        const m = /^(\d{1,2})\/(\d{1,2})$/.exec(t);
+        return m ? (Number(m[1]) * 4) / Number(m[2]) : 0;
+    };
+    /** Compasso valendo para as teclas tocadas: o do Tocar livre ou o da música do editor. */
+    const freeMeterText = () => (isMusic() ? songMeterText : isFree() ? prefs.meter : "");
+    // Figuras possíveis (nome, pontos, semínimas), da maior para a menor.
+    const FIT_FIGS = [["breve", 0, 8], ["semibreve", 1, 6], ["semibreve", 0, 4], ["minima", 1, 3], ["minima", 0, 2],
+        ["seminima", 1, 1.5], ["seminima", 0, 1], ["colcheia", 1, 0.75], ["colcheia", 0, 0.5], ["semicolcheia", 0, 0.25]];
+    const QUARTERS = { breve: 8, semibreve: 4, minima: 2, seminima: 1 };
+    /**
+     * Com compasso, a figura pedida pelo ritmo tem que caber no que sobra do compasso:
+     * no 3/4 a semibreve (4 tempos) vira mínima pontuada; no fim do compasso, a maior que couber.
+     */
+    const fitFigure = (name, cap) => {
+        const q = QUARTERS[name] || 1;
+        if (!cap) return { figure: name, dots: 0, q };
+        const want = Math.min(q, cap - freeFill);
+        const [figure, dots, v] = FIT_FIGS.find(([, , val]) => val <= want + 1e-9) || FIT_FIGS[FIT_FIGS.length - 1];
+        return { figure, dots, q: v };
+    };
     /** Pauta dupla no Tocar livre: só quando escolhida na opção Pauta ("Sol e Fá"). */
     const freeGrand = () => isFree() && !isMusic() && prefs.pauta === "dupla";
     /** Tocar livre: acende e toca; no visor aparece a nota (se o nome for curto). */
     const playFree = (i, source = "") => {
+        if (practice) { practicePress(i); return; } // praticando: a tecla é a resposta
         light(i, 420);
         if (songPlaying()) return; // a música do editor está tocando: só acende e toca
         // A figura segue o ritmo de quem toca: devagar = semibreve, rápido = semínima.
@@ -948,20 +994,30 @@
             && source && lastSource && source !== lastSource && held.has(lastSource);
         lastSource = source;
         const sinceChord = lastChordAt ? now - lastChordAt : 99999;
+        let newBar = false;
         if (!chord) {
             chordStart = now;
             // A figura sai do intervalo entre um toque (ou acorde) e o próximo.
             freeFigure = sinceChord > 900 ? "semibreve" : sinceChord > 450 ? "minima" : "seminima";
+            // Com compasso: a figura se ajusta ao que sobra e o compasso cheio ganha a barra.
+            const cap = meterQuarters(freeMeterText());
+            freeFit = fitFigure(freeFigure, cap);
+            newBar = freeBar;
+            freeBar = false;
+            if (cap) {
+                freeFill += freeFit.q;
+                if (freeFill >= cap - 1e-9) { freeFill = 0; freeBar = true; }
+            } else freeFill = 0;
             lastChordAt = now;
-            if (staffOn()) setFigure(freeFigure);
+            if (staffOn()) setFigure(freeFit.figure, freeFit.dots);
         }
         lastFreeAt = now;
         if (!chord) freeAt++;
         // Piano no Tocar livre (pauta dupla): abaixo do Dó central vai para a clave de Fá;
         // o acorde com notas dos dois lados fica na mesma vertical (mesma coluna, freeAt).
         const hand = staff.grand && mode.pads[i].octave < 0 ? "me" : "md";
-        if (staffOn()) staff.done(staff.push(i, freeFigure, 420, chord, { hand, at: freeAt }));
-        if (!isMusic()) transcribe(i, freeFigure, chord, sinceChord);
+        if (staffOn()) staff.done(staff.push(i, freeFit.figure, 420, chord, { hand, at: freeAt, dotted: freeFit.dots, bar: newBar }));
+        if (!isMusic()) transcribe(i, freeFit, chord, sinceChord, newBar);
         const pad = mode.pads[i];
         const text = noteName(pad);
         setCount(text.length <= 4 ? text.toUpperCase() : "♪", text.length > 3 ? 0.78 : 1);
@@ -1008,7 +1064,8 @@
     const mu = {
         text: $("song-text"), name: $("song-name"), tempo: $("song-tempo"), example: $("song-example"),
         open: $("btn-song-open"), save: $("btn-song-save"), saveAs: $("btn-song-saveas"),
-        play: $("btn-song-play"), playHere: $("btn-song-here"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
+        play: $("btn-song-play"), playHere: $("btn-song-here"), practice: $("btn-song-practice"),
+        practiceHand: $("practice-hand"), practiceHint: $("practice-hint"), speed: $("song-speed"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
     };
     const savedSong = storage.get(SONG_KEY);
     const song = {
@@ -1133,19 +1190,35 @@
         closeGroup("me");
         songSlots = slots;
         if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
+        // Teclas tocadas depois da música seguem o compasso dela, a partir de onde ela terminou.
+        songMeterText = info.meter;
+        const cap = meterQuarters(info.meter);
+        const voice = songEvents[0]?.hand || "md";
+        const end = Math.max(0, ...songEvents.filter((ev) => ev.hand === voice).map((ev) => ev.at + Math.round(ev.frac * MUSIC.UNIT)));
+        freeFill = cap ? Math.round((((end / MUSIC.UNIT) * 4) % cap) * 8) / 8 : 0;
+        freeBar = false;
     };
 
     const updatePlayButton = () => {
-        mu.play.textContent = songPlaying() ? "⏹ Parar" : "▶ Tocar";
+        mu.play.textContent = songPlaying() && !practice ? "⏹ Parar" : "▶ Tocar";
         mu.playHere.disabled = songPlaying();
         mu.play.classList.toggle("primary", !songPlaying());
         mu.play.title = songPlaying() ? "Parar a música" : "Tocar a música do editor";
+        mu.practice.textContent = practice ? "⏹ Parar a prática" : "🎹 Praticar";
+        mu.practice.classList.toggle("primary", !!practice);
     };
 
     const stopSong = () => {
         songRun++;
         if (songAt >= 0) padEls.forEach((el) => el.classList.remove("lit"));
         songAt = -1;
+        if (practice) {
+            const done = practice.resolve;
+            practice = null;
+            done?.(false);
+            clearHints();
+            staff.unmarkAll();
+        }
         updatePlayButton();
     };
 
@@ -1177,38 +1250,16 @@
             setStatus("Não achei notas no editor. Exemplo: E[n1/4]; F[n1/4]; G[n1/2]; — veja a Ajuda.", "soft");
             return;
         }
-        // Trecho: notas que tocam a seleção; sem seleção, a 1ª nota que termina depois do cursor.
-        // Com as duas mãos, o trecho vale pelo tempo: começa no instante da 1ª nota escolhida
-        // e vai até o fim da última (a outra mão toca junto nesse intervalo).
-        let k0 = 0, k1 = events.length;
-        let part = "";
+        const range = songRange(events, fromCursor);
+        if (range.error) { renderSong(); setStatus(range.error, "soft"); return; }
+        const { k0, k1, part } = range;
         const U = MUSIC.UNIT;
         const endOf = (ev) => ev.at + Math.round(ev.frac * U);
-        if (fromCursor) {
-            const a = mu.text.selectionStart, b = mu.text.selectionEnd;
-            const picked = events.filter((ev) => ev.to > a && (b > a ? ev.from < b : true));
-            const first = picked.reduce((m, ev) => (!m || ev.from < m.from ? ev : m), null);
-            if (first) {
-                k0 = events.findIndex((ev) => ev.at >= first.at);
-                if (b > a) {
-                    const stop = Math.max(...picked.map(endOf));
-                    k1 = events.findIndex((ev) => ev.at >= stop);
-                    if (k1 < 0) k1 = events.length;
-                }
-            } else k0 = -1;
-            part = b > a ? "trecho marcado" : "do cursor em diante";
-            if (k0 < 0 || k0 >= k1) {
-                renderSong();
-                setStatus(b > a ? "Não há notas no trecho marcado." : "Não há notas depois do cursor. Coloque o cursor antes de uma nota.", "soft");
-                return;
-            }
-        }
         const id = songRun;
         songAt = k0;
         updatePlayButton();
         renderSong();
-        const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 160));
-        const quarter = 60000 / bpm;
+        const quarter = quarterMs();
         const outside = events.some((ev) => ev.kind === "note" && ev.notes.some((n) => {
             const p = mode.pads[padForSemi(n.semi)];
             return p && semiOf(p) !== n.semi;
@@ -1235,6 +1286,7 @@
             const nextAt = kEnd < k1 ? events[kEnd].at : Math.max(...events.slice(k, kEnd).map(endOf));
             const wait = (nextAt - at) / U * 4 * quarter; // semibreve = 4 semínimas
             const moment = events.slice(k, kEnd);
+            const struck = new Set(); // a mesma tecla em duas vozes no mesmo instante toca uma vez só
             moment.forEach((ev) => {
                 const ms = ev.frac * 4 * quarter;
                 const on = Math.max(60, ms * 0.9);      // um respiro entre as notas
@@ -1242,7 +1294,8 @@
                     const i = padForSemi(n.semi);
                     // Nota ligada à anterior: não toca de novo (continua soando). Começando
                     // por ela (do cursor), toca o que sobra da ligadura.
-                    if (i < 0 || (n.tied && at > startAt)) return;
+                    if (i < 0 || (n.tied && at > startAt) || struck.has(i)) return;
+                    struck.add(i);
                     const holdMs = (n.hold || ev.frac) * 4 * quarter;
                     light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
                 });
@@ -1263,6 +1316,190 @@
         setStatus(part === "trecho marcado"
             ? "Fim do trecho marcado. 🎵 Toque em ⏯ Do cursor para ouvir de novo."
             : "Fim da música! 🎉 Toque em ▶ Tocar para ouvir de novo.", "good");
+    };
+
+    /**
+     * Trecho a tocar: com fromCursor, as notas da seleção ou, sem seleção, da 1ª nota que
+     * termina depois do cursor até o fim. Com as duas mãos, o trecho vale pelo tempo: começa
+     * no instante da 1ª nota escolhida e vai até o fim da última (a outra mão toca junto).
+     * Devolve { k0, k1, part, marked } ou { error }.
+     */
+    const songRange = (events, fromCursor) => {
+        if (!fromCursor) return { k0: 0, k1: events.length, part: "", marked: false };
+        const a = mu.text.selectionStart, b = mu.text.selectionEnd;
+        const endOf = (ev) => ev.at + Math.round(ev.frac * MUSIC.UNIT);
+        const picked = events.filter((ev) => ev.to > a && (b > a ? ev.from < b : true));
+        const first = picked.reduce((m, ev) => (!m || ev.from < m.from ? ev : m), null);
+        let k0 = -1, k1 = events.length;
+        if (first) {
+            k0 = events.findIndex((ev) => ev.at >= first.at);
+            if (b > a) {
+                const stop = Math.max(...picked.map(endOf));
+                k1 = events.findIndex((ev) => ev.at >= stop);
+                if (k1 < 0) k1 = events.length;
+            }
+        }
+        if (k0 < 0 || k0 >= k1) {
+            return { error: b > a ? "Não há notas no trecho marcado." : "Não há notas depois do cursor. Coloque o cursor antes de uma nota." };
+        }
+        return { k0, k1, part: b > a ? "trecho marcado" : "do cursor em diante", marked: b > a };
+    };
+    /** Duração da semínima (ms): o ♩ = do editor e a Velocidade (100%, 75%, 50%…). */
+    const quarterMs = () => {
+        const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 160));
+        return 60000 / bpm / (Number(prefs.speed) || 1);
+    };
+
+    // =================================================================
+    // Praticar: a música espera você tocar a tecla certa antes de seguir
+    // =================================================================
+    // practice = { need, got, hold, resolve, hits, misses, wrongHere } enquanto pratica.
+    let practice = null;
+    const HAND_WORD = { ambas: "as duas mãos", md: "a mão direita", me: "a mão esquerda" };
+    /** Nome da nota como está escrita na música (Lá♭, não Sol♯, com a armadura de Ré♭). */
+    const spelledName = (n) => {
+        const li = ((n.step % 7) + 7) % 7;
+        const nat = mode.pads.filter((p) => !p.sharp)[li];
+        const d = n.semi - (Math.floor(n.step / 7) * 12 + [0, 2, 4, 5, 7, 9, 11][li]);
+        return (nat ? noteName(nat) : "") + (d > 0 ? "♯".repeat(d) : "♭".repeat(-d));
+    };
+    const clearHints = () => padEls.forEach((el) => el?.classList.remove("hint"));
+    const showHints = (list) => list.forEach((i) => padEls[i]?.classList.add("hint"));
+    /** Espera as teclas do momento (acorde: todas, em qualquer ordem). false = parou. */
+    const waitKeys = (need, hold) => new Promise((resolve) => Object.assign(practice, { need, hold, got: new Set(), resolve, wrongHere: 0 }));
+
+    /** Tecla apertada durante a prática: certa (some a dica), repetida ou errada. */
+    const practicePress = (i) => {
+        const p = practice;
+        if (!p.need) { light(i, 300); return; } // a outra mão está tocando: só soa
+        if (!p.need.has(i) || p.got.has(i)) {
+            light(i, 300);
+            if (p.got.has(i)) return;
+            p.misses++;
+            p.wrongHere++;
+            padEls[i]?.classList.add("wrong");
+            setTimeout(() => padEls[i]?.classList.remove("wrong"), 600);
+            const left = [...p.need].filter((k) => !p.got.has(k));
+            // Sem dica: depois de 2 erros na mesma nota, a tecla certa acende para ajudar.
+            if (prefs.practiceHint === "0" && p.wrongHere >= 2) showHints(left);
+            setStatus(`Ops! Essa é ${noteName(mode.pads[i])}. ${prefs.practiceHint !== "0" || p.wrongHere >= 2
+                ? `Toque ${left.map((k) => p.names?.get(k) || noteName(mode.pads[k])).join(" + ")} (a tecla que pisca).`
+                : "Olhe a nota marcada no pentagrama e tente de novo."} · ✔ ${p.hits} · ✖ ${p.misses}`, "soft");
+            return;
+        }
+        p.got.add(i);
+        light(i, p.hold.get(i) || 420);
+        padEls[i]?.classList.remove("hint");
+        if (p.got.size < p.need.size) return; // acorde: faltam teclas
+        const done = p.resolve;
+        p.need = null;
+        p.resolve = null;
+        done(true);
+    };
+
+    /**
+     * Praticar: toca a música esperando você. Em cada instante, as teclas da mão escolhida
+     * acendem (dica) e a nota fica marcada no pentagrama; a música só segue quando você toca
+     * todas. A outra mão (e as pausas) tocam sozinhas, no ritmo da Velocidade escolhida.
+     * Com um trecho marcado no texto, ele se repete até você parar.
+     */
+    const practiceSong = async () => {
+        stopSong();
+        sound.ensure();
+        sound.load(prefs.timbre);
+        const parsed = MUSIC.parse(mu.text.value);
+        const { events, tempo } = parsed;
+        if (tempo && tempo !== song.textTempo) { mu.tempo.value = tempo; song.textTempo = tempo; }
+        songEvents = events;
+        syncKeyboard(parsed);
+        if (!events.length) {
+            renderSong();
+            setStatus("Não achei notas no editor para praticar. Escolha uma música em 🎼 Músicas… ou escreva as notas.", "soft");
+            return;
+        }
+        // Trecho marcado: repete. Sem marcação: do cursor (ou do começo, se o cursor está depois da última nota).
+        let range = songRange(events, true);
+        if (range.error && !(mu.text.selectionEnd > mu.text.selectionStart)) range = songRange(events, false);
+        if (range.error) { renderSong(); setStatus(range.error, "soft"); return; }
+        const { k0, k1, marked } = range;
+        let hand = prefs.practiceHand;
+        let note = "";
+        if (hand === "me" && parsed.hands < 2) { hand = "ambas"; note = " (esta música não tem mão esquerda)"; }
+        const mine = (ev) => hand === "ambas" || (ev.hand || "md").startsWith(hand);
+        const id = songRun;
+        practice = { need: null, got: new Set(), hold: new Map(), resolve: null, hits: 0, misses: 0, wrongHere: 0 };
+        songAt = k0;
+        updatePlayButton();
+        renderSong();
+        mu.info.textContent = infoText(parsed);
+        sound.timbre = prefs.timbre;
+        await sound.ready();
+        if (id !== songRun) return;
+        const U = MUSIC.UNIT;
+        const quarter = quarterMs();
+        const startAt = events[k0].at;
+        const slotsOf = (list) => list.flatMap((ev) => songSlots[events.indexOf(ev)] || []);
+        setStatus(`🎹 Praticando ${HAND_WORD[hand]}${note}${marked ? " no trecho marcado (ele se repete)" : ""}: toque as teclas que piscam. A música espera você.`, "turn");
+        for (let round = 0; ; round++) {
+            let prevAt = null;
+            for (let k = k0; k < k1;) {
+                if (id !== songRun) return;
+                songAt = k;
+                const at = events[k].at;
+                let kEnd = k;
+                while (kEnd < k1 && events[kEnd].at === at) kEnd++;
+                const moment = events.slice(k, kEnd);
+                // Teclas do momento: as da mão praticada esperam você; as outras tocam sozinhas.
+                const need = new Set(), hold = new Map(), others = new Map(), names = new Map();
+                moment.forEach((ev) => {
+                    if (ev.kind !== "note") return;
+                    ev.notes.forEach((n) => {
+                        const i = padForSemi(n.semi);
+                        if (i < 0 || (n.tied && at > startAt)) return; // ligada: continua soando
+                        const ms = Math.max(60, (n.hold || ev.frac) * 4 * quarter * 0.95);
+                        if (mine(ev)) { need.add(i); hold.set(i, Math.max(hold.get(i) || 0, ms)); names.set(i, spelledName(n)); }
+                        else others.set(i, { ms, freq: freqOfSemi(n.semi) });
+                    });
+                });
+                if (need.size) {
+                    const marks = slotsOf(moment.filter(mine));
+                    marks.forEach((slot) => staff.mark(slot, true));
+                    if (prefs.practiceHint !== "0") showHints([...need]);
+                    const list = [...need].map((i) => names.get(i));
+                    practice.names = names;
+                    setCount(list.length === 1 && list[0].length <= 4 ? list[0].toUpperCase() : "♪", list[0]?.length > 3 ? 0.78 : 1);
+                    if (round || k > k0 || practice.hits) {
+                        setStatus(`${prefs.practiceHint !== "0" ? `Toque ${list.join(" + ")}` : "Toque a nota marcada no pentagrama"} · compasso ${moment[0].measure || "—"} · ✔ ${practice.hits} · ✖ ${practice.misses}`, "turn");
+                    }
+                    const ok = await waitKeys(need, hold);
+                    if (!ok || id !== songRun) return;
+                    clearHints();
+                    marks.forEach((slot) => staff.mark(slot, false));
+                    practice.hits++;
+                } else if (prevAt != null) {
+                    // Só a outra mão (ou pausa): espera o ritmo desde o último instante.
+                    await sleep(((at - prevAt) / U) * 4 * quarter);
+                    if (id !== songRun) return;
+                }
+                others.forEach(({ ms, freq }, i) => { if (!need.has(i)) light(i, ms, freq); });
+                slotsOf(moment).forEach((slot) => { staff.light(slot, 260); staff.done(slot); });
+                prevAt = at;
+                k = kEnd;
+            }
+            if (!marked || id !== songRun) break;
+            setStatus(`🔁 Muito bem! De novo, desde o começo do trecho… · ✔ ${practice.hits} · ✖ ${practice.misses}`, "good");
+            await sleep(1400);
+            if (id !== songRun) return;
+            songAt = k0;
+            renderSong();
+        }
+        if (id !== songRun) return;
+        const { hits, misses } = practice;
+        stopSong();
+        setCount("♪");
+        const stars = misses === 0 ? "⭐⭐⭐" : misses <= Math.max(1, hits * 0.1) ? "⭐⭐" : "⭐";
+        setStatus(`Fim da prática! ${hits} ${hits === 1 ? "acerto" : "acertos"} e ${misses} ${misses === 1 ? "erro" : "erros"} ${stars} ` +
+            "Marque um trecho no texto para repetir só ele, ou diminua a Velocidade.", "good");
     };
 
     // ---------- Arquivo: abrir, salvar, salvar como ----------
@@ -1399,6 +1636,14 @@
         stopSong();
         setStatus("Música parada. Toque em ▶ Tocar para começar de novo.", "soft");
     });
+    mu.practice.addEventListener("mousedown", (e) => e.preventDefault()); // não tira a marcação do texto
+    mu.practice.addEventListener("click", () => {
+        if (!practice) { practiceSong(); return; }
+        const { hits, misses } = practice;
+        stopSong();
+        setCount("♪");
+        setStatus(`Prática parada (✔ ${hits} · ✖ ${misses}). Toque em 🎹 Praticar para começar de novo.`, "soft");
+    });
     mu.clear.addEventListener("click", () => {
         if (mu.text.value.trim() && !window.confirm("Apagar todo o texto do editor?")) return;
         setSongText("", "nova-musica.txt");
@@ -1425,7 +1670,9 @@
         clear: $("btn-free-clear"), send: $("btn-free-send"),
     };
     const FREE_KEY = "dinogames-sigadino-free-notes";
-    const FRAC_CODE = { semibreve: "1", minima: "1/2", seminima: "1/4" };
+    const FRAC_CODE = { breve: "2", semibreve: "1", minima: "1/2", seminima: "1/4", colcheia: "1/8", semicolcheia: "1/16" };
+    /** Cabeçalho do texto levado ao Executar música (com a fórmula de compasso escolhida). */
+    const freeHeader = () => `Música: Minha música\nAndamento: semínima = 160\n${prefs.meter ? `Compasso: ${prefs.meter}\n` : ""}\n`;
     // A caixinha é texto comum (dá para editar, desfazer, copiar e colar); as notas tocadas
     // entram no fim. Versão antiga guardava a lista de notas: vira texto uma vez.
     const freeSaved = storage.get(FREE_KEY) || {};
@@ -1446,11 +1693,14 @@
         storage.set(FREE_KEY, { text: tr.text.value });
     };
     tr.text.addEventListener("input", renderFree);
-    /** Acrescenta a nota tocada (ou junta no acorde). Pausa longa ou 8 notas na linha = linha nova. */
-    function transcribe(i, figure, chord, sinceMs) {
+    /**
+     * Acrescenta a nota tocada (ou junta no acorde). Com compasso, cada compasso numa linha;
+     * sem compasso, pausa longa ou 8 notas na linha = linha nova.
+     */
+    function transcribe(i, fit, chord, sinceMs, newBar = false) {
         const code = codeOf(mode.pads[i]);
         if (!code) return;
-        const token = `${code}[n${FRAC_CODE[figure] || "1/4"}]`;
+        const token = `${code}[n${FRAC_CODE[fit.figure] || "1/4"}${".".repeat(fit.dots || 0)}]`;
         const text = tr.text.value.replace(/\s+$/, "");
         let next;
         if (chord && text.endsWith(";")) {
@@ -1458,7 +1708,8 @@
         } else {
             const line = text.slice(text.lastIndexOf("\n") + 1);
             const onLine = (line.match(/;/g) || []).length;
-            next = `${text}${!text ? "" : sinceMs > 2500 || onLine >= 8 ? "\n" : " "}${token};`;
+            const breakLine = prefs.meter ? newBar : sinceMs > 2500 || onLine >= 8;
+            next = `${text}${!text ? "" : breakLine ? "\n" : " "}${token};`;
         }
         tr.text.value = next;
         tr.text.scrollTop = tr.text.scrollHeight;
@@ -1470,13 +1721,13 @@
         setStatus("Caixinha de notas limpa. Toque as teclas para escrever de novo. 🎶", "turn");
     });
     tr.save.addEventListener("click", async () => {
-        const text = `Música: Minha música\nAndamento: semínima = 160\n\n${tr.text.value}\n`;
+        const text = `${freeHeader()}${tr.text.value}\n`;
         const saved = await saveTextFile(text, "minha-musica.txt");
         if (saved) setStatus(`Notas salvas em “${saved.name}”. 💾 Abra no Executar música para tocar.`, "good");
     });
     tr.send.addEventListener("click", () => {
         if (!okToReplace()) return;
-        const text = `Música: Minha música\nAndamento: semínima = 160\n\n${tr.text.value}\n`;
+        const text = `${freeHeader()}${tr.text.value}\n`;
         prefs.play = "musica";
         ui.play.value = "musica";
         storage.set(PREFS_KEY, prefs);
@@ -1577,6 +1828,8 @@
         staff.clear();
         lastFreeAt = 0;
         lastChordAt = 0;
+        freeFill = 0;
+        freeBar = false;
     });
     ui.btnPause.addEventListener("click", togglePause);
 
@@ -1618,6 +1871,17 @@
     bindSelect(ui.pautaOpt, "pauta", () => (isMusic() ? renderSong() : build())); // clave de Sol, pauta dupla ou automática
     bindSelect(ui.tecladoOpt, "teclado", () => { stopSong(); mode = pickMode(); build(); }); // oitavas do teclado
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
+    bindSelect(ui.keysOpt, "keys", () => build()); // teclas coloridas ou preto e branco
+    // Praticar (Executar música): mão, dica e velocidade
+    bindSelect(mu.practiceHand, "practiceHand", () => { if (practice) practiceSong(); });
+    bindSelect(mu.practiceHint, "practiceHint", () => { if (practice) practiceSong(); });
+    bindSelect(mu.speed, "speed", () => { if (songPlaying()) setStatus("A nova Velocidade vale na próxima vez que tocar ou praticar.", "soft"); });
+    bindSelect(ui.meterOpt, "meter", () => { // compasso do Tocar livre
+        build();
+        setStatus(prefs.meter
+            ? `Compasso ${prefs.meter}: as figuras das notas se ajustam ao que cabe em cada compasso. 🎼`
+            : "Sem compasso: a figura segue só o ritmo de quem toca.", "turn");
+    });
 
     // Legenda: Nota - Letra - Cor (aberta ou fechada fica salva).
     ui.legendRows.innerHTML = (window.SIGA_DINO_LEGEND || []).map((p) =>

@@ -438,114 +438,249 @@ Fim
 Observação: Esta transcrição apresenta o tema principal da melodia completo, com dezesseis compassos e o acorde final, com base na pauta superior da partitura da página 3 (compassos 1 a 8) e na continuação do tema (compassos 9 a 16). Não representa o acompanhamento da pauta inferior do piano.
 `;
 
-    // Igual ao arquivo "Clair_de_Lune_notas.txt" (os 14 compassos da 1ª página, as duas mãos).
+    // Igual ao arquivo "Clair_de_Lune_notas.txt" (os 36 compassos em Ré♭ maior, as duas mãos).
     const CLAIR = `Música: Clair de Lune – Claude Debussy
-Transcrição em texto: os 14 compassos da 1ª página (as duas mãos)
+Transcrição em texto: os 36 compassos em Ré♭ maior (as duas mãos), até antes do "En animant"
 
 Referência: Suite bergamasque, 3º movimento, 1ª edição (E. Fromont, Paris, 1905),
-página 14 — partitura em domínio público (IMSLP #83536).
+páginas 14 a 16 — domínio público (IMSLP #83536), conferida com a edição digital do
+Mutopia Project (Keith OHara, a partir da mesma edição de 1905, domínio público).
 Andante très expressif · pp · con sordina
 Tom: Ré♭ maior
 Compasso: 9/8
 Andamento: semínima. = 52
 
 Convenção utilizada:
-MD = mão direita (melodia); MD2 = 2ª voz da mão direita (notas longas por baixo)
-ME = mão esquerda; ME2 = 2ª voz da mão esquerda (o baixo, a partir do compasso 10)
-Com o Tom de Ré♭ maior, B, E, A, D e G já são bemóis; A♮ = Lá natural.
-[s…] = espera em silêncio (só para a 2ª voz começar no lugar certo)
-{2 …} = duína: 2 colcheias no tempo de 3; ~ = ligadura
+MD = mão direita (melodia); MD2 = 2ª voz da mão direita
+ME = mão esquerda; ME2 = 2ª voz da mão esquerda (o baixo)
+Com o Tom de Ré♭ maior, B, E, A, D e G já são bemóis; A♮ = Lá natural; Bbb = Si dobrado bemol.
+[s…] = espera em silêncio (só para a voz começar no lugar certo)
+{2 …} = duína: 2 colcheias no tempo de 3; {6:9 …} = 6 colcheias no tempo de 9; ~ = ligadura
 
-Compasso 1:
-MD:  [p1/8]; [p1/8]; 2F[n1/8], 2A[n1/8]~ 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
+Compasso 1 (Andante très expressif):
+MD:  [p1/4]; 2F[n1/8], 2A[n1/8]~ 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
 MD2: [s1/2.]; [s1/4.];
-ME:  [p1/4]; F[n1/8], A[n1/8]~ F[n1/2.], A[n1/2.];
+ME:  [p1/8]; F[n1/4], A[n1/4]~ F[n1/2.], A[n1/2.];
 ME2: [s1/2.]; [s1/4.];
 
 Compasso 2:
 MD:  2D[n1/8], 2F[n1/8]; 2C[n1/8], 2E[n1/8]; 2D[n1/8], 2F[n1/8]; 2C[n1/2.], 2E[n1/2.]~
 MD2: [s1/2.]; [s1/4.];
-ME:  G[n1/2.], A♮[n1/2.]~ G[n1/4.], A[n1/4.];
+ME:  G[n1/2.], Bbb[n1/2.]~ G[n1/4.], Bbb[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
 Compasso 3:
 MD:  2C[n1/8], 2E[n1/8]; B[n1/8], 2D[n1/8]; 2C[n1/8], 2E[n1/8]; {2 2D[n1/8]; 2F[n1/8]~} {2 2F[n1/8]; 2D[n1/8]~}
-MD2: [s1/4.]; A[n1/2.];
+MD2: [s1/4.]; B[n1/2.]~
 ME:  F[n1/2.], A[n1/2.]~ F[n1/4.], A[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
 Compasso 4:
-MD:  B[n1/8], 2D[n1/8]; A[n1/8], 2C[n1/8]; B[n1/8], 2D[n1/8]; A[n1/2.], 2C[n1/2.]~
-MD2: [s1/2.]; [s1/4.];
+MD:  2D[n1/8]; A[n1/8], 2C[n1/8]; B[n1/8], 2D[n1/8]; A[n1/2.], 2C[n1/2.]~
+MD2: B[n1/8]; [s1];
 ME:  E[n1/2.], G[n1/2.]~ E[n1/4.], G[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
 Compasso 5:
 MD:  2C[n1/8]; B[n1/8]; 2C[n1/8]; B[n1/8]; 2E[n1/8]; B[n1/8]; A[n1/8]; B[n1/8]; A[n1/8]~
 MD2: G[n1/2.]; G[n1/4.];
-ME:  C[n1/2.], E[n1/2.]; C[n1/4.], E[n1/4.];
-ME2: [s1/2.]; [s1/4.];
+ME:  E[n1/2.]; E[n1/4.];
+ME2: D[n1/2.]; C[n1/4.];
 
 Compasso 6:
-MD:  A[n1/8]; G[n1/8]; A[n1/8]; G[n1/4.]; F[n1/4.];
+MD:  A[n1/8]; G[n1/8]; A[n1/8]; G[n1/4.]; F[n1/4.]~
 MD2: E[n1/2.]; E[n1/4.];
-ME:  0B[n1/2.], C[n1/2.]; 0A♮[n1/4.], C[n1/4.];
-ME2: [s1/2.]; [s1/4.];
+ME:  D[n1/2.]; C[n1/4.];
+ME2: 0B[n1/2.]; 0A♮[n1/4.];
 
 Compasso 7 (a mão esquerda passa para a clave de Fá):
-MD:  G[n1/8]; F[n1/8]; G[n1/8]; F[n1/8]; B[n1/8]; F[n1/8]; E[n1/8]; F[n1/8]; E[n1/8]~
-MD2: D[n1/2.]; D[n1/4.];
-ME:  0A[n1/2.], 0B[n1/2.]; 0G[n1/4.], 0B[n1/4.];
-ME2: [s1/2.]; [s1/4.];
+MD:  F[n1/8]; F[n1/8]; G[n1/8]; F[n1/8]; B[n1/8]; F[n1/8]; E[n1/8]; F[n1/8]; E[n1/8]~
+MD2: D[n1/2.]~ D[n1/4.];
+ME:  0B[n1/2.]~ 0B[n1/4.];
+ME2: 0A[n1/2.]; 0G[n1/4.];
 
 Compasso 8:
 MD:  E[n1/8]; D[n1/8]; E[n1/8]; D[n1/4.]; C[n1/4.];
 MD2: 0B[n1/2.]; 0A[n1/4.];
-ME:  0E[n1/2.], 0A[n1/2.]; {2 0E[n1/8], 0G[n1/8]; -1A[n1/8];}
-ME2: [s1/2.]; [s1/4.];
+ME:  0A[n1/2.]; 0G[n1/4.];
+ME2: 0F[n1/2.]; {2 0E[n1/8]; -1A[n1/8]~}
 
 Compasso 9 (volta o tema do começo; a mão esquerda faz um arpejo):
-MD:  [p1/8]; [p1/8]; 2F[n1/8], 2A[n1/8]~ 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
+MD:  [p1/4.]; 2F[n1/4.], 2A[n1/4.]; 2D[n1/4.], 2F[n1/4.]~
 MD2: [s1/2.]; [s1/4.];
-ME:  -1D[n1/8], -1A[n1/8]; 0F[n1/8], 0A[n1/8]; F[n1/8], A[n1/8]~ F[n1/2.], A[n1/2.];
-ME2: [s1/2.]; [s1/4.];
+ME:  [s1/2.]; [s1/4.];
+ME2: -1D[n1/8], -1A[n1/8]; 0F[n1/8], 0A[n1/8]; F[n1/8], A[n1/8]~ F[n1/2.], A[n1/2.];
 
 Compasso 10:
 MD:  2D[n1/8], 2F[n1/8]; 2E[n1/8]; 2F[n1/8]; 2E[n1/2.]~
-MD2: [p1/8]; G[n1/4], B[n1/4]; F[n1/2.], A[n1/2.];
+MD2: [p1/8]; G[n1/4], B[n1/4]~ G[n1/2.], B[n1/2.];
 ME:  [p1/8]; 0D[n1/4], 0G[n1/4], 0B[n1/4], D[n1/4]~ 0D[n1/2.], 0G[n1/2.], 0B[n1/2.], D[n1/2.];
 ME2: -1G[n1/2.], 0D[n1/2.]; [s1/4.];
 
 Compasso 11:
-MD:  A[n1/8], 2E[n1/8]; D[n1/8], 2D[n1/8]; E[n1/8], 2E[n1/8]; A[n1/4.], 2D[n1/4.], 2A[n1/4.]; F[n1/4.], 2D[n1/4.], 2F[n1/4.]~
-MD2: [s1/2.]; [s1/4.];
+MD:  2E[n1/8]; 2D[n1/8], D[n1/8]; 2E[n1/8], E[n1/8]; 2A[n1/4.], 2D[n1/4.], A[n1/4.]; 2F[n1/4.], 2D[n1/4.], F[n1/4.]~
+MD2: [s1/8]; A[n1/4]; [s1/2.];
 ME:  [p1/8]; 0F[n1/4], 0A[n1/4]; D[n1/4.], F[n1/4.]; 0A[n1/4.], D[n1/4.];
 ME2: -1F[n1/2.], 0D[n1/2.]; [s1/4.];
 
 Compasso 12:
 MD:  2F[n1/8]; 2E[n1/8]; 2F[n1/8]; 2E[n1/4.]; 2D[n1/4.]~
-MD2: [p1/8]; G[n1/4], B[n1/4]; F[n1/2.], A[n1/2.];
+MD2: [p1/8]; G[n1/4], B[n1/4]~ G[n1/2.], B[n1/2.];
 ME:  [p1/8]; 0D[n1/4], 0G[n1/4], 0B[n1/4], D[n1/4]~ 0D[n1/2.], 0G[n1/2.], 0B[n1/2.], D[n1/2.];
 ME2: -1G[n1/2.], 0D[n1/2.]; [s1/4.];
 
-Compasso 13 (Dó♭ na mão esquerda: Lá♭ menor sobre o Lá♭ grave):
-MD:  A[n1/8], 2D[n1/8]; E[n1/8], 2D[n1/8]; E[n1/8], 2E[n1/8]; {2 B[n1/8], 2B[n1/8]; A[n1/8], 2A[n1/8]~} {2 A[n1/8], 2A[n1/8]; F[n1/8], 2F[n1/8]~}
-MD2: [s1/2.]; [s1/4.];
-ME:  [p1/8]; 0F[n1/4], C♭[n1/4]; C♭[n1/4.], E[n1/4.], F[n1/4.]~ C♭[n1/8], E[n1/8], F[n1/8]; [p1/8]; [p1/8];
-ME2: -1A[n1/2.]~ -1A[n1/4.]~
+Compasso 13:
+MD:  2D[n1/8]; 2D[n1/8], D[n1/8]; 2E[n1/8], E[n1/8]; {2 2B[n1/8], B[n1/8]; 2A[n1/8], A[n1/8]~} {2 2A[n1/8], A[n1/8]; 2F[n1/8], F[n1/8];}
+MD2: [s1/8]; A[n1/4]; 2F[n1/2.];
+ME:  [p1/8]; 0F[n1/4], C♭[n1/4]; C♭[n1/4.], D[n1/4.], F[n1/4.]~ C♭[n1/8], D[n1/8], F[n1/8]; [p1/8]; [p1/8];
+ME2: -1A[n1/2.]~ -1A[n1/4.];
 
 Compasso 14:
 MD:  2F[n1/8]; 2E[n1/8]; 2F[n1/8]; {2 2E[n1/8]; 2D[n1/8]~} {2 2D[n1/8]; B[n1/8];}
-MD2: [p1/8]; F[n1/4], B[n1/4]~ F[n1/2.], A[n1/2.];
-ME:  [p1/8]; 0F[n1/4], 0B[n1/4], E[n1/4]~ {2 0E[n1/8], 0B[n1/8], E[n1/8]; D[n1/8]~} D[n1/4.];
-ME2: -1A[n1/2.]~ -1A[n1/4.];
+MD2: [p1/8]; F[n1/4], B[n1/4]~ F[n1/2.], B[n1/2.];
+ME:  [p1/8]; E[n1/4]~ {2 E[n1/8]; D[n1/8]~} D[n1/4.];
+ME2: -1B[n1/8]~ -1B[n1/4], 0F[n1/4], 0B[n1/4]~ -1B[n1/4.], 0F[n1/4.], 0B[n1/4.]~ 0F[n1/4.], 0B[n1/4.];
+
+Compasso 15 (Tempo rubato: a melodia em oitavas, com acordes):
+MD:  {2 [p1/8]; 2F[n1/8], 2B[n1/8], 3F[n1/8]~} 2F[n1/8], 2B[n1/8], 3F[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  {2 [p1/8]; F[n1/8], G[n1/8], B[n1/8]~} F[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8]; D[n1/8], G[n1/8], B[n1/8]; D[n1/8], G[n1/8], B[n1/8];
+ME2: -1E[n1/2.], -2E[n1/2.]; [s1/4.];
+
+Compasso 16:
+MD:  2D[n1/8], 2B[n1/8], 3D[n1/8]; 2C[n1/8], 2G[n1/8], 2B[n1/8], 3C[n1/8]; 2C[n1/8], 2G[n1/8], 2B[n1/8], 3C[n1/8]; {2 2C[n1/8], 2G[n1/8], 2B[n1/8], 3C[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8];} B[n1/4.], 2G[n1/4.], 2B[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  D[n1/8], G[n1/8], B[n1/8]; C[n1/8], G[n1/8], B[n1/8]; C[n1/8], G[n1/8], B[n1/8]; {2 C[n1/8], G[n1/8], B[n1/8]; D[n1/8], G[n1/8], B[n1/8];} 0B[n1/4.], D[n1/4.], G[n1/4.];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 17:
+MD:  {2 [p1/8]; 2F[n1/8], 2B[n1/8], 3F[n1/8]~} 2F[n1/8], 2B[n1/8], 3F[n1/8]; 2G[n1/8], 2B[n1/8], 3G[n1/8]; 2F[n1/8], 2B[n1/8], 3F[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8]; 2F[n1/8], 2B[n1/8], 3F[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8];
+MD2: -1B[n1/2.]; [s1/4.];
+ME:  {2 [p1/8]; F[n1/8], G[n1/8], B[n1/8]~} F[n1/8], G[n1/8], B[n1/8]; G[n1/8], B[n1/8], 2E[n1/8]; F[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8]; F[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8];
+ME2: -1E[n1/2.], -2E[n1/2.]; [s1/4.];
+
+Compasso 18:
+MD:  2D[n1/8], 2B[n1/8], 3D[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8]; {2 2B[n1/8], 3C[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8];} B[n1/4.], 2G[n1/4.], 2B[n1/4.]~
+MD2: [s1/2.]; [s1/4.];
+ME:  D[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8]; D[n1/8], G[n1/8], B[n1/8]; {2 C[n1/8], G[n1/8], B[n1/8]; D[n1/8], G[n1/8], B[n1/8];} 0B[n1/4.], E[n1/4.], G[n1/4.];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 19 (peu à peu cresc. et animé (aos poucos, mais forte e mais animado)):
+MD:  {6:9 B[n1/8], 2G[n1/8], 2B[n1/8]; G[n1/8], 2G[n1/8]; A[n1/8], 2E[n1/8], 2A[n1/8]; 2C[n1/8], 3C[n1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; G[n1/8], 2G[n1/8];}
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8.]; {6:9 0G[n1/8]; 0A[n1/8]; C[n1/8]; 0B[n1/8]; 0G[n1/8];}
+ME2: -1A[n1/4.], -2A[n1/4.]~ -1A[n1/4.], -2A[n1/4.], C[n1/4.], E[n1/4.]; E[n1/4.], G[n1/4.];
+
+Compasso 20:
+MD:  [p1/8]; G[n1/8], 2C[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], 2C[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], 2C[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], 2C[n1/8], 2E[n1/8], 2G[n1/8]; A[n1/8], 2C[n1/8], 2E[n1/8], 2A[n1/8]; G[n1/4.], 2C[n1/4.], 2E[n1/4.], 2G[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8]; 0G[n1/8], C[n1/8], E[n1/8]; 0G[n1/8], C[n1/8], E[n1/8]; 0G[n1/8], C[n1/8], E[n1/8]; 0G[n1/8], C[n1/8], E[n1/8]; 0A[n1/8], C[n1/8], E[n1/8]; 0G[n1/4.], C[n1/4.], E[n1/4.];
+ME2: -1Bbb[n1/2.], -2Bbb[n1/2.]; [s1/4.];
+
+Compasso 21:
+MD:  [p1/8.]; {6:9 G[n1/8], 2G[n1/8]; A[n1/8], 2A[n1/8]; 2D[n1/8], 3D[n1/8]; B[n1/8], 2B[n1/8]; G[n1/8], 2G[n1/8];}
+MD2: [s1/8.]; 2D[n1/4.]; [s1/8.]; 2G[n1/4.];
+ME:  [p1/8.]; {6:9 0G[n1/8]; 0A[n1/8]; D[n1/8]; 0B[n1/8]; 0G[n1/8];}
+ME2: -1B[n1/8.], -2B[n1/8.]~ -1B[n1/4.], -2B[n1/4.], 0B[n1/4.], D[n1/4.]~ -1B[n1/8.], -2B[n1/8.]; D[n1/4.], G[n1/4.];
+
+Compasso 22:
+MD:  [p1/8]; G[n1/8], B[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], B[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], B[n1/8], 2E[n1/8], 2G[n1/8]; G[n1/8], B[n1/8], 2E[n1/8], 2G[n1/8]; A[n1/8], 2C[n1/8], 2F[n1/8], 2A[n1/8]; G[n1/4.], B[n1/4.], 2E[n1/4.], 2G[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8]; 0G[n1/8], 0B[n1/8], E[n1/8]; 0G[n1/8], 0B[n1/8], E[n1/8]; 0G[n1/8], 0B[n1/8], E[n1/8]; 0G[n1/8], 0B[n1/8], E[n1/8]; 0A[n1/8], C[n1/8], F[n1/8]; 0G[n1/4.], 0B[n1/4.], E[n1/4.];
+ME2: -1A[n1/2.], -2A[n1/2.]; [s1/4.];
+
+Compasso 23:
+MD:  [p1/8.]; {6:9 G[n1/8], 2G[n1/8]; A[n1/8], 2A[n1/8]; 2E[n1/8], 3E[n1/8]; 2D[n1/8], 3D[n1/8]; B[n1/8], 2B[n1/8];}
+MD2: [s1/8.]; B[n1/2], 2D[n1/2]~ B[n1/16], 2D[n1/16]; 2G[n1/4.], 2B[n1/4.];
+ME:  [p1/8.]; {6:9 0G[n1/8]; 0A[n1/8]; E[n1/8]; D[n1/8]; 0B[n1/8];}
+ME2: 0D[n1/8.], -1D[n1/8.]~ 0D[n1/4.], -1D[n1/4.], 0B[n1/4.], D[n1/4.]~ 0D[n1/8.], -1D[n1/8.], 0B[n1/8.], D[n1/8.]; G[n1/4.], B[n1/4.];
+
+Compasso 24:
+MD:  [p1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; 2C[n1/8], 2A[n1/8], 3C[n1/8]; B[n1/8], 2G[n1/8], 2B[n1/8]; 2D[n1/8], 2B[n1/8], 3D[n1/8]; 2E[n1/8], 2B[n1/8], 3E[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  [p1/8]; 0B[n1/8], D[n1/8], G[n1/8]; 0B[n1/8], D[n1/8], G[n1/8]; 0B[n1/8], D[n1/8], G[n1/8]; 0B[n1/8], D[n1/8], G[n1/8]; C[n1/8], E[n1/8], A[n1/8]; 0B[n1/8], D[n1/8], G[n1/8]; D[n1/8], G[n1/8], B[n1/8]; E[n1/8], G[n1/8], B[n1/8];
+ME2: 0E[n1/2.], -1E[n1/2.]; [s1/4.];
+
+Compasso 25 (diminuendo molto: acordes arpejados):
+MD:  2A[n1/2.], 3D[n1/2.], 3A[n1/2.]; 2A[n1/4.], 3D[n1/4.], 3A[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  F[n1/2.], A[n1/2.], 2D[n1/2.], 2F[n1/2.]; F♭[n1/4.], A[n1/4.], B[n1/4.], 2D[n1/4.], 2F♭[n1/4.];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 26:
+MD:  2A[n1/2.], 3D[n1/2.], 3A[n1/2.]; A[n1/4.], 2E[n1/4.], 2A[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  E[n1/2.], G[n1/2.], A[n1/2.], 2D[n1/2.], 2E[n1/2.]; 0A[n1/4.], E[n1/4.], G[n1/4.], 2C[n1/4.];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 27 (Un poco mosso: a mão esquerda em arpejos de semicolcheias):
+MD:  F[n1/2.], A[n1/2.]; A[n1/4], 2C♭[n1/4]; 2D[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  -1D[n1/16]; -1A[n1/16]; 0D[n1/16]; 0F[n1/16]; 0A[n1/16]; D[n1/16]; -1F[n1/16]; 0C[n1/16]; 0F[n1/16]; 0A[n1/16]; C[n1/16]; F[n1/16]; -1A[n1/16]; 0F♭[n1/16]; 0A[n1/16]; C♭[n1/16]; F♭[n1/16]; A[n1/16];
+ME2: -1D[n1/4.]; -1F[n1/4.]; -1A[n1/4.];
+
+Compasso 28:
+MD:  F[n1/2.], A[n1/2.]; A[n1/4], 2C♭[n1/4]; A[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  -1D[n1/16]; -1A[n1/16]; 0D[n1/16]; 0F[n1/16]; 0A[n1/16]; D[n1/16]; -1F[n1/16]; 0C[n1/16]; 0F[n1/16]; 0A[n1/16]; C[n1/16]; F[n1/16]; -1A[n1/16]; 0F♭[n1/16]; 0A[n1/16]; C♭[n1/16]; A[n1/16]; F♭[n1/16];
+ME2: -1D[n1/4.]; -1F[n1/4.]; -1A[n1/4.];
+
+Compasso 29:
+MD:  F[n1/4], 2D[n1/4]; A[n1/8], 2E[n1/8]; 2D[n1/4.], 2F[n1/4.]; F[n1/4], 2D[n1/4]; 2D[n1/8], 2F[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  -1D[n1/16]; -1A[n1/16]; 0D[n1/16]; 0F[n1/16]; 0A[n1/16]; D[n1/16]; F[n1/16]; A[n1/16]; F[n1/16]; D[n1/16]; 0A[n1/16]; 0F[n1/16]; 0A[n1/16]; 0F[n1/16]; 0D[n1/16]; -1A[n1/16]; 0D[n1/16]; -1A[n1/16];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 30:
+MD:  2E[n1/8], 2G♮[n1/8]; 2D[n1/8], 2F[n1/8]; B[n1/8], 2D[n1/8]; B[n1/4.], 2D[n1/4.]; [p1/4.];
+MD2: [s1/4.]; G♮[n1/8]; F[n1/8]; D[n1/8]; D[n1/8.]; 0B[n1/8.];
+ME:  -1E[n1/16]; -1B[n1/16]; 0E[n1/16]; 0G♮[n1/16]; 0B[n1/16]; E[n1/16]; G♮[n1/16]; E[n1/16]; 0B[n1/16]; 0G♮[n1/16]; 0E[n1/16]; -1B[n1/16]; -1E[n1/16]; -1B[n1/16]; 0E[n1/16]; 0G♮[n1/16]; 0E[n1/16]; -1B[n1/16];
+ME2: [s1/2.]; [s1/4.];
+
+Compasso 31:
+MD:  B[n1/2.]; 2C[n1/4]; 2F[n1/8];
+MD2: [s1/2.]; [s1/4]; A[n1/16]; F[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0G[n1/16]; 0B[n1/16]; C[n1/16]; G[n1/16]; -1G[n1/16]; 0D[n1/16]; 0G[n1/16]; 0B[n1/16]; D[n1/16]; G[n1/16]; -1F[n1/16]; 0C[n1/16]; 0F[n1/16]; 0A[n1/16]; C[n1/8];
+ME2: -1A[n1/4.]; -1G[n1/4.]; -1F[n1/4.];
+
+Compasso 32:
+MD:  B[n1/2.]; 2C[n1/4]; 2F[n1/8];
+MD2: [s1/2.]; [s1/4]; A[n1/16]; F[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0G[n1/16]; 0B[n1/16]; C[n1/16]; G[n1/16]; -1G[n1/16]; 0D[n1/16]; 0G[n1/16]; 0B[n1/16]; D[n1/16]; G[n1/16]; -1F[n1/16]; 0C[n1/16]; 0F[n1/16]; 0A[n1/16]; C[n1/8];
+ME2: -1A[n1/4.]; -1G[n1/4.]; -1F[n1/4.];
+
+Compasso 33 (a melodia passa para as duas mãos):
+MD:  2G[n1/4.]~ 2G[n1/8.]; 2F[n1/8.]; 2D♮[n1/8.]; 2E[n1/8.];
+MD2: [s1/4.]; 2G[n1/16]; G[n1/16]; B[n1/16]; 2F[n1/16]; G[n1/16]; B[n1/16]; 2D♮[n1/16]; G[n1/16]; B[n1/16]; 2E[n1/16]; G[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; -1B[n1/16]; 0E[n1/16]; 0G[n1/16]; 0B[n1/16]; E[n1/16]; [s1/2.];
+ME2: -1E[n1/4.]; G[n1/8.]; F[n1/8.]; D♮[n1/8.]; E[n1/8.];
+
+Compasso 34:
+MD:  2B[n1/2.]; 2A[n1/4.];
+MD2: [s1/2.]; [s1/4.];
+ME:  D♮[n1/16]; G[n1/16]; B[n1/16]; B[n1/16]; 2G[n1/16]; 2B[n1/16]; E[n1/16]; G[n1/16]; B[n1/16]; B[n1/16]; 2G[n1/16]; 2B[n1/16]; C[n1/16]; E♮[n1/16]; A[n1/16]; 2C[n1/16]; 2E♮[n1/16]; 2A[n1/16];
+ME2: D♮[n1/4.]; E[n1/4.]; 0A[n1/4.];
+
+Compasso 35 (o tema do compasso 27, uma oitava acima (cresc.)):
+MD:  2F[n1/2.], 2A[n1/2.]; 2A[n1/4], 3C♭[n1/4]; 3D[n1/8];
+MD2: [s1/8]; [s1];
+ME:  0D[n1/16]; 0A[n1/16]; D[n1/16]; F[n1/16]; A[n1/16]; 2D[n1/16]; 0A[n1/16]; C[n1/16]; F[n1/16]; A[n1/16]; 2C[n1/16]; 2F[n1/16]; C♭[n1/16]; F♭[n1/16]; A[n1/16]; 2C♭[n1/16]; 2F♭[n1/16]; 2A[n1/16];
+ME2: 0D[n1/4.]; 0F[n1/4.]; 0A[n1/4.];
+
+Compasso 36:
+MD:  2F[n1/2.], 2A[n1/2.]; 2A[n1/4], 3C♭[n1/4]; 2A[n1/8];
+MD2: [s1/2.]; [s1/4.];
+ME:  0D[n1/16]; 0A[n1/16]; D[n1/16]; F[n1/16]; A[n1/16]; 2D[n1/16]; 0A[n1/16]; C[n1/16]; F[n1/16]; A[n1/16]; 2C[n1/16]; 2F[n1/16]; C♭[n1/16]; F♭[n1/16]; A[n1/16]; 2C♭[n1/16]; 2A[n1/16]; 2F♭[n1/16];
+ME2: 0D[n1/4.]; 0F[n1/4.]; 0A[n1/4.];
 
 Fim
 
-Observação: a peça continua (72 compassos no total); aqui estão os 14 compassos da
-1ª página (a primeira parte, antes do "Tempo rubato"), a parte mais conhecida. As duas vozes da mão direita foram separadas em MD e MD2; na
-partitura, a mão esquerda está na clave de Sol até o compasso 6 — aqui ela fica sempre
-na clave de Fá da pauta dupla (por isso as linhas suplementares em cima).
+Observação: a peça tem 72 compassos; aqui estão os 36 primeiros, toda a parte em
+Ré♭ maior (no compasso 37, "En animant", o tom muda para Dó♯ menor). As mudanças de
+andamento (Tempo rubato, animé, Un poco mosso) e o pedal não estão no texto. Na
+partitura, a mão esquerda às vezes usa a clave de Sol e o 8va (compassos 25 e 26);
+aqui ela fica na clave de Fá da pauta dupla e as notas aparecem na altura real (por
+isso as linhas suplementares).
 `;
 
     window.SigaDinoMusic = {

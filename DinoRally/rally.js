@@ -55,6 +55,10 @@ const MODE_KEY = "dinogames-rally-mode";
 const LAPS_KEY = "dinogames-rally-laps";
 const CAR_KEY = "dinogames-rally-car";
 const MINIMAP_KEY = "dinogames-rally-minimap";
+const STEER_KEY = "dinogames-rally-steer";
+// Sensibilidade da direção (botões, teclas e dedo): 1 = normal; menor = o carro vira mais devagar.
+const STEER_LEVELS = [0.5, 0.75, 1, 1.3, 1.6];
+let steerSens = 1;
 
 // ---------- Nitro ----------
 const NITRO_MAX_SPEED = MAX_SPEED * 1.3; // com nitro passa da velocidade máxima
@@ -662,11 +666,12 @@ const update = (dt) => {
     state.crashTimer = Math.max(0, state.crashTimer - dt);
 
     // Direção (com leve inércia, mais forte na neve)
+    // A sensibilidade muda a rapidez com que o carro vai para o lado (e a resposta do volante).
     const keySteer = (input.left ? -1 : 0) + (input.right ? 1 : 0);
-    const pointerSteer = pointer.x === null ? 0 : clamp((pointer.x - state.playerX) * 3, -1, 1);
+    const pointerSteer = pointer.x === null ? 0 : clamp((pointer.x - state.playerX) * 3 * steerSens, -1, 1);
     const target = crashed ? 0 : keySteer || pointerSteer;
-    state.steer = lerp(state.steer, target, Math.min(1, dt * (6 * grip + 2)));
-    state.playerX += state.steer * dx * (0.6 + 0.4 * grip);
+    state.steer = lerp(state.steer, target, Math.min(1, dt * (6 * grip + 2) * Math.sqrt(steerSens)));
+    state.playerX += state.steer * dx * (0.6 + 0.4 * grip) * steerSens;
     state.playerX -= dx * speedRatio * playerSeg.curve * CENTRIFUGAL;
 
     // Aceleração
@@ -2121,6 +2126,7 @@ const modeSel = document.getElementById("mode");
 const lapsSel = document.getElementById("laps");
 const carSel = document.getElementById("car");
 const minimapSel = document.getElementById("minimap");
+const steerSel = document.getElementById("steer");
 const btnStart = document.getElementById("btn-start");
 const btnRetry = document.getElementById("btn-retry");
 const settings = {
@@ -2147,6 +2153,15 @@ carSel.addEventListener("change", () => {
     // renumera os outros carros para nenhum ficar com o mesmo número do jogador
     state.cars.forEach((car, i) => (car.number = rivalNumber(i)));
 });
+{
+    const saved = Number(storage.get(STEER_KEY));
+    steerSens = STEER_LEVELS.includes(saved) ? saved : 1;
+    steerSel.value = String(steerSens);
+    steerSel.addEventListener("change", () => {
+        steerSens = STEER_LEVELS.includes(Number(steerSel.value)) ? Number(steerSel.value) : 1;
+        storage.set(STEER_KEY, String(steerSens));
+    });
+}
 minimapSel.addEventListener("change", () => {
     settings.minimap = minimapSel.value !== "0";
     storage.set(MINIMAP_KEY, settings.minimap ? "1" : "0");
@@ -2278,7 +2293,7 @@ const aimPointer = (event) => {
 const dragTo = (event) => {
     const rect = canvas.getBoundingClientRect();
     const dx = (event.clientX - drag.startX) / rect.width;
-    pointer.x = clamp(drag.startCar + dx * DRAG_GAIN, -1.25, 1.25);
+    pointer.x = clamp(drag.startCar + dx * DRAG_GAIN * steerSens, -1.25, 1.25);
 };
 const releasePointerSteer = () => {
     pointer.x = null;

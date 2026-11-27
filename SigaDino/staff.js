@@ -702,6 +702,14 @@
                 clearTimeout(n.off);
                 n.off = setTimeout(() => n.el.classList.remove("lit"), ms);
             },
+            /** Praticar: marca (ou desmarca) a nota i como a próxima a tocar e rola até ela. */
+            mark(i, on = true) {
+                const n = notes[i - first];
+                if (!n) return;
+                if (on) scrollTo(i);
+                n.el.classList.toggle("next", on);
+            },
+            unmarkAll() { notes.forEach((n) => n.el.classList.remove("next")); },
             /** Marca a nota i como acertada (fica forte). */
             done(i) { notes[i - first]?.el.classList.add("done"); },
             allDone() { notes.forEach((n) => n.el.classList.add("done")); },
