@@ -507,7 +507,9 @@
     /** Lista do Modelo conforme o jogo (o piano some no "Siga a sequência"). */
     const renderModeOptions = () => {
         const list = enabledModes.filter(([, m]) => !m.freeOnly || prefs.play !== "memoria");
-        ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}">${m.title}</option>`).join("");
+        // Ícone pequeno no texto da opção (aparece no combobox, sem ocupar altura).
+        const MODE_ICON = { cores4: "🔴", teclado7: "🌈", teclado12: "🎹", teclado24: "🎹", piano36: "🎹", piano60: "🎹", notas7: "🌈", cromatica12: "🎹" };
+        ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}">${MODE_ICON[id] ? `${MODE_ICON[id]} ` : ""}${m.title}</option>`).join("");
         ui.mode.value = modeId();
     };
     renderModeOptions();
@@ -621,12 +623,18 @@
      * toda e a altura que sobra embaixo da pauta. null fora do celular deitado.
      */
     const fillAr = () => {
-        if (!window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches) return null;
+        const landscape = window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches;
+        // Computador: o teclado também ocupa a largura toda (altura de 170 a 320 px, sobrando
+        // espaço para as opções e a pauta em cima).
+        const desktop = !landscape && !window.matchMedia("(max-width: 860px), (pointer: coarse)").matches;
+        document.body.classList.toggle("kb-fill", desktop);
+        if (!landscape && !desktop) return null;
         const w = ui.device.parentElement?.clientWidth || window.innerWidth - 20;
         const staffH = document.body.classList.contains("with-staff") && !ui.staffBox.hidden ? ui.staffBox.offsetHeight + 8 : 0;
         document.body.style.setProperty("--staff-h", `${staffH}px`);
-        const h = window.innerHeight - staffH - 30;
-        return h > 60 ? w / h : null;
+        let h = window.innerHeight - staffH - 30;
+        if (desktop) h = Math.min(320, Math.max(170, h - 150));
+        return h > 60 && w > 0 ? w / h : null;
     };
 
     // ---------- Celular: largura das teclas (− / +) e teclado rolando para os lados ----------
@@ -2110,7 +2118,8 @@
         `<tr><td>${p.name}</td><td>${p.letter}</td><td><span class="swatch" style="--c:${p.color}"></span>${p.colorName}</td></tr>`).join("");
     ui.legend.open = prefs.legend !== false;
     ui.legend.addEventListener("toggle", () => { prefs.legend = ui.legend.open; storage.set(PREFS_KEY, prefs); });
-    ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.title}</option>`).join("");
+    // O ícone do instrumento vai no próprio texto da opção: aparece no combobox, sem ocupar altura.
+    ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.icon ? `${o.icon} ` : ""}${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;
         sound.load(prefs.timbre);

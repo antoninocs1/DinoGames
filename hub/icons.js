@@ -18,6 +18,7 @@
         dotsboxes: svg('<path d="M4 4h8v8H4z"/><path d="M12 4h8"/><path d="M20 12v8"/><circle cx="4" cy="20" r=".6" fill="currentColor"/><circle cx="12" cy="20" r=".6" fill="currentColor"/><circle cx="12" cy="12" r=".6" fill="currentColor"/>'),
         chomp: svg('<path d="M20 7.5A9 9 0 1 0 20 16.5L12 12Z"/><path d="M7 5.5 8 3l1.6 2.2"/><circle cx="10" cy="8" r=".9" fill="currentColor"/><circle cx="21" cy="12" r=".6" fill="currentColor"/>'),
         snake: svg('<path d="M4 18c0-3 3-4 6-4s4-1 4-3-2-3-4-3H8"/><path d="M14 11c0 2 1.5 3 3.5 3H19a2.5 2.5 0 0 0 0-5"/><circle cx="18.5" cy="6.5" r="1.8"/><circle cx="5.5" cy="6.5" r="1.2" fill="currentColor"/>'),
+        hockey: svg('<ellipse cx="12" cy="16" rx="8" ry="3"/><path d="M4 16v1.5c0 1.7 3.6 3 8 3s8-1.3 8-3V16"/><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="7" cy="7" r=".8" fill="currentColor"/><circle cx="17" cy="7" r=".8" fill="currentColor"/>'),
         pcf: svg('<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/>'),
         external: svg('<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
         eye: svg('<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>'),

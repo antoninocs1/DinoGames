@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#14121a">
-    <title>Siga o Dino</title>
+    <title>Siga o Dino (e Piano Mágico)</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.070">
-    <link rel="stylesheet" href="style.css?v=1.070">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.071">
+    <link rel="stylesheet" href="style.css?v=1.071">
 </head>
 <body>
     <main class="app">
@@ -17,8 +17,8 @@
                     <svg viewBox="0 0 24 24"><path d="M11 3a9 9 0 0 0-8 8h8z" fill="#22c55e"/><path d="M13 3a9 9 0 0 1 8 8h-8z" fill="#ef4444"/><path d="M13 21a9 9 0 0 0 8-8h-8z" fill="#3b82f6"/><path d="M11 21a9 9 0 0 1-8-8h8z" fill="#facc15"/><circle cx="12" cy="12" r="3.2" fill="#3a3640"/></svg>
                 </span>
                 <div>
-                    <p class="eyebrow">Jogo de memória</p>
-                    <h1>Siga o Dino</h1>
+                    <p class="eyebrow">Jogo de memória e piano</p>
+                    <h1>Siga o Dino <span class="h1-plus">(e Piano Mágico)</span></h1>
                 </div>
             </div>
 
@@ -31,16 +31,16 @@
                 <label class="field">
                     <span>Jogo</span>
                     <select id="play" aria-label="Tipo de jogo">
-                        <option value="memoria">Siga a sequência</option>
-                        <option value="livre">Tocar livre</option>
-                        <option value="musica">Executar música (notas)</option>
+                        <option value="memoria">🧠 Siga a sequência</option>
+                        <option value="livre">🎶 Tocar livre</option>
+                        <option value="musica">📜 Executar música (notas)</option>
                     </select>
                 </label>
                 <label class="field" id="field-names" hidden>
                     <span>Nomes</span>
                     <select id="names" aria-label="Mostrar o nome ou a letra da nota">
-                        <option value="nome">Dó, Ré, Mi…</option>
-                        <option value="letra">Letras (C, D, E…)</option>
+                        <option value="nome">🗣️ Dó, Ré, Mi…</option>
+                        <option value="letra">🔤 Letras (C, D, E…)</option>
                     </select>
                 </label>
                 <label class="field" id="field-accidental" hidden>
@@ -53,24 +53,24 @@
                 <label class="field" id="field-staff" hidden>
                     <span>Pentagrama</span>
                     <select id="staff-opt" aria-label="Mostrar as notas na partitura">
-                        <option value="1">Cor com nome</option>
-                        <option value="3">Só cor (sem nome)</option>
-                        <option value="2">Só preto (desafio)</option>
-                        <option value="0">Esconder</option>
+                        <option value="1">🏷️ Cor com nome</option>
+                        <option value="3">🎨 Só cor (sem nome)</option>
+                        <option value="2">⚫ Só preto (desafio)</option>
+                        <option value="0">🙈 Esconder</option>
                     </select>
                 </label>
                 <label class="field" id="field-keys" hidden>
                     <span>Teclas</span>
                     <select id="keys-opt" aria-label="Cores das teclas: coloridas ou preto e branco como um piano">
-                        <option value="cor">Coloridas</option>
-                        <option value="pb">Preto e branco</option>
-                        <option value="pbsem">Sem cor e sem nome</option>
+                        <option value="cor">🌈 Coloridas</option>
+                        <option value="pb">🎹 Preto e branco</option>
+                        <option value="pbsem">⬜ Sem cor e sem nome</option>
                     </select>
                 </label>
                 <label class="field" id="field-meter" hidden>
                     <span>Compasso</span>
                     <select id="meter-opt" aria-label="Fórmula de compasso do Tocar livre">
-                        <option value="">Sem compasso</option>
+                        <option value="">➖ Sem compasso</option>
                         <option value="4/4">4/4</option>
                         <option value="3/4">3/4</option>
                         <option value="2/4">2/4</option>
@@ -82,28 +82,28 @@
                 <label class="field" id="field-beams" hidden>
                     <span>Colcheias</span>
                     <select id="beams-opt" aria-label="Colcheias e semicolcheias ligadas por barra ou separadas">
-                        <option value="0">Separadas (bandeirolas)</option>
-                        <option value="1">Com barra (partitura)</option>
+                        <option value="0">♪ Separadas (bandeirolas)</option>
+                        <option value="1">♫ Com barra (partitura)</option>
                     </select>
                 </label>
                 <label class="field" id="field-measures" hidden>
                     <span>Nº do compasso</span>
                     <select id="measures-opt" aria-label="Mostrar o número de cada compasso no pé da pauta">
-                        <option value="1">Mostrar</option>
+                        <option value="1">🔢 Mostrar</option>
                         <option value="0">Esconder</option>
                     </select>
                 </label>
                 <label class="field" id="field-scroll" hidden>
                     <span>Rolagem</span>
                     <select id="scroll-opt" aria-label="Como a partitura rola: acompanha a música ou com barra de rolagem">
-                        <option value="auto">Acompanha a música</option>
-                        <option value="barra">Com barra de rolagem</option>
+                        <option value="auto">👀 Acompanha a música</option>
+                        <option value="barra">↔️ Com barra de rolagem</option>
                     </select>
                 </label>
                 <label class="field" id="field-teclado" hidden>
                     <span>Teclado</span>
                     <select id="teclado-opt" aria-label="Quantas oitavas o teclado tem no Executar música">
-                        <option value="auto">Automático (pela música)</option>
+                        <option value="auto">✨ Automático (pela música)</option>
                         <option value="24">2 oitavas</option>
                         <option value="36">3 oitavas</option>
                         <option value="60">Piano (5 oitavas)</option>
@@ -112,9 +112,9 @@
                 <label class="field" id="field-pauta" hidden>
                     <span>Pauta</span>
                     <select id="pauta-opt" aria-label="Pauta da música: clave de sol ou pauta dupla de piano">
-                        <option value="auto">Automática</option>
-                        <option value="sol">Clave de Sol</option>
-                        <option value="dupla">Sol e Fá (piano)</option>
+                        <option value="auto">✨ Automática</option>
+                        <option value="sol">𝄞 Clave de Sol</option>
+                        <option value="dupla">🎹 Sol e Fá (piano)</option>
                     </select>
                 </label>
                 <label class="field">
@@ -124,16 +124,16 @@
                 <label class="field game-only">
                     <span>Velocidade</span>
                     <select id="level" aria-label="Velocidade">
-                        <option value="facil">Fácil</option>
-                        <option value="normal">Normal</option>
-                        <option value="rapido">Rápido</option>
+                        <option value="facil">🐢 Fácil</option>
+                        <option value="normal">🚶 Normal</option>
+                        <option value="rapido">🐇 Rápido</option>
                     </select>
                 </label>
                 <label class="field game-only">
                     <span>Ao errar</span>
                     <select id="strict" aria-label="O que acontece ao errar">
-                        <option value="0">Ouvir de novo</option>
-                        <option value="1">Fim de jogo</option>
+                        <option value="0">🔁 Ouvir de novo</option>
+                        <option value="1">🏁 Fim de jogo</option>
                     </select>
                 </label>
                 <label class="field game-only">
@@ -143,7 +143,7 @@
                         <option value="14">14 passos</option>
                         <option value="20">20 passos</option>
                         <option value="31">31 passos</option>
-                        <option value="0">Sem fim</option>
+                        <option value="0">♾️ Sem fim</option>
                     </select>
                 </label>
             </div>
@@ -209,23 +209,23 @@
                         <button class="btn" id="btn-song-practice" type="button" title="A música espera você tocar a tecla certa (com um trecho marcado no texto, ele se repete)">🎹 Praticar</button>
                         <label class="mini-field"><span>Mão</span>
                             <select id="practice-hand" aria-label="Mão que você vai tocar ao praticar">
-                                <option value="ambas">As duas</option>
-                                <option value="md">Direita (MD)</option>
-                                <option value="me">Esquerda (ME)</option>
+                                <option value="ambas">🙌 As duas</option>
+                                <option value="md">✋ Direita (MD)</option>
+                                <option value="me">🤚 Esquerda (ME)</option>
                             </select>
                         </label>
                         <label class="mini-field"><span>Dica</span>
                             <select id="practice-hint" aria-label="Mostrar a tecla certa ao praticar">
-                                <option value="1">Tecla pisca</option>
-                                <option value="0">Sem dica (só a pauta)</option>
+                                <option value="1">💡 Tecla pisca</option>
+                                <option value="0">🙈 Sem dica (só a pauta)</option>
                             </select>
                         </label>
                         <label class="mini-field"><span>Velocidade</span>
                             <select id="song-speed" aria-label="Velocidade da música ao tocar e praticar">
-                                <option value="1">Normal</option>
-                                <option value="0.75">75%</option>
-                                <option value="0.5">Devagar (50%)</option>
-                                <option value="0.25">Bem devagar (25%)</option>
+                                <option value="1">🐇 Normal</option>
+                                <option value="0.75">🚶 75%</option>
+                                <option value="0.5">🐢 Devagar (50%)</option>
+                                <option value="0.25">🐌 Bem devagar (25%)</option>
                             </select>
                         </label>
                     </div>
@@ -267,7 +267,7 @@
                                 <li><strong>Ponto e vírgula</strong> (ou outra linha): uma nota depois da outra — <code>C[n1/4]; D[n1/4]; E[n1/2];</code></li>
                                 <li><strong>Vírgula</strong>: notas juntas, formando um <strong>acorde</strong> — <code>C[n1], E[n1], G[n1];</code></li>
                                 <li><strong>Pausa</strong> (silêncio): <code>[p1/4];</code> ou <code>p[1/4];</code></li>
-                                <li><strong>Sustenido</strong> (sobe ½ tom): <code>F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <code>Bb[n1/4]</code></li>
+                                <li><strong>Sustenido</strong> (sobe ½ tom): <code>#</code> depois da letra — <code>4F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <strong>b minúsculo</strong> — <code>4Bb[n1/4]</code>, <code>4Eb[n1/4]</code> (o B maiúsculo é a nota Si; o b minúsculo é o bemol) · <strong>Bequadro</strong> (volta ao natural, quando a armadura tem ♯/♭): <code>4A=[n1/4]</code> · Dobrado: <code>##</code> e <code>bb</code> (<code>3Bbb[n1/2]</code>). Os símbolos ♯ ♭ ♮ também valem, mas <code># b =</code> são mais fáceis de digitar; as músicas do jogo usam <code># b =</code>.</li>
                                 <li><strong>Oitava</strong>: o <strong>número na frente da letra</strong> diz a oitava, como no piano. <code>4C</code> é o <strong>Dó central</strong> (a bolinha no pé da tecla), e <code>4D</code>, <code>4E</code>… <code>4B</code> são as notas logo acima dele; <code>5C</code> é o Dó de cima; <code>3G</code> é o Sol abaixo do Dó central. Cada número começa num Dó: a oitava 4 vai do <code>4C</code> ao <code>4B</code>, a 5 do <code>5C</code> ao <code>5B</code>. Sem número vale a oitava 4 (<code>C[n1]</code> = <code>4C[n1]</code>).
                                     <table>
                                         <thead><tr><th>Código</th><th>Nota</th><th>Onde</th></tr></thead>
@@ -393,12 +393,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.070"></script>
-    <script src="sounds.js?v=1.070"></script>
-    <script src="modes.js?v=1.070"></script>
-    <script src="engine.js?v=1.070"></script>
-    <script src="staff.js?v=1.070"></script>
-    <script src="music.js?v=1.070"></script>
-    <script src="game.js?v=1.070"></script>
+    <script src="../assets/combobox.js?v=1.071"></script>
+    <script src="sounds.js?v=1.071"></script>
+    <script src="modes.js?v=1.071"></script>
+    <script src="engine.js?v=1.071"></script>
+    <script src="staff.js?v=1.071"></script>
+    <script src="music.js?v=1.071"></script>
+    <script src="game.js?v=1.071"></script>
 </body>
 </html>

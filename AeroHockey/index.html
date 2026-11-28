@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0c111b">
+    <title>AeroHockey</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.071">
+    <link rel="stylesheet" href="style.css?v=1.071">
+</head>
+<body>
+    <main class="app">
+        <header class="bar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="16.5" rx="8.5" ry="3.2" fill="#0c111b"/><ellipse cx="12" cy="15" rx="8.5" ry="3.2" fill="#e8eefc"/><ellipse cx="12" cy="15" rx="4.2" ry="1.5" fill="#9fb0cc"/><circle cx="7" cy="7.5" r="4" fill="#ef5350"/><circle cx="7" cy="7.5" r="1.4" fill="#fff"/><circle cx="17" cy="7.5" r="4" fill="#4a90e2"/><circle cx="17" cy="7.5" r="1.4" fill="#fff"/></svg>
+                </span>
+                <div>
+                    <p class="eyebrow">Mesa de ar</p>
+                    <h1>AeroHockey</h1>
+                </div>
+            </div>
+
+            <div class="settings">
+                <label class="field">
+                    <span>Jogadores</span>
+                    <select id="opt-players" aria-label="Jogadores">
+                        <option value="cpu">Contra o computador</option>
+                        <option value="2">2 jogadores</option>
+                    </select>
+                </label>
+                <label class="field" id="field-level">
+                    <span>Nível</span>
+                    <select id="opt-level" aria-label="Nível do computador">
+                        <option value="facil">Fácil</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="dificil">Difícil</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Partida</span>
+                    <select id="opt-goal" aria-label="Gols para vencer">
+                        <option value="5">Até 5 gols</option>
+                        <option value="7" selected>Até 7 gols</option>
+                        <option value="10">Até 10 gols</option>
+                        <option value="0">Sem fim</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Disco</span>
+                    <select id="opt-speed" aria-label="Velocidade do disco">
+                        <option value="0.8">Lento</option>
+                        <option value="1" selected>Normal</option>
+                        <option value="1.2">Rápido</option>
+                    </select>
+                </label>
+            </div>
+        </header>
+
+        <section class="layout">
+            <div class="board-area" id="area">
+                <div class="players" id="players">
+                    <div class="player p0"><span class="avatar">1</span><div class="who"><strong id="name0">Jogador 1</strong><small id="keys0">Setas · Espaço</small></div><span class="pts" id="score0">0</span></div>
+                    <div class="player p1"><span class="avatar" id="avatar1">🤖</span><div class="who"><strong id="name1">Computador</strong><small id="keys1">Normal</small></div><span class="pts" id="score1">0</span></div>
+                </div>
+                <div class="board-frame" id="frame">
+                    <canvas class="board" id="board" tabindex="0" aria-label="Mesa de AeroHockey"></canvas>
+                    <div class="overlay" id="overlay">
+                        <div class="overlay-card">
+                            <div class="overlay-icon" id="ov-icon">🏒</div>
+                            <h2 id="ov-title">AeroHockey</h2>
+                            <p id="ov-text">Leve o disco até o gol do adversário. Mova o rebatedor com o mouse, o dedo ou as setas.</p>
+                            <div class="overlay-actions">
+                                <button class="btn primary" id="ov-play" type="button">Jogar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="panel">
+                <div class="status" id="status" aria-live="polite">Toque em Jogar para começar.</div>
+
+                <div class="actions">
+                    <button class="btn primary" id="btn-play" type="button" title="Jogar (Enter)">Jogar</button>
+                    <button class="btn" id="btn-pause" type="button" title="Pausar (P)" disabled>⏸ Pausar</button>
+                    <button class="btn icon" id="btn-sound" type="button" title="Som (M)" aria-label="Ligar/desligar som">🔊</button>
+                </div>
+
+                <div class="card">
+                    <h2>Contra o computador</h2>
+                    <div class="records" id="records"></div>
+                </div>
+
+                <details class="card rules">
+                    <summary>Como jogar</summary>
+                    <ul>
+                        <li>Cada jogador defende o gol do seu lado: <b style="color:#ff6b6b">Jogador 1</b> à esquerda e <b style="color:#5aa9ff">Jogador 2</b> (ou o computador) à direita. O rebatedor fica sempre na sua metade da mesa.</li>
+                        <li>O disco desliza pela mesa (o ar diminui o atrito) e bate nas paredes; só entra pela abertura do gol, no meio da lateral.</li>
+                        <li><b>Mouse ou dedo</b>: o rebatedor segue a sua mão. Quanto mais rápido você bater, mais forte o disco vai.</li>
+                        <li><b>Teclado</b>: Jogador 1 com as <b>setas</b> e <b>Espaço</b> para bater forte; Jogador 2 com <b>A S W Z</b> (esquerda, direita, cima, baixo) e <b>Shift</b> para bater forte.</li>
+                        <li><b>2 jogadores no celular</b>: cada um põe o dedo na sua metade da mesa.</li>
+                        <li>Com o celular em pé, a mesa fica na vertical: o Jogador 1 joga embaixo.</li>
+                        <li>Depois de um gol, o disco volta para o lado de quem sofreu o gol.</li>
+                    </ul>
+                </details>
+
+                <p class="keys" id="keys">Jogador 1: setas + Espaço · Jogador 2: A S W Z + Shift · Mouse/dedo: mover · P: pausa · M: som · Enter: jogar</p>
+            </aside>
+        </section>
+    </main>
+
+    <script src="../assets/combobox.js?v=1.071"></script>
+    <script src="game.js?v=1.071"></script>
+</body>
+</html>
