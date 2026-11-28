@@ -17,55 +17,55 @@ C = Dó | D = Ré | E = Mi | F = Fá | G = Sol | A = Lá | B = Si
 MELODIA – TEMA PRINCIPAL
 
 Compasso 1:
-E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+4E[n1/4]; 4E[n1/4]; 4F[n1/4]; 4G[n1/4];
 
 Compasso 2:
-G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+4G[n1/4]; 4F[n1/4]; 4E[n1/4]; 4D[n1/4];
 
 Compasso 3:
-C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+4C[n1/4]; 4C[n1/4]; 4D[n1/4]; 4E[n1/4];
 
 Compasso 4:
-E[n1/2]; D[n1/2];
+4E[n1/2]; 4D[n1/2];
 
 Compasso 5:
-E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+4E[n1/4]; 4E[n1/4]; 4F[n1/4]; 4G[n1/4];
 
 Compasso 6:
-G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+4G[n1/4]; 4F[n1/4]; 4E[n1/4]; 4D[n1/4];
 
 Compasso 7:
-C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+4C[n1/4]; 4C[n1/4]; 4D[n1/4]; 4E[n1/4];
 
 Compasso 8:
-D[n1/2]; C[n1/2];
+4D[n1/2]; 4C[n1/2];
 
 Compasso 9:
-D[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+4D[n1/4]; 4D[n1/4]; 4E[n1/4]; 4C[n1/4];
 
 Compasso 10:
-D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+4D[n1/4]; 4E[n1/8]; 4F[n1/8]; 4E[n1/4]; 4C[n1/4];
 
 Compasso 11:
-D[n1/4]; E[n1/8]; F[n1/8]; E[n1/4]; D[n1/4];
+4D[n1/4]; 4E[n1/8]; 4F[n1/8]; 4E[n1/4]; 4D[n1/4];
 
-Compasso 12 (G de baixo = 0G):
-C[n1/4]; D[n1/4]; 0G[n1/2];
+Compasso 12 (G de baixo = 3G):
+4C[n1/4]; 4D[n1/4]; 3G[n1/2];
 
 Compasso 13:
-E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];
+4E[n1/4]; 4E[n1/4]; 4F[n1/4]; 4G[n1/4];
 
 Compasso 14:
-G[n1/4]; F[n1/4]; E[n1/4]; D[n1/4];
+4G[n1/4]; 4F[n1/4]; 4E[n1/4]; 4D[n1/4];
 
 Compasso 15:
-C[n1/4]; C[n1/4]; D[n1/4]; E[n1/4];
+4C[n1/4]; 4C[n1/4]; 4D[n1/4]; 4E[n1/4];
 
 Compasso 16:
-D[n1/2]; C[n1/2];
+4D[n1/2]; 4C[n1/2];
 
 Compasso 17 (final com acorde de Dó maior: Dó, Mi e Sol juntos):
-C[n1], E[n1], G[n1];
+4C[n1], 4E[n1], 4G[n1];
 
 Fim
 

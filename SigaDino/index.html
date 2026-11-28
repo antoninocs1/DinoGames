@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.064">
-    <link rel="stylesheet" href="style.css?v=1.064">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.065">
+    <link rel="stylesheet" href="style.css?v=1.065">
 </head>
 <body>
     <main class="app">
@@ -208,7 +208,7 @@
                     <details class="music-help">
                         <summary>❓ Ajuda — como escrever as notas</summary>
                         <div class="help-body">
-                            <p>Cada nota é a <strong>letra</strong> (ou o nome) e a <strong>figura</strong> entre colchetes: <code>E[n1/4];</code> = Mi semínima.</p>
+                            <p>Cada nota é a <strong>oitava</strong> (número), a <strong>letra</strong> (ou o nome) e a <strong>figura</strong> entre colchetes: <code>4E[n1/4];</code> = Mi (da oitava do Dó central) semínima.</p>
                             <table>
                                 <thead><tr><th>Nota</th><th>Letra</th><th>Cor</th></tr></thead>
                                 <tbody>
@@ -240,7 +240,18 @@
                                 <li><strong>Vírgula</strong>: notas juntas, formando um <strong>acorde</strong> — <code>C[n1], E[n1], G[n1];</code></li>
                                 <li><strong>Pausa</strong> (silêncio): <code>[p1/4];</code> ou <code>p[1/4];</code></li>
                                 <li><strong>Sustenido</strong> (sobe ½ tom): <code>F#[n1/4]</code> · <strong>Bemol</strong> (desce ½ tom): <code>Bb[n1/4]</code></li>
-                                <li><strong>Oitava</strong>: o número antes da nota diz qual Dó do pentagrama — <code>C[n1]</code> ou <code>1C[n1]</code> é o Dó central (1º Dó); <code>2C[n1]</code> é o Dó de cima (2º Dó); <code>0G[n1/2]</code> é o Sol abaixo do Dó central. Mais grave ainda (mão esquerda): <code>-1C</code> e <code>-2C</code>, uma e duas oitavas abaixo do <code>0C</code>.</li>
+                                <li><strong>Oitava</strong>: o <strong>número na frente da letra</strong> diz a oitava, como no piano. <code>4C</code> é o <strong>Dó central</strong> (a bolinha no pé da tecla), e <code>4D</code>, <code>4E</code>… <code>4B</code> são as notas logo acima dele; <code>5C</code> é o Dó de cima; <code>3G</code> é o Sol abaixo do Dó central. Cada número começa num Dó: a oitava 4 vai do <code>4C</code> ao <code>4B</code>, a 5 do <code>5C</code> ao <code>5B</code>. Sem número vale a oitava 4 (<code>C[n1]</code> = <code>4C[n1]</code>).
+                                    <table>
+                                        <thead><tr><th>Código</th><th>Nota</th><th>Onde</th></tr></thead>
+                                        <tbody>
+                                            <tr><td><code>1C</code> <code>2C</code></td><td>Dó bem grave</td><td>mão esquerda, clave de Fá</td></tr>
+                                            <tr><td><code>3C</code></td><td>Dó abaixo do central</td><td>clave de Fá</td></tr>
+                                            <tr><td><code>4C</code></td><td><strong>Dó central</strong></td><td>linha suplementar entre as duas claves</td></tr>
+                                            <tr><td><code>5C</code></td><td>Dó de cima</td><td>3º espaço da clave de Sol</td></tr>
+                                            <tr><td><code>6C</code> <code>7C</code></td><td>Dó agudo</td><td>linhas suplementares em cima</td></tr>
+                                        </tbody>
+                                    </table>
+                                    O número fica <strong>na frente</strong> (<code>4C</code>, não <code>C4</code>) para não se misturar com a figura nem com os acordes: <code>4C[n1], 4E[n1], 4G[n1];</code> é o acorde de Dó maior. No acidente, o número também vem antes: <code>4F#[n1/4]</code>, <code>3Bb[n1/2]</code>. <em>Arquivos .txt feitos antes da versão 1.065</em> usavam a numeração antiga (Dó central = <code>C</code> ou <code>1C</code>): some 3 ao número (<code>2C</code> antigo = <code>5C</code>, <code>0G</code> antigo = <code>3G</code>, <code>-1C</code> antigo = <code>2C</code>). O texto que estava guardado no editor foi convertido sozinho.</li>
                                 <li>Também vale escrever o nome: <code>Dó[n1/4]; Sol[n1/2];</code></li>
                                 <li><strong>Ponto de aumento</strong> (vale 1 vez e meia): <code>E[n1/4.]</code> = semínima pontuada (1½ tempo); <code>[p1/2.]</code> = pausa de mínima pontuada.</li>
                                 <li><strong>Ponto duplo</strong> (vale 1 vez e ¾): <code>E[n1/2..]</code> = mínima com ponto duplo (3½ tempos no 4/4).</li>
@@ -270,11 +281,11 @@
                                 <li><strong>Duas mãos (piano)</strong>: escreva <code>MD:</code> (mão direita) e <code>ME:</code> (mão esquerda) antes das notas de cada mão — vale também <code>Mão direita:</code> / <code>Mão esquerda:</code>. O que vem depois do marcador é daquela mão até o próximo marcador; sem marcador, tudo é mão direita. As duas mãos tocam <strong>juntas</strong>, cada uma com os seus compassos, ligaduras e quiálteras, e as notas do mesmo instante ficam na mesma vertical do pentagrama. Exemplo:<br>
                                     <code>Compasso 1:</code><br>
                                     <code>MD: E[n1/4]; F[n1/4]; G[n1/2];</code><br>
-                                    <code>ME: 0C[n1/2], 0G[n1/2]; -1G[n1/2];</code></li>
+                                    <code>ME: 3C[n1/2], 3G[n1/2]; 2G[n1/2];</code></li>
                                 <li><strong>Duas vozes na mesma mão</strong>: <code>MD2:</code> e <code>ME2:</code> são a 2ª voz da mão direita e da esquerda (por exemplo, uma nota longa por baixo da melodia). No pentagrama a 1ª voz fica com a haste para cima e a 2ª para baixo. Para a 2ª voz esperar sem desenhar pausa, use <code>[s1/4]</code> (espera em silêncio).</li>
                                 <li><strong>Armadura</strong>: escreva <code>Tom: Ré♭ maior</code> (ou <code>Tom: Db</code>, <code>Tom: Lá menor</code>) ou <code>Armadura: 5b</code> / <code>Armadura: 3#</code>. Os ♭/♯ aparecem depois da clave e as notas sem acidente seguem a armadura (com 5 bemóis, <code>B[n1/4]</code> já é Si♭). Para o natural use o bequadro: <code>A♮[n1/4]</code> ou <code>A=[n1/4]</code>. Outra linha <code>Tom:</code> no meio do texto <strong>troca a armadura</strong> dali em diante: o pentagrama desenha uma barra dupla e os novos ♯/♭ (a Clair de Lune vai para <code>Tom: Dó♯ menor</code> no compasso 37 e volta para Ré♭ maior no 43).</li>
-                                <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code> ou quando a música desce abaixo do Fá de baixo (<code>0F</code>) — sem <code>ME:</code>, as notas abaixo do Dó central vão para a clave de Fá; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
-                                <li><strong>Teclado</strong> (nas opções, em cima): <strong>Automático</strong> parte das 2 oitavas do Dó central e acrescenta oitavas embaixo e em cima até caber a música (de <code>-2C</code> até <code>4B</code>), como um piano; <strong>2 oitavas</strong> é o teclado de 24 notas; <strong>3 oitavas</strong> vai do <code>0C</code> ao <code>2B</code> (a oitava de baixo do Dó central e as 2 de cima); <strong>Piano (5 oitavas)</strong> vai do <code>-1C</code> ao <code>3B</code>. Com o <strong>Modelo: Piano (5 oitavas)</strong>, o Automático parte das 5 oitavas. A bolinha no pé da tecla marca o <strong>Dó central</strong>. As teclas do computador continuam nas 2 oitavas do meio; as outras se tocam com o mouse ou o dedo.</li>
+                                <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code> ou quando a música desce abaixo do Fá de baixo (<code>3F</code>) — sem <code>ME:</code>, as notas abaixo do Dó central vão para a clave de Fá; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
+                                <li><strong>Teclado</strong> (nas opções, em cima): <strong>Automático</strong> parte das 2 oitavas do Dó central e acrescenta oitavas embaixo e em cima até caber a música (de <code>1C</code> até <code>7B</code>), como um piano; <strong>2 oitavas</strong> é o teclado de 24 notas (do <code>4C</code> ao <code>5B</code>); <strong>3 oitavas</strong> vai do <code>3C</code> ao <code>5B</code> (a oitava de baixo do Dó central e as 2 de cima); <strong>Piano (5 oitavas)</strong> vai do <code>2C</code> ao <code>6B</code>. Com o <strong>Modelo: Piano (5 oitavas)</strong>, o Automático parte das 5 oitavas. A bolinha no pé da tecla marca o <strong>Dó central</strong>. As teclas do computador continuam nas 2 oitavas do meio; as outras se tocam com o mouse ou o dedo.</li>
                                 <li><strong>Barras de colcheia</strong>: colcheias e semicolcheias seguidas da mesma voz ficam <strong>ligadas por barras</strong>, como na partitura: de 3 em 3 no 6/8 e no 9/8, a cada semínima no 2/4, 3/4 e 4/4, e todas as notas de uma quiáltera juntas. Pausa ou nota mais longa no meio separa os grupos.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
@@ -352,12 +363,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.064"></script>
-    <script src="sounds.js?v=1.064"></script>
-    <script src="modes.js?v=1.064"></script>
-    <script src="engine.js?v=1.064"></script>
-    <script src="staff.js?v=1.064"></script>
-    <script src="music.js?v=1.064"></script>
-    <script src="game.js?v=1.064"></script>
+    <script src="../assets/combobox.js?v=1.065"></script>
+    <script src="sounds.js?v=1.065"></script>
+    <script src="modes.js?v=1.065"></script>
+    <script src="engine.js?v=1.065"></script>
+    <script src="staff.js?v=1.065"></script>
+    <script src="music.js?v=1.065"></script>
+    <script src="game.js?v=1.065"></script>
 </body>
 </html>

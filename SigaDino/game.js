@@ -1137,6 +1137,8 @@
         practiceHand: $("practice-hand"), practiceHint: $("practice-hint"), speed: $("song-speed"), clear: $("btn-song-clear"), file: $("song-file"), info: $("song-info"),
     };
     const savedSong = storage.get(SONG_KEY);
+    // Texto guardado na numeração antiga das oitavas (Dó central = C/1C): passa para 4C uma vez.
+    if (savedSong?.text && savedSong.oct !== 4) { savedSong.text = MUSIC.migrateOctaves(savedSong.text); savedSong.oct = 4; storage.set(SONG_KEY, savedSong); }
     const song = {
         name: savedSong?.name || MUSIC.EXAMPLES[0].file,
         handle: null,          // arquivo aberto (quando o navegador deixa salvar por cima)
@@ -1609,7 +1611,7 @@
     };
 
     // ---------- Arquivo: abrir, salvar, salvar como ----------
-    const rememberSong = () => storage.set(SONG_KEY, { text: mu.text.value, name: song.name });
+    const rememberSong = () => storage.set(SONG_KEY, { text: mu.text.value, name: song.name, oct: 4 });
     const showName = () => { mu.name.textContent = `${song.name}${song.dirty ? " •" : ""}`; };
     const setSongText = (text, name, handle = null) => {
         stopSong();
@@ -1782,6 +1784,7 @@
     // A caixinha é texto comum (dá para editar, desfazer, copiar e colar); as notas tocadas
     // entram no fim. Versão antiga guardava a lista de notas: vira texto uma vez.
     const freeSaved = storage.get(FREE_KEY) || {};
+    if (freeSaved.text && freeSaved.oct !== 4) freeSaved.text = MUSIC.migrateOctaves(freeSaved.text); // numeração antiga → 4C
     const oldEvents = freeSaved.events || [];
     tr.text.value = freeSaved.text ?? oldEvents.map((ev, k) =>
         `${k && ev.br ? "\n" : k ? " " : ""}${ev.notes.map((n) => `${n}[n${FRAC_CODE[ev.fig] || "1/4"}]`).join(", ")};`).join("");
@@ -1791,12 +1794,12 @@
         if (!pad.letter) return "";
         const flat = prefs.accidental === "bemol" && pad.flatLetter;
         const letter = (flat ? pad.flatLetter : pad.letter).replace("♯", "#").replace("♭", "b");
-        return `${pad.octave ? pad.octave + 1 : ""}${letter}`; // oitava 1 (a de cima) = "2C", −1 = "0C"…
+        return `${(pad.octave || 0) + 4}${letter}`; // como no piano: Dó central = "4C", o de cima = "5C"…
     };
     const renderFree = () => {
         const empty = !tr.text.value.trim();
         tr.save.disabled = tr.clear.disabled = tr.send.disabled = empty;
-        storage.set(FREE_KEY, { text: tr.text.value });
+        storage.set(FREE_KEY, { text: tr.text.value, oct: 4 });
     };
     tr.text.addEventListener("input", renderFree);
     /**
