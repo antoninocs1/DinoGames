@@ -481,7 +481,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), beamsOpt: $("beams-opt"), fieldBeams: $("field-beams"), staffScroll: $("staff-scroll"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), beamsOpt: $("beams-opt"), fieldBeams: $("field-beams"), scrollOpt: $("scroll-opt"), fieldScroll: $("field-scroll"), staffScroll: $("staff-scroll"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
     const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), pan: $("kb-pan"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"),
@@ -490,12 +490,14 @@
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, beams: "1", keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
+    const DEFAULTS = { v: 3, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, beams: "0", scroll: "auto", keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
-    if (saved.v !== 2) delete saved.strict;
+    if ((saved.v || 0) < 2) delete saved.strict;
+    // Versão 3: colcheias separadas (sem barra) passaram a ser o padrão.
+    if ((saved.v || 0) < 3) delete saved.beams;
     delete saved.look; // o desenho agora vem do modo (campo "look" em modes.js)
-    const prefs = Object.assign({}, DEFAULTS, saved, { v: 2 });
+    const prefs = Object.assign({}, DEFAULTS, saved, { v: 3 });
     if (!MODES[prefs.mode]?.enabled) prefs.mode = enabledModes[0][0];
     /**
      * Modelo valendo agora: o piano (freeOnly) só existe no Tocar livre e no Executar
@@ -748,6 +750,8 @@
         ui.fieldPauta.hidden = !on || !isFree(); // pauta dupla: no Tocar livre e no Executar música
         ui.fieldTeclado.hidden = !isMusic();
         ui.fieldBeams.hidden = !(isMusic() && on); // barras de colcheia: só na música
+        ui.fieldScroll.hidden = !(isFree() && on); // rolagem da pauta: acompanha a música ou com barra
+        staff.setManual(prefs.scroll === "barra");
         ui.fieldKeys.hidden = mode.look !== "teclado";
         // Compasso do Tocar livre: as figuras das notas tocadas se ajustam ao que cabe no compasso.
         ui.fieldMeter.hidden = !(isFree() && !isMusic() && mode.pads.some((p) => p.letter));
@@ -1300,6 +1304,7 @@
             runs[hand] = null;
         };
         let curKey = info.key;     // armadura valendo (troca com uma linha "Tom:" no meio do texto)
+        let curTempo = songEvents[0]?.tmark ?? -1; // marca de andamento valendo (muda com outra linha "Andamento:")
         const grand = staff.grand;
         songEvents.forEach((ev, k) => {
             if (ev.key != null && ev.key !== curKey) { staff.keyChange(ev.key); curKey = ev.key; }
@@ -1351,6 +1356,12 @@
                 }
             }
             slots[k] = got;
+            // Mudança de andamento: "♩. = 60" em cima da 1ª nota do trecho novo.
+            if (ev.tmark != null && ev.tmark !== curTempo && got.length) {
+                curTempo = ev.tmark;
+                const t = info.tempos[ev.tmark];
+                if (t) staff.annotate(got[0], t.label);
+            }
         });
         Object.keys(groups).forEach(closeGroup);
         Object.keys(runs).forEach(flush);
@@ -1453,11 +1464,12 @@
             let kEnd = k;
             while (kEnd < k1 && events[kEnd].at === at) kEnd++;
             const nextAt = kEnd < k1 ? events[kEnd].at : Math.max(...events.slice(k, kEnd).map(endOf));
-            const wait = (nextAt - at) / U * 4 * quarter; // semibreve = 4 semínimas
+            const wait = (nextAt - at) / U * 4 * quarterAt(events[k], quarter, parsed.tempo); // semibreve = 4 semínimas
             const moment = events.slice(k, kEnd);
             const struck = new Set(); // a mesma tecla em duas vozes no mesmo instante toca uma vez só
             moment.forEach((ev) => {
-                const ms = ev.frac * 4 * quarter;
+                const q = quarterAt(ev, quarter, parsed.tempo);
+                const ms = ev.frac * 4 * q;
                 const on = Math.max(60, ms * 0.9);      // um respiro entre as notas
                 if (ev.kind === "note") ev.notes.forEach((n) => {
                     const i = padForSemi(n.semi);
@@ -1465,7 +1477,7 @@
                     // por ela (do cursor), toca o que sobra da ligadura.
                     if (i < 0 || (n.tied && at > startAt) || struck.has(i)) return;
                     struck.add(i);
-                    const holdMs = (n.hold || ev.frac) * 4 * quarter;
+                    const holdMs = (n.hold || ev.frac) * 4 * q;
                     light(i, Math.max(60, holdMs - (ms - on)), freqOfSemi(n.semi));
                 });
                 (songSlots[events.indexOf(ev)] || []).forEach((slot) => { staff.light(slot, on); staff.done(slot); });
@@ -1518,6 +1530,11 @@
         const bpm = Math.min(240, Math.max(30, Number(mu.tempo.value) || 160));
         return 60000 / bpm / (Number(prefs.speed) || 1);
     };
+    /**
+     * Semínima (ms) no trecho do evento: com "Andamento:" no meio do texto, o andamento muda
+     * na mesma proporção em relação ao do começo (o ♩ = e a Velocidade continuam valendo).
+     */
+    const quarterAt = (ev, base, first) => (first && ev?.tempo ? base * (first / ev.tempo) : base);
 
     // =================================================================
     // Praticar: a música espera você tocar a tecla certa antes de seguir
@@ -1628,7 +1645,7 @@
                     ev.notes.forEach((n) => {
                         const i = padForSemi(n.semi);
                         if (i < 0 || (n.tied && at > startAt)) return; // ligada: continua soando
-                        const ms = Math.max(60, (n.hold || ev.frac) * 4 * quarter * 0.95);
+                        const ms = Math.max(60, (n.hold || ev.frac) * 4 * quarterAt(ev, quarter, parsed.tempo) * 0.95);
                         if (mine(ev)) { need.add(i); hold.set(i, Math.max(hold.get(i) || 0, ms)); names.set(i, spelledName(n)); }
                         else others.set(i, { ms, freq: freqOfSemi(n.semi) });
                     });
@@ -1650,7 +1667,7 @@
                     practice.hits++;
                 } else if (prevAt != null) {
                     // Só a outra mão (ou pausa): espera o ritmo desde o último instante.
-                    await sleep(((at - prevAt) / U) * 4 * quarter);
+                    await sleep(((at - prevAt) / U) * 4 * quarterAt(events[k], quarter, parsed.tempo));
                     if (id !== songRun) return;
                 }
                 others.forEach(({ ms, freq }, i) => { if (!need.has(i)) light(i, ms, freq); });
@@ -2048,11 +2065,12 @@
     bindSelect(ui.beamsOpt, "beams", () => renderSong()); // colcheias com barra ou separadas
     // Barra de rolagem da partitura (a clave, a armadura e o compasso ficam parados).
     staff.onScroll((pos, max) => {
-        ui.staffScroll.hidden = max < 1;
+        ui.staffScroll.hidden = max < 1 || prefs.scroll !== "barra";
         ui.staffScroll.max = String(max);
         ui.staffScroll.value = String(pos);
     });
     ui.staffScroll.addEventListener("input", () => staff.setShift(Number(ui.staffScroll.value)));
+    bindSelect(ui.scrollOpt, "scroll", () => { staff.setManual(prefs.scroll === "barra"); staff.syncScroll(); });
     // Praticar (Executar música): mão, dica e velocidade
     bindSelect(mu.practiceHand, "practiceHand", () => { if (practice) practiceSong(); });
     bindSelect(mu.practiceHint, "practiceHint", () => { if (practice) practiceSong(); });

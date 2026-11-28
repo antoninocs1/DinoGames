@@ -159,7 +159,10 @@ body.kb-wide .kb-scroll .device[data-look="teclado"] { flex: 0 0 auto; width: va
 .staff .bar { stroke: #1d1b22; stroke-width: 1.4; transition: opacity .15s; }
 .staff .bar.gone { opacity: 0; }
 .staff .tie, .staff .tuplet { transition: opacity .15s; }
-.staff .tie.gone, .staff .tuplet.gone { opacity: 0; }
+.staff .tie.gone, .staff .tuplet.gone, .staff .beam.gone, .staff .tempo-mark.gone { opacity: 0; }
+.staff .tempo-mark { font-size: 9px; font-weight: 700; fill: #1d1b22; font-style: italic; }
+.staff.drag-scroll { cursor: grab; }
+.staff .far { display: none; } /* longe da parte à vista: não é desenhada (rolagem leve) */
 .staff .tuplet text { font: italic 700 10px/1 Georgia, "Times New Roman", serif; fill: #1d1b22; text-anchor: middle; dominant-baseline: central; }
 .staff .stem { stroke: #1d1b22; stroke-width: 1.6; }
 .staff .acc { pointer-events: none; }

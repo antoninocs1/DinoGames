@@ -450,6 +450,29 @@
             if (lead) want = Math.min(want, Math.max(0, notes[notes.length - 1].x - end));
             applyShift(want);
         };
+        let goneN = 0;           // as goneN primeiras notas já passaram da clave (escondidas)
+        // Só as notas perto da parte à vista são desenhadas: as de índice va até vb−1. As outras
+        // ficam com display: none (a música inteira tem mais de mil notas; o celular agradece).
+        let va = 0, vb = 0;
+        const setFar = (m, far) => {
+            m.el.classList.toggle("far", far);
+            m.barEl?.classList.toggle("far", far);
+            m.extras?.forEach((x) => x.classList.toggle("far", far));
+        };
+        /** Primeira nota com x ≥ px (as notas estão em ordem de x). */
+        const firstAt = (px) => { let lo = 0, hi = notes.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (notes[mid].x < px) lo = mid + 1; else hi = mid; } return lo; };
+        const updateRange = () => {
+            const na = firstAt(shift + x0 - 300), nb = firstAt(shift + W + 150);
+            if (vb > notes.length) vb = notes.length;
+            for (let i = va; i < vb; i++) if (i < na || i >= nb) setFar(notes[i], true);
+            for (let i = na; i < nb; i++) if (i < va || i >= vb) setFar(notes[i], false);
+            va = na; vb = nb;
+        };
+        const setGone = (m, gone) => {
+            m.el.classList.toggle("gone", gone);
+            m.barEl?.classList.toggle("gone", gone);
+            m.extras?.forEach((x) => x.classList.toggle("gone", gone));
+        };
         /** Maior rolagem: a última nota (e a barra do fim) chega ao fim da pauta. */
         const maxShift = () => {
             const last = notes[notes.length - 1];
@@ -465,22 +488,34 @@
             shift = want;
             layer.style.transform = `translateX(${f(-shift)}px)`;
             // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
-            notes.forEach((m) => {
-                const gone = m.x - shift < x0 - 6;
-                m.el.classList.toggle("gone", gone);
-                m.barEl?.classList.toggle("gone", gone);
-                m.extras?.forEach((x) => x.classList.toggle("gone", gone));
-            });
+            // As notas estão em ordem (x crescente): só as que cruzam a clave mudam (leve no celular).
+            updateRange();
+            const limit = shift + x0 - 6;
+            if (goneN > notes.length) goneN = notes.length;
+            while (goneN < notes.length && notes[goneN].x < limit) setGone(notes[goneN++], true);
+            while (goneN > 0 && notes[goneN - 1].x >= limit) setGone(notes[--goneN], false);
             // Depois de uma troca de tom, a armadura do começo da pauta passa a ser a nova.
-            const seen = notes.find((m) => !m.el.classList.contains("gone"));
+            const seen = notes[goneN];
             const k = seen ? seen.key ?? keyCount : keyCount;
             if (k !== keyShown) drawKey(k);
             emitScroll();
         };
+        // Rolagem pela barra ou arrastando: um desenho por quadro de tela (requestAnimationFrame).
+        let pending = null, frame = 0;
+        const queueShift = (px) => {
+            pending = Math.max(0, Math.min(maxShift(), px));
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                layer.style.transition = "none";
+                applyShift(pending);
+            });
+        };
+        let manual = false;      // barra de rolagem / arrastar ligados (opção Rolagem)
         // Arrastar a pauta para os lados (dedo ou mouse) rola a partitura.
         let drag = null;
         svg.addEventListener("pointerdown", (e) => {
-            if (e.button > 0 || maxShift() < 1) return;
+            if (!manual || e.button > 0 || maxShift() < 1) return;
             drag = { id: e.pointerId, x: e.clientX, shift, moved: false };
         });
         svg.addEventListener("pointermove", (e) => {
@@ -488,8 +523,7 @@
             const dx = ((e.clientX - drag.x) * W) / (svg.clientWidth || W);
             if (!drag.moved && Math.abs(dx) < 4) return;
             if (!drag.moved) { drag.moved = true; try { svg.setPointerCapture(e.pointerId); } catch { /* sem captura */ } }
-            layer.style.transition = "none";
-            applyShift(Math.max(0, Math.min(maxShift(), drag.shift - dx)));
+            queueShift(drag.shift - dx);
         });
         const endDrag = (e) => { if (drag && e.pointerId === drag.id) { drag = null; layer.style.transition = ""; } };
         svg.addEventListener("pointerup", endDrag);
@@ -531,9 +565,19 @@
             /** Barra de rolagem da partitura: fn(posição, máximo) a cada rolagem. */
             onScroll(fn) { onScroll = fn; },
             /** Rola até a posição px (0 = começo), sem passar do fim. */
-            setShift(px) { applyShift(Math.max(0, Math.min(maxShift(), Number(px) || 0))); },
+            setShift(px) { queueShift(Number(px) || 0); },
+            /** Liga a rolagem manual (arrastar a pauta); desligada, a pauta só acompanha a música. */
+            setManual(on) { manual = !!on; svg.classList.toggle("drag-scroll", manual); },
+            /** Texto em cima da nota da posição i (mudança de andamento: "♩. = 60"). */
+            annotate(i, text) {
+                const n = notes[i - first];
+                if (!n) return;
+                const y = Math.min(n.top ?? 0, 0) - 10;
+                layer.insertAdjacentHTML("beforeend", `<text class="tempo-mark" x="${f(n.x - 8)}" y="${f(y)}">${text}</text>`);
+                n.extras.push(layer.lastElementChild);
+            },
             /** Avisa a posição atual (depois de desenhar a música inteira). */
-            syncScroll() { emitScroll(); },
+            syncScroll() { updateRange(); emitScroll(); },
             /** Liga ou desliga a pauta dupla (clave de Sol em cima e clave de Fá embaixo). */
             setGrand(on) {
                 if (!!on === grand) return;
@@ -630,6 +674,8 @@
                 layer.style.transition = "none";
                 layer.style.transform = "";
                 layer.innerHTML = "";
+                goneN = 0;
+                va = vb = 0;
                 void layer.getBoundingClientRect();
                 layer.style.transition = "";
                 emitScroll();
@@ -700,6 +746,7 @@
                 el.classList.add("done");
                 const slot = first + notes.length;
                 notes.push({ el, x: left, pads: [], rest: true, figure: "", extras: [], extraRight: 0, rightEdge: end, top: 0, clef: "sol", key: count });
+                if (notes.length - 1 === vb) vb++; else setFar(notes[notes.length - 1], true);
                 keyNow = count;
                 prevCol = col;
                 col = { at: {}, x: end + 10 - DX, right: end, extraRight: 0, count: 1, barEl: null };
@@ -751,6 +798,8 @@
                     // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
                     if (data.over) el.classList.add("over");
                     notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [], key: keyNow });
+                    // Nota nova: desenhada se encosta no trecho desenhado; senão fica escondida até chegar a vez dela.
+                    if (notes.length - 1 === vb) vb++; else setFar(notes[notes.length - 1], true);
                     if (barEl) col.barEl = barEl;
                     col.right = Math.max(col.right, drawn.rightEdge);
                     col.extraRight = Math.max(col.extraRight, drawn.extraRight);
@@ -765,6 +814,9 @@
                     old.barEl?.remove();
                     old.extras?.forEach((x) => x.remove());
                     first++;
+                    goneN = Math.max(0, goneN - 1);
+                    va = Math.max(0, va - 1);
+                    vb = Math.max(0, vb - 1);
                 }
                 if (ms) this.light(slot, ms);
                 return slot;

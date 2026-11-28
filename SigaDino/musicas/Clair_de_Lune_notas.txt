@@ -8,6 +8,8 @@ Andante très expressif · pp · con sordina
 Tom: Ré♭ maior
 Compasso: 9/8
 Andamento: semínima. = 52
+Mudanças de andamento: uma linha "Andamento: …" antes do compasso (os números depois
+do compasso 1 são sugestões: Debussy só escreveu as palavras, como "Tempo rubato").
 
 Convenção utilizada:
 MD = mão direita (melodia); MD2 = 2ª voz da mão direita
@@ -101,6 +103,7 @@ MD2: [p1/8]; 4F[n1/4], 4B[n1/4]~ 4F[n1/2.], 4B[n1/2.];
 ME:  [p1/8]; 4E[n1/4]~ {2 4E[n1/8]; 4D[n1/8]~} 4D[n1/4.];
 ME2: 2B[n1/8]~ 2B[n1/4], 3F[n1/4], 3B[n1/4]~ 2B[n1/4.], 3F[n1/4.], 3B[n1/4.]~ 3F[n1/4.], 3B[n1/4.];
 
+Andamento: semínima. = 56   (Tempo rubato)
 Compasso 15 (Tempo rubato: a melodia em oitavas, com acordes):
 MD:  {2 [p1/8]; 5F[n1/8], 5B[n1/8], 6F[n1/8]~} 5F[n1/8], 5B[n1/8], 6F[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5D[n1/8], 5B[n1/8], 6D[n1/8]; 5D[n1/8], 5B[n1/8], 6D[n1/8];
 MD2: [s1/2.]; [s1/4.];
@@ -125,6 +128,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4D[n1/8], 4G[n1/8], 4B[n1/8]; 4E[n1/8], 4G[n1/8], 4B[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8]; {2 4C[n1/8], 4G[n1/8], 4B[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8];} 3B[n1/4.], 4E[n1/4.], 4G[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 62   (peu à peu cresc. et animé: aos poucos, mais animado)
 Compasso 19 (peu à peu cresc. et animé (aos poucos, mais forte e mais animado)):
 MD:  {6:9 4B[n1/8], 5G[n1/8], 5B[n1/8]; 4G[n1/8], 5G[n1/8]; 4A[n1/8], 5E[n1/8], 5A[n1/8]; 5C[n1/8], 6C[n1/8]; 4B[n1/8], 5G[n1/8], 5B[n1/8]; 4G[n1/8], 5G[n1/8];}
 MD2: [s1/2.]; [s1/4.];
@@ -161,6 +165,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  [p1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 4C[n1/8], 4E[n1/8], 4A[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8]; 4E[n1/8], 4G[n1/8], 4B[n1/8];
 ME2: 3E[n1/2.], 2E[n1/2.]; [s1/4.];
 
+Andamento: semínima. = 54   (diminuendo molto: mais calmo)
 Compasso 25 (diminuendo molto: acordes arpejados):
 MD:  5A[n1/2.], 6D[n1/2.], 6A[n1/2.]; 5A[n1/4.], 6D[n1/4.], 6A[n1/4.];
 MD2: [s1/2.]; [s1/4.];
@@ -173,6 +178,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4E[n1/2.], 4G[n1/2.], 4A[n1/2.], 5D[n1/2.], 5E[n1/2.]; 3A[n1/4.], 4E[n1/4.], 4G[n1/4.], 5C[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 66   (Un poco mosso: um pouco mais movido)
 Compasso 27 (Un poco mosso: a mão esquerda em arpejos de semicolcheias):
 MD:  4F[n1/2.], 4A[n1/2.]; 4A[n1/4], 5C♭[n1/4]; 5D[n1/8];
 MD2: [s1/2.]; [s1/4.];
@@ -233,6 +239,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  3D[n1/16]; 3A[n1/16]; 4D[n1/16]; 4F[n1/16]; 4A[n1/16]; 5D[n1/16]; 3A[n1/16]; 4C[n1/16]; 4F[n1/16]; 4A[n1/16]; 5C[n1/16]; 5F[n1/16]; 4C♭[n1/16]; 4F♭[n1/16]; 4A[n1/16]; 5C♭[n1/16]; 5A[n1/16]; 5F♭[n1/16];
 ME2: 3D[n1/4.]; 3F[n1/4.]; 3A[n1/4.];
 
+Andamento: semínima. = 72   (En animant: animando)
 Tom: Dó♯ menor  (armadura de 4 sustenidos)
 
 Compasso 37 (En animant: mais animado, em Dó♯ menor):
@@ -271,6 +278,7 @@ MD2: [s1/2.]; 3A[n1/4.];
 ME:  2F[n1/16]; 3C[n1/16]; 3E[n1/16]; 3F[n1/16]; 3A[n1/16]; 4C[n1/16]; 4E[n1/16]; 4C[n1/16]; 3A[n1/16]; 3F[n1/16]; 3E[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 60   (Calmato: mais calmo)
 Tom: Ré♭ maior  (volta a armadura de 5 bemóis)
 
 Compasso 43 (Calmato: volta o Ré♭ maior):
@@ -321,6 +329,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 5A♮[n1/16]; 4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 6C♭[n1/16]; 4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 5A♮[n1/16];
 ME2: 4G[n1/2.]~ 4G[n1/4.];
 
+Andamento: a tempo   (a Tempo 1º: volta ao andamento do começo)
 Compasso 51 (a Tempo 1º: volta o tema do começo, ppp):
 MD:  [p1/4.]; 6F[n1/4.], 6A[n1/4.]; 6F[n1/4.]~
 MD2: [s1/2.]; [s1/4.];
@@ -411,6 +420,7 @@ MD2: [s1/8]; 4G[n1/4], 4C[n1/4]; 4A[n1/4.]; [s1/4.];
 ME:  {2 2A[n1/8]; 3E[n1/8];} 5A[n1/4.]; 3A[n1/4.];
 ME2: 2A[n1/2.]; [s1/4.];
 
+Andamento: semínima. = 48   (morendo jusqu'à la fin: sumindo até o fim)
 Compasso 66 (morendo jusqu'à la fin (sumindo até o fim)):
 MD:  [p1/4]; [s1/8]; [p1/4]; [s1/8]; [p1/4]; [s1/8];
 MD2: [s1/2.]; [s1/4.];

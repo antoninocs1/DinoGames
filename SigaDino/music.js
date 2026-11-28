@@ -42,6 +42,9 @@
    comentário até o fim da linha. "Andamento: semínima = 160" define a velocidade
    (vale também "mínima = 80", "colcheia = 200", "semínima. = 60"); só o número
    ("Andamento: 120") conta tempos da figura da fórmula de compasso (x2).
+   Mudança de andamento: outra linha "Andamento: semínima = 100" (ou "colcheia = 200",
+   "semínima. = 60"…) no meio do texto vale dali em diante; "Andamento: a tempo" volta ao
+   do começo. Cada evento ganha tempo (semínimas por minuto) e tmark (índice em tempos).
    "Música: Nome da música" dá o título, mostrado em cima do pentagrama.
    Uma linha "Fim" (ou ":Fim") põe a barra dupla de fim depois da última nota.
    Duas mãos (piano): "MD:" (mão direita) e "ME:" (mão esquerda) — vale também
@@ -125,6 +128,9 @@
         // texto troca a armadura dali em diante; antes da 1ª linha vale a 1ª.
         const keys = readKeys(text);
         const keyAt = (pos) => { let k = keys[0] || NO_KEY; for (const x of keys) { if (x.pos > pos) break; k = x; } return k; };
+        // Andamento valendo em cada nota (índice em tempos; −1 = antes da 1ª marca).
+        const tempos = readTempos(text, readMeter(text));
+        const tempoAt = (pos) => { let k = tempos.length ? 0 : -1; tempos.forEach((t, i) => { if (t.pos <= pos) k = i; }); return k; };
         let events = lists.md, lastEnd = -1;
         // Quiálteras: "{3 …}", "{2 …}" ou "{n:m …}" (n notas no tempo de m).
         const groups = [];
@@ -161,7 +167,9 @@
             // Linha nova, "Compasso" ou "|" antes desta nota = começa outro compasso.
             const bar = events.length > 0 && /\n|compasso|\|/i.test(gap);
             const key = keyAt(from);
-            if (!isNote) { events.push({ kind: "rest", hand, frac, figure, dotted, dots, tuplet, bar, from, to, hidden: spacers.has(from), key: key.count }); continue; }
+            const tmark = tempoAt(from);
+            const tempo = tmark >= 0 ? tempos[tmark].bpm : 0;
+            if (!isNote) { events.push({ kind: "rest", hand, frac, figure, dotted, dots, tuplet, bar, from, to, hidden: spacers.has(from), key: key.count, tempo, tmark }); continue; }
 
             const word = plain(m[2]);
             const letter = word.length === 1 ? LETTERS.indexOf(word.toUpperCase()) : NAMES[word];
@@ -188,7 +196,7 @@
                 if (frac > prev.frac) Object.assign(prev, { frac, figure, dotted, dots });
                 continue;
             }
-            events.push({ kind: "note", hand, notes: [note], frac, figure, dotted, dots, tuplet, bar, from, to, key: key.count });
+            events.push({ kind: "note", hand, notes: [note], frac, figure, dotted, dots, tuplet, bar, from, to, key: key.count, tempo, tmark });
         }
         const voicesUsed = VOICES.filter((v) => lists[v].length);
         const two = voicesUsed.length > 1;
@@ -230,10 +238,10 @@
         const titleMatch = text.match(/^[ \t]*m[úu]sica[ \t]*:[ \t]*(.+?)[ \t]*$/im);
         const title = titleMatch ? titleMatch[1] : "";
         const meter = meterInfo ? meterInfo.text : "";
-        const tempo = readTempo(text, meterInfo);
+        const tempo = tempos.find((t) => t.bpm)?.bpm || 0; // andamento do começo (o ♩ = do jogo)
         const end = /^[ \t]*:?[ \t]*fim[ \t]*[:.!]?[ \t]*$/im.test(text) || /:[ \t]*fim(?![\p{L}\d])/iu.test(text);
         const hands = lists.me.length || lists.me2.length ? 2 : 1;
-        return { events, tempo, warnings, title, meter, end, hands, key: (keys[0] || NO_KEY).count, voices: VOICES.filter((v) => lists[v].length) };
+        return { events, tempo, tempos, warnings, title, meter, end, hands, key: (keys[0] || NO_KEY).count, voices: VOICES.filter((v) => lists[v].length) };
     };
 
     /**
@@ -367,19 +375,43 @@
      * dizem a figura; só o número ("Andamento: 120") conta o tempo da fórmula (x2).
      */
     const BEAT_FIG = { semibreve: 1, minima: 1 / 2, seminima: 1 / 4, colcheia: 1 / 8, semicolcheia: 1 / 16 };
-    const readTempo = (text, meterInfo) => {
+    const FIG_SIGN = { semibreve: "semibreve", minima: "mínima", seminima: "♩", colcheia: "♪", semicolcheia: "semicolcheia" };
+    /** Andamento de um trecho de texto: { bpm (semínimas por minuto), label ("♩. = 52") } ou null. */
+    const tempoOf = (text, meterInfo) => {
         const byFig = text.match(/(?<!\p{L})(semibreve|semicolcheia|sem[ií]nima|m[ií]nima|colcheia)(\s*(?:\.|pontuada))?\s*=\s*(\d{1,3})/iu);
-        let fig, n;
+        let fig, n, label;
         if (byFig) {
-            fig = BEAT_FIG[plain(byFig[1])] * (byFig[2] ? 1.5 : 1);
+            const name = plain(byFig[1]);
+            fig = BEAT_FIG[name] * (byFig[2] ? 1.5 : 1);
             n = Number(byFig[3]);
+            label = `${FIG_SIGN[name]}${byFig[2] ? "." : ""} = ${n}`;
         } else {
             const bare = text.match(/(?:andamento|bpm|tempo)\s*[:=]?\s*(\d{2,3})/i);
-            if (!bare) return 0;
+            if (!bare) return null;
             n = Number(bare[1]);
             fig = meterInfo ? 1 / meterInfo.unit : 1 / 4;
+            label = `Andamento ${n}`;
         }
-        return Math.min(240, Math.max(30, Math.round(n * fig * 4))); // figura do tempo → semínimas por minuto
+        return { bpm: Math.min(240, Math.max(30, Math.round(n * fig * 4))), label }; // figura do tempo → semínimas por minuto
+    };
+    const readTempo = (text, meterInfo) => tempoOf(text, meterInfo)?.bpm || 0;
+    /**
+     * Todas as marcas de andamento do texto, na ordem: [{ pos, bpm, label }]. A 1ª é o
+     * andamento da música; cada outra linha "Andamento: …" muda dali em diante, e
+     * "Andamento: a tempo" volta ao 1º.
+     */
+    const readTempos = (text, meterInfo) => {
+        const list = [];
+        let pos = 0;
+        for (const line of text.split("\n")) {
+            const t = tempoOf(line, meterInfo);
+            const back = /^\s*andamento\s*:\s*(a\s+tempo|tempo\s+inicial|inicial)\b/i.test(line);
+            if (t || back) list.push({ pos, bpm: t ? t.bpm : 0, label: t ? t.label : "a tempo", back: !t && back });
+            pos += line.length + 1;
+        }
+        const first = list.find((t) => t.bpm)?.bpm || 0;
+        list.forEach((t) => { if (t.back) t.bpm = first; });
+        return list;
     };
 
     // ---------- Exemplos ----------
@@ -469,6 +501,8 @@ Andante très expressif · pp · con sordina
 Tom: Ré♭ maior
 Compasso: 9/8
 Andamento: semínima. = 52
+Mudanças de andamento: uma linha "Andamento: …" antes do compasso (os números depois
+do compasso 1 são sugestões: Debussy só escreveu as palavras, como "Tempo rubato").
 
 Convenção utilizada:
 MD = mão direita (melodia); MD2 = 2ª voz da mão direita
@@ -562,6 +596,7 @@ MD2: [p1/8]; 4F[n1/4], 4B[n1/4]~ 4F[n1/2.], 4B[n1/2.];
 ME:  [p1/8]; 4E[n1/4]~ {2 4E[n1/8]; 4D[n1/8]~} 4D[n1/4.];
 ME2: 2B[n1/8]~ 2B[n1/4], 3F[n1/4], 3B[n1/4]~ 2B[n1/4.], 3F[n1/4.], 3B[n1/4.]~ 3F[n1/4.], 3B[n1/4.];
 
+Andamento: semínima. = 56   (Tempo rubato)
 Compasso 15 (Tempo rubato: a melodia em oitavas, com acordes):
 MD:  {2 [p1/8]; 5F[n1/8], 5B[n1/8], 6F[n1/8]~} 5F[n1/8], 5B[n1/8], 6F[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5E[n1/8], 5B[n1/8], 6E[n1/8]; 5D[n1/8], 5B[n1/8], 6D[n1/8]; 5D[n1/8], 5B[n1/8], 6D[n1/8];
 MD2: [s1/2.]; [s1/4.];
@@ -586,6 +621,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4D[n1/8], 4G[n1/8], 4B[n1/8]; 4E[n1/8], 4G[n1/8], 4B[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8]; {2 4C[n1/8], 4G[n1/8], 4B[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8];} 3B[n1/4.], 4E[n1/4.], 4G[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 62   (peu à peu cresc. et animé: aos poucos, mais animado)
 Compasso 19 (peu à peu cresc. et animé (aos poucos, mais forte e mais animado)):
 MD:  {6:9 4B[n1/8], 5G[n1/8], 5B[n1/8]; 4G[n1/8], 5G[n1/8]; 4A[n1/8], 5E[n1/8], 5A[n1/8]; 5C[n1/8], 6C[n1/8]; 4B[n1/8], 5G[n1/8], 5B[n1/8]; 4G[n1/8], 5G[n1/8];}
 MD2: [s1/2.]; [s1/4.];
@@ -622,6 +658,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  [p1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 4C[n1/8], 4E[n1/8], 4A[n1/8]; 3B[n1/8], 4D[n1/8], 4G[n1/8]; 4D[n1/8], 4G[n1/8], 4B[n1/8]; 4E[n1/8], 4G[n1/8], 4B[n1/8];
 ME2: 3E[n1/2.], 2E[n1/2.]; [s1/4.];
 
+Andamento: semínima. = 54   (diminuendo molto: mais calmo)
 Compasso 25 (diminuendo molto: acordes arpejados):
 MD:  5A[n1/2.], 6D[n1/2.], 6A[n1/2.]; 5A[n1/4.], 6D[n1/4.], 6A[n1/4.];
 MD2: [s1/2.]; [s1/4.];
@@ -634,6 +671,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4E[n1/2.], 4G[n1/2.], 4A[n1/2.], 5D[n1/2.], 5E[n1/2.]; 3A[n1/4.], 4E[n1/4.], 4G[n1/4.], 5C[n1/4.];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 66   (Un poco mosso: um pouco mais movido)
 Compasso 27 (Un poco mosso: a mão esquerda em arpejos de semicolcheias):
 MD:  4F[n1/2.], 4A[n1/2.]; 4A[n1/4], 5C♭[n1/4]; 5D[n1/8];
 MD2: [s1/2.]; [s1/4.];
@@ -694,6 +732,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  3D[n1/16]; 3A[n1/16]; 4D[n1/16]; 4F[n1/16]; 4A[n1/16]; 5D[n1/16]; 3A[n1/16]; 4C[n1/16]; 4F[n1/16]; 4A[n1/16]; 5C[n1/16]; 5F[n1/16]; 4C♭[n1/16]; 4F♭[n1/16]; 4A[n1/16]; 5C♭[n1/16]; 5A[n1/16]; 5F♭[n1/16];
 ME2: 3D[n1/4.]; 3F[n1/4.]; 3A[n1/4.];
 
+Andamento: semínima. = 72   (En animant: animando)
 Tom: Dó♯ menor  (armadura de 4 sustenidos)
 
 Compasso 37 (En animant: mais animado, em Dó♯ menor):
@@ -732,6 +771,7 @@ MD2: [s1/2.]; 3A[n1/4.];
 ME:  2F[n1/16]; 3C[n1/16]; 3E[n1/16]; 3F[n1/16]; 3A[n1/16]; 4C[n1/16]; 4E[n1/16]; 4C[n1/16]; 3A[n1/16]; 3F[n1/16]; 3E[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16]; 2F[n1/16]; 3C[n1/16];
 ME2: [s1/2.]; [s1/4.];
 
+Andamento: semínima. = 60   (Calmato: mais calmo)
 Tom: Ré♭ maior  (volta a armadura de 5 bemóis)
 
 Compasso 43 (Calmato: volta o Ré♭ maior):
@@ -782,6 +822,7 @@ MD2: [s1/2.]; [s1/4.];
 ME:  4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 5A♮[n1/16]; 4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 6C♭[n1/16]; 4G[n1/16]; 4A♮[n1/16]; 5D[n1/16]; 5E[n1/16]; 5G[n1/16]; 5A♮[n1/16];
 ME2: 4G[n1/2.]~ 4G[n1/4.];
 
+Andamento: a tempo   (a Tempo 1º: volta ao andamento do começo)
 Compasso 51 (a Tempo 1º: volta o tema do começo, ppp):
 MD:  [p1/4.]; 6F[n1/4.], 6A[n1/4.]; 6F[n1/4.]~
 MD2: [s1/2.]; [s1/4.];
@@ -872,6 +913,7 @@ MD2: [s1/8]; 4G[n1/4], 4C[n1/4]; 4A[n1/4.]; [s1/4.];
 ME:  {2 2A[n1/8]; 3E[n1/8];} 5A[n1/4.]; 3A[n1/4.];
 ME2: 2A[n1/2.]; [s1/4.];
 
+Andamento: semínima. = 48   (morendo jusqu'à la fin: sumindo até o fim)
 Compasso 66 (morendo jusqu'à la fin (sumindo até o fim)):
 MD:  [p1/4]; [s1/8]; [p1/4]; [s1/8]; [p1/4]; [s1/8];
 MD2: [s1/2.]; [s1/4.];
