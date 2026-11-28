@@ -481,7 +481,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), beamsOpt: $("beams-opt"), fieldBeams: $("field-beams"), scrollOpt: $("scroll-opt"), fieldScroll: $("field-scroll"), staffScroll: $("staff-scroll"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), beamsOpt: $("beams-opt"), fieldBeams: $("field-beams"), measuresOpt: $("measures-opt"), fieldMeasures: $("field-measures"), scrollOpt: $("scroll-opt"), fieldScroll: $("field-scroll"), staffScroll: $("staff-scroll"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
     const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), pan: $("kb-pan"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"),
@@ -490,7 +490,7 @@
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 3, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, beams: "0", scroll: "auto", keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
+    const DEFAULTS = { v: 3, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, beams: "0", scroll: "auto", measures: "1", keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if ((saved.v || 0) < 2) delete saved.strict;
@@ -750,6 +750,7 @@
         ui.fieldPauta.hidden = !on || !isFree(); // pauta dupla: no Tocar livre e no Executar música
         ui.fieldTeclado.hidden = !isMusic();
         ui.fieldBeams.hidden = !(isMusic() && on); // barras de colcheia: só na música
+        ui.fieldMeasures.hidden = !(isFree() && on); // número dos compassos no pé da pauta
         ui.fieldScroll.hidden = !(isFree() && on); // rolagem da pauta: acompanha a música ou com barra
         staff.setManual(prefs.scroll === "barra");
         ui.fieldKeys.hidden = mode.look !== "teclado";
@@ -1088,6 +1089,7 @@
 
     let freeAt = 0;        // coluna do pentagrama no Tocar livre (acorde = mesma coluna)
     let freeFill = 0;      // com compasso: quanto do compasso (em semínimas) as notas já ocupam
+    let freeMeasure = 0;   // número do compasso que está sendo tocado (Tocar livre com compasso)
     let freeBar = false;   // o compasso encheu: a próxima nota começa outro (barra antes dela)
     let freeFit = { figure: "semibreve", dots: 0, q: 4 }; // figura da última nota (o acorde usa a mesma)
     let songMeterText = ""; // fórmula de compasso da música do editor ("9/8")
@@ -1152,7 +1154,15 @@
         // Piano no Tocar livre (pauta dupla): abaixo do Dó central vai para a clave de Fá;
         // o acorde com notas dos dois lados fica na mesma vertical (mesma coluna, freeAt).
         const hand = staff.grand && mode.pads[i].octave < 0 ? "me" : "md";
-        if (staffOn()) staff.done(staff.push(i, freeFit.figure, 420, chord, { hand, at: freeAt, dotted: freeFit.dots, bar: newBar }));
+        if (staffOn()) {
+            const slot = staff.push(i, freeFit.figure, 420, chord, { hand, at: freeAt, dotted: freeFit.dots, bar: newBar });
+            staff.done(slot);
+            // Com compasso: o número de cada compasso no pé da pauta.
+            if (!chord && freeMeterText() && !isMusic() && prefs.measures !== "0" && (newBar || staff.length === 1)) {
+                freeMeasure = newBar ? freeMeasure + 1 : 1;
+                staff.measureNumber(slot, freeMeasure);
+            }
+        }
         if (!isMusic()) transcribe(i, freeFit, chord, sinceChord, newBar);
         const pad = mode.pads[i];
         const text = noteName(pad);
@@ -1305,6 +1315,10 @@
         };
         let curKey = info.key;     // armadura valendo (troca com uma linha "Tom:" no meio do texto)
         let curTempo = songEvents[0]?.tmark ?? -1; // marca de andamento valendo (muda com outra linha "Andamento:")
+        // Número do compasso no pé da pauta: o da fórmula de compasso (measure) ou, sem ela,
+        // contando as barras da 1ª voz.
+        const firstVoice = songEvents[0]?.hand || "md";
+        let barCount = 1, shownMeasure = 0;
         const grand = staff.grand;
         songEvents.forEach((ev, k) => {
             if (ev.key != null && ev.key !== curKey) { staff.keyChange(ev.key); curKey = ev.key; }
@@ -1357,6 +1371,12 @@
             }
             slots[k] = got;
             // Mudança de andamento: "♩. = 60" em cima da 1ª nota do trecho novo.
+            if (ev.hand === firstVoice && ev.bar && ev.measure == null) barCount++;
+            const measure = ev.measure ?? barCount;
+            if (prefs.measures !== "0" && got.length && measure !== shownMeasure) {
+                shownMeasure = measure;
+                staff.measureNumber(got[0], measure);
+            }
             if (ev.tmark != null && ev.tmark !== curTempo && got.length) {
                 curTempo = ev.tmark;
                 const t = info.tempos[ev.tmark];
@@ -2063,6 +2083,7 @@
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
     bindSelect(ui.keysOpt, "keys", () => build()); // teclas coloridas ou preto e branco
     bindSelect(ui.beamsOpt, "beams", () => renderSong()); // colcheias com barra ou separadas
+    bindSelect(ui.measuresOpt, "measures", () => (isMusic() ? renderSong() : build())); // número dos compassos
     // Barra de rolagem da partitura (a clave, a armadura e o compasso ficam parados).
     staff.onScroll((pos, max) => {
         ui.staffScroll.hidden = max < 1 || prefs.scroll !== "barra";

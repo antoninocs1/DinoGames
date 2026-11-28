@@ -568,6 +568,18 @@
             setShift(px) { queueShift(Number(px) || 0); },
             /** Liga a rolagem manual (arrastar a pauta); desligada, a pauta só acompanha a música. */
             setManual(on) { manual = !!on; svg.classList.toggle("drag-scroll", manual); },
+            /**
+             * Número do compasso no pé da pauta, embaixo da 1ª nota do compasso (posição i): numa
+             * faixa abaixo de todas as notas, para não esbarrar nas notas graves.
+             */
+            measureNumber(i, n) {
+                const m = notes[i - first];
+                if (!m) return;
+                const x = m.x - 9 - (m.bar ? 4 : 0);
+                layer.insertAdjacentHTML("beforeend", `<text class="measure-num" x="${f(x)}" y="${f(view.bottom - 5)}">${n}</text>`);
+                m.extras.push(layer.lastElementChild);
+                if (m.el.classList.contains("far")) layer.lastElementChild.classList.add("far");
+            },
             /** Texto em cima da nota da posição i (mudança de andamento: "♩. = 60"). */
             annotate(i, text) {
                 const n = notes[i - first];
