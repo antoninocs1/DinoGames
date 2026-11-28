@@ -1319,6 +1319,7 @@
         // contando as barras da 1ª voz.
         const firstVoice = songEvents[0]?.hand || "md";
         let barCount = 1, shownMeasure = 0;
+        const numbers = [];
         const grand = staff.grand;
         songEvents.forEach((ev, k) => {
             if (ev.key != null && ev.key !== curKey) { staff.keyChange(ev.key); curKey = ev.key; }
@@ -1375,7 +1376,7 @@
             const measure = ev.measure ?? barCount;
             if (prefs.measures !== "0" && got.length && measure !== shownMeasure) {
                 shownMeasure = measure;
-                staff.measureNumber(got[0], measure);
+                numbers.push([got[0], measure]); // desenhados no fim: a barra só fica no lugar certo depois das duas mãos
             }
             if (ev.tmark != null && ev.tmark !== curTempo && got.length) {
                 curTempo = ev.tmark;
@@ -1383,6 +1384,7 @@
                 if (t) staff.annotate(got[0], t.label);
             }
         });
+        numbers.forEach(([slot, n]) => staff.measureNumber(slot, n));
         Object.keys(groups).forEach(closeGroup);
         Object.keys(runs).forEach(flush);
         if (prefs.beams !== "0") beams.forEach((list) => staff.beam(list)); // opção Colcheias: com barra ou separadas

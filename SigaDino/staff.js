@@ -575,7 +575,14 @@
             measureNumber(i, n) {
                 const m = notes[i - first];
                 if (!m) return;
-                const x = m.x - 9 - (m.bar ? 4 : 0);
+                // Embaixo da barra de compasso (o vão entre os compassos, sem cabeças nem hastes);
+                // o 1º compasso, sem barra, fica logo depois da clave.
+                let x = null;
+                for (let j = Math.max(0, i - first - 8); j < Math.min(notes.length, i - first + 8); j++) {
+                    const b = notes[j].barEl;
+                    if (b && notes[j].x === m.x) { x = Number(b.getAttribute("x1")); break; }
+                }
+                if (x == null) x = m.bar && m.leftEdge != null ? m.leftEdge - 6 : Math.max(x0 - 8, (m.leftEdge ?? m.x) - 8);
                 layer.insertAdjacentHTML("beforeend", `<text class="measure-num" x="${f(x)}" y="${f(view.bottom - 5)}">${n}</text>`);
                 m.extras.push(layer.lastElementChild);
                 if (m.el.classList.contains("far")) layer.lastElementChild.classList.add("far");
@@ -809,7 +816,7 @@
                     if (scroll) el.classList.add("pop");
                     // Nota que não cabe no compasso (fórmula de compasso): fica marcada em vermelho.
                     if (data.over) el.classList.add("over");
-                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, top: drawn.top, extras: [], key: keyNow });
+                    notes.push({ ...data, el, barEl, x, extraRight: drawn.extraRight, rightEdge: drawn.rightEdge, leftEdge: drawn.leftEdge, top: drawn.top, extras: [], key: keyNow });
                     // Nota nova: desenhada se encosta no trecho desenhado; senão fica escondida até chegar a vez dela.
                     if (notes.length - 1 === vb) vb++; else setFar(notes[notes.length - 1], true);
                     if (barEl) col.barEl = barEl;

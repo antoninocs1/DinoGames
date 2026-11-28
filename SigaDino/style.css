@@ -160,7 +160,9 @@ body.kb-wide .kb-scroll .device[data-look="teclado"] { flex: 0 0 auto; width: va
 .staff .bar.gone { opacity: 0; }
 .staff .tie, .staff .tuplet { transition: opacity .15s; }
 .staff .tie.gone, .staff .tuplet.gone, .staff .beam.gone, .staff .tempo-mark.gone, .staff .measure-num.gone { opacity: 0; }
-.staff .measure-num { font-size: 10.5px; font-weight: 700; fill: #6b6478; }
+/* Número do compasso: centrado embaixo da barra, com um contorno da cor do papel (fica legível
+   mesmo se uma haste passar perto). */
+.staff .measure-num { font-size: 10.5px; font-weight: 700; fill: #6b6478; text-anchor: middle; paint-order: stroke; stroke: #e8eefb; stroke-width: 3.5px; stroke-linejoin: round; }
 .staff .tempo-mark { font-size: 9px; font-weight: 700; fill: #1d1b22; font-style: italic; }
 .staff.drag-scroll { cursor: grab; }
 .staff .far { display: none; } /* longe da parte à vista: não é desenhada (rolagem leve) */
