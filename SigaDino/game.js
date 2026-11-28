@@ -508,7 +508,7 @@
     const renderModeOptions = () => {
         const list = enabledModes.filter(([, m]) => !m.freeOnly || prefs.play !== "memoria");
         // Ícone (desenho SVG de select-icons.js) do lado esquerdo do combobox.
-        const MODE_ICON = { cores4: "simon", teclado7: "palette", teclado12: "piano", teclado24: "piano", piano36: "piano", piano60: "piano", notas7: "simon", cromatica12: "simon" };
+        const MODE_ICON = { cores4: "simon", teclado7: "piano", teclado12: "piano", teclado24: "piano", piano36: "piano", piano60: "piano", notas7: "simon", cromatica12: "simon" };
         ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}" data-icon="${MODE_ICON[id] || "piano"}">${m.title}</option>`).join("");
         ui.mode.value = modeId();
     };
