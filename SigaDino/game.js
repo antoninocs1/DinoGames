@@ -507,9 +507,9 @@
     /** Lista do Modelo conforme o jogo (o piano some no "Siga a sequência"). */
     const renderModeOptions = () => {
         const list = enabledModes.filter(([, m]) => !m.freeOnly || prefs.play !== "memoria");
-        // Ícone pequeno no texto da opção (aparece no combobox, sem ocupar altura).
-        const MODE_ICON = { cores4: "🔴", teclado7: "🌈", teclado12: "🎹", teclado24: "🎹", piano36: "🎹", piano60: "🎹", notas7: "🌈", cromatica12: "🎹" };
-        ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}">${MODE_ICON[id] ? `${MODE_ICON[id]} ` : ""}${m.title}</option>`).join("");
+        // Ícone (desenho SVG de select-icons.js) do lado esquerdo do combobox.
+        const MODE_ICON = { cores4: "simon", teclado7: "palette", teclado12: "piano", teclado24: "piano", piano36: "piano", piano60: "piano", notas7: "simon", cromatica12: "simon" };
+        ui.mode.innerHTML = list.map(([id, m]) => `<option value="${id}" data-icon="${MODE_ICON[id] || "piano"}">${m.title}</option>`).join("");
         ui.mode.value = modeId();
     };
     renderModeOptions();
@@ -612,6 +612,7 @@
         fitKeyboard(true);
         staff.refit(); // a pauta enche a caixa (mais notas à vista)
         renderOptsSummary();
+        window.DinoSelectIcons?.refresh(); // ícone da opção escolhida em cada combobox
         // Celular deitado: a pauta só aparece depois do 1º desenho; com a altura certa dela,
         // o teclado é desenhado de novo na proporção da área que sobra.
         const fill = mode.look === "teclado" ? fillAr() : null;
@@ -2118,8 +2119,8 @@
         `<tr><td>${p.name}</td><td>${p.letter}</td><td><span class="swatch" style="--c:${p.color}"></span>${p.colorName}</td></tr>`).join("");
     ui.legend.open = prefs.legend !== false;
     ui.legend.addEventListener("toggle", () => { prefs.legend = ui.legend.open; storage.set(PREFS_KEY, prefs); });
-    // O ícone do instrumento vai no próprio texto da opção: aparece no combobox, sem ocupar altura.
-    ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}">${o.icon ? `${o.icon} ` : ""}${o.title}</option>`).join("");
+    // Ícone do instrumento (desenho SVG de select-icons.js) do lado esquerdo do combobox.
+    ui.timbre.innerHTML = Object.entries(SOUNDS).map(([id, o]) => `<option value="${id}"${o.icon ? ` data-icon="${o.icon}"` : ""}>${o.title}</option>`).join("");
     bindSelect(ui.timbre, "timbre", async () => {
         sound.timbre = prefs.timbre;
         sound.load(prefs.timbre);

@@ -77,6 +77,9 @@
             opt.setAttribute("role", "option");
             opt.setAttribute("aria-selected", String(o.selected));
             opt.disabled = o.disabled;
+            // Ícone da opção (data-icon), quando a página registra os desenhos em window.DINO_SELECT_ICONS.
+            const icone = o.dataset.icon && window.DINO_SELECT_ICONS?.[o.dataset.icon];
+            if (icone) opt.insertAdjacentHTML("beforeend", `<span class="dg-combo-icone" aria-hidden="true">${icone}</span>`);
             const texto = document.createElement("span");
             texto.textContent = o.textContent;
             opt.appendChild(texto);

@@ -202,6 +202,14 @@ body.with-staff .device[data-look="teclado"] { width: min(100%, calc(490px * var
 body.kb-fill .device[data-look="teclado"],
 body.kb-fill.with-staff .device[data-look="teclado"] { width: 100%; }
 .h1-plus { color: var(--accent-2, #fdba74); }
+/* Combobox com ícone (select-icons.js): o desenho da opção escolhida fica à esquerda, sem ocupar altura. */
+.sel-wrap { position: relative; display: block; }
+.mini-field .sel-wrap { display: inline-block; }
+.sel-wrap .sel-icon { position: absolute; left: 9px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--accent); pointer-events: none; display: none; }
+.sel-wrap.has-icon .sel-icon { display: block; }
+.sel-wrap .sel-icon svg { width: 16px; height: 16px; display: block; }
+.sel-wrap.has-icon select { padding-left: 31px; }
+.field .sel-wrap select { width: 100%; }
 /* A pauta usa a largura toda (o desenho fica mais largo e mostra mais notas). */
 body.with-staff .staff-box { width: 100%; }
 

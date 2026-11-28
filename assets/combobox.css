@@ -68,3 +68,7 @@
     flex-shrink: 0;
     color: #16a34a;
 }
+
+/* Ícone da opção (data-icon) */
+.dg-combo-icone { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: -2px; opacity: .9; }
+.dg-combo-icone svg { width: 18px; height: 18px; }

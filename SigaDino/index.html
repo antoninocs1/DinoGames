@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino (e Piano Mágico)</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.072">
-    <link rel="stylesheet" href="style.css?v=1.072">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.073">
+    <link rel="stylesheet" href="style.css?v=1.073">
 </head>
 <body>
     <main class="app">
@@ -31,9 +31,9 @@
                 <label class="field">
                     <span>Jogo</span>
                     <select id="play" aria-label="Tipo de jogo">
-                        <option value="memoria">🧠 Siga a sequência</option>
-                        <option value="livre">🎹 Tocar livre</option>
-                        <option value="musica">🎶 Executar música (notas)</option>
+                        <option value="memoria" data-icon="brain">Siga a sequência</option>
+                        <option value="livre" data-icon="piano">Tocar livre</option>
+                        <option value="musica" data-icon="score">Executar música (notas)</option>
                     </select>
                 </label>
                 <label class="field" id="field-names" hidden>
@@ -62,9 +62,9 @@
                 <label class="field" id="field-keys" hidden>
                     <span>Teclas</span>
                     <select id="keys-opt" aria-label="Cores das teclas: coloridas ou preto e branco como um piano">
-                        <option value="cor">🌈 Coloridas</option>
-                        <option value="pb">🎹 Preto e branco</option>
-                        <option value="pbsem">⬜ Sem cor e sem nome</option>
+                        <option value="cor" data-icon="palette">Coloridas</option>
+                        <option value="pb" data-icon="piano">Preto e branco</option>
+                        <option value="pbsem" data-icon="eyeOff">Sem cor e sem nome</option>
                     </select>
                 </label>
                 <label class="field" id="field-meter" hidden>
@@ -124,16 +124,16 @@
                 <label class="field game-only">
                     <span>Velocidade</span>
                     <select id="level" aria-label="Velocidade">
-                        <option value="facil">🐢 Fácil</option>
-                        <option value="normal">🐎 Normal</option>
-                        <option value="rapido">🐇 Rápido</option>
+                        <option value="facil" data-icon="turtle">Fácil</option>
+                        <option value="normal" data-icon="rabbit">Normal</option>
+                        <option value="rapido" data-icon="zap">Rápido</option>
                     </select>
                 </label>
                 <label class="field game-only">
                     <span>Ao errar</span>
                     <select id="strict" aria-label="O que acontece ao errar">
-                        <option value="0">🔁 Ouvir de novo</option>
-                        <option value="1">🏁 Fim de jogo</option>
+                        <option value="0" data-icon="repeat">Ouvir de novo</option>
+                        <option value="1" data-icon="flag">Fim de jogo</option>
                     </select>
                 </label>
                 <label class="field game-only">
@@ -209,23 +209,23 @@
                         <button class="btn" id="btn-song-practice" type="button" title="A música espera você tocar a tecla certa (com um trecho marcado no texto, ele se repete)">🎹 Praticar</button>
                         <label class="mini-field"><span>Mão</span>
                             <select id="practice-hand" aria-label="Mão que você vai tocar ao praticar">
-                                <option value="ambas">🙌 As duas</option>
-                                <option value="md">✋ Direita (MD)</option>
-                                <option value="me">🤚 Esquerda (ME)</option>
+                                <option value="ambas" data-icon="hands">As duas</option>
+                                <option value="md" data-icon="handRight">Direita (MD)</option>
+                                <option value="me" data-icon="handLeft">Esquerda (ME)</option>
                             </select>
                         </label>
                         <label class="mini-field"><span>Dica</span>
                             <select id="practice-hint" aria-label="Mostrar a tecla certa ao praticar">
-                                <option value="1">💡 Tecla pisca</option>
-                                <option value="0">🙈 Sem dica (só a pauta)</option>
+                                <option value="1" data-icon="bulb">Tecla pisca</option>
+                                <option value="0" data-icon="eyeOff">Sem dica (só a pauta)</option>
                             </select>
                         </label>
                         <label class="mini-field"><span>Velocidade</span>
                             <select id="song-speed" aria-label="Velocidade da música ao tocar e praticar">
-                                <option value="1">🐇 Normal</option>
-                                <option value="0.75">🐎 75%</option>
-                                <option value="0.5">🐢 Devagar (50%)</option>
-                                <option value="0.25">🐌 Bem devagar (25%)</option>
+                                <option value="1" data-icon="rabbit">Normal</option>
+                                <option value="0.75" data-icon="turtle">75%</option>
+                                <option value="0.5" data-icon="snail">Devagar (50%)</option>
+                                <option value="0.25" data-icon="snail">Bem devagar (25%)</option>
                             </select>
                         </label>
                     </div>
@@ -393,12 +393,13 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.072"></script>
-    <script src="sounds.js?v=1.072"></script>
-    <script src="modes.js?v=1.072"></script>
-    <script src="engine.js?v=1.072"></script>
-    <script src="staff.js?v=1.072"></script>
-    <script src="music.js?v=1.072"></script>
-    <script src="game.js?v=1.072"></script>
+    <script src="../assets/combobox.js?v=1.073"></script>
+    <script src="sounds.js?v=1.073"></script>
+    <script src="modes.js?v=1.073"></script>
+    <script src="engine.js?v=1.073"></script>
+    <script src="staff.js?v=1.073"></script>
+    <script src="select-icons.js?v=1.073"></script>
+    <script src="music.js?v=1.073"></script>
+    <script src="game.js?v=1.073"></script>
 </body>
 </html>
