@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.066">
-    <link rel="stylesheet" href="style.css?v=1.066">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.067">
+    <link rel="stylesheet" href="style.css?v=1.067">
 </head>
 <body>
     <main class="app">
@@ -79,6 +79,13 @@
                         <option value="9/8">9/8</option>
                     </select>
                 </label>
+                <label class="field" id="field-beams" hidden>
+                    <span>Colcheias</span>
+                    <select id="beams-opt" aria-label="Colcheias e semicolcheias ligadas por barra ou separadas">
+                        <option value="1">Com barra (partitura)</option>
+                        <option value="0">Separadas (bandeirolas)</option>
+                    </select>
+                </label>
                 <label class="field" id="field-teclado" hidden>
                     <span>Teclado</span>
                     <select id="teclado-opt" aria-label="Quantas oitavas o teclado tem no Executar música">
@@ -134,6 +141,8 @@
                     <svg class="staff" id="staff" role="img" aria-label="Pentagrama na clave de sol com as notas tocadas"></svg>
                     <figcaption class="staff-foot">
                         <button type="button" class="staff-clear" id="btn-staff-clear" aria-label="Limpar as notas do pentagrama">🧽 Limpar</button>
+                        <input type="range" class="staff-scroll" id="staff-scroll" min="0" max="0" value="0" step="1" hidden
+                            aria-label="Rolar a partitura (a clave, a armadura e o compasso ficam parados)" title="Rolar a partitura — ou arraste a pauta com o dedo">
                         <span class="staff-figure" id="staff-figure"></span>
                     </figcaption>
                 </figure>
@@ -291,7 +300,8 @@
                                 <li><strong>Armadura</strong>: escreva <code>Tom: Ré♭ maior</code> (ou <code>Tom: Db</code>, <code>Tom: Lá menor</code>) ou <code>Armadura: 5b</code> / <code>Armadura: 3#</code>. Os ♭/♯ aparecem depois da clave e as notas sem acidente seguem a armadura (com 5 bemóis, <code>B[n1/4]</code> já é Si♭). Para o natural use o bequadro: <code>A♮[n1/4]</code> ou <code>A=[n1/4]</code>. Outra linha <code>Tom:</code> no meio do texto <strong>troca a armadura</strong> dali em diante: o pentagrama desenha uma barra dupla e os novos ♯/♭ (a Clair de Lune vai para <code>Tom: Dó♯ menor</code> no compasso 37 e volta para Ré♭ maior no 43).</li>
                                 <li><strong>Pauta</strong> (nas opções, em cima): <strong>Automática</strong> mostra a <strong>pauta dupla</strong> (clave de Sol em cima e clave de Fá embaixo, como no piano) quando o texto tem <code>ME:</code> ou quando a música desce abaixo do Fá de baixo (<code>3F</code>) — sem <code>ME:</code>, as notas abaixo do Dó central vão para a clave de Fá; <strong>Clave de Sol</strong> mostra tudo numa pauta só; <strong>Sol e Fá (piano)</strong> mostra sempre a pauta dupla. Na pauta dupla, a mão esquerda vai para a clave de Fá. As notas fora do teclado tocam na altura certa e acendem a mesma nota em outra oitava.</li>
                                 <li><strong>Teclado</strong> (nas opções, em cima): <strong>Automático</strong> parte das 2 oitavas do Dó central e acrescenta oitavas embaixo e em cima até caber a música (de <code>1C</code> até <code>7B</code>), como um piano; <strong>2 oitavas</strong> é o teclado de 24 notas (do <code>4C</code> ao <code>5B</code>); <strong>3 oitavas</strong> vai do <code>3C</code> ao <code>5B</code> (a oitava de baixo do Dó central e as 2 de cima); <strong>Piano (5 oitavas)</strong> vai do <code>2C</code> ao <code>6B</code>. Com o <strong>Modelo: Piano (5 oitavas)</strong>, o Automático parte das 5 oitavas. A bolinha no pé da tecla marca o <strong>Dó central</strong>. As teclas do computador continuam nas 2 oitavas do meio; as outras se tocam com o mouse ou o dedo.</li>
-                                <li><strong>Barras de colcheia</strong>: colcheias e semicolcheias seguidas da mesma voz ficam <strong>ligadas por barras</strong>, como na partitura: de 3 em 3 no 6/8 e no 9/8, a cada semínima no 2/4, 3/4 e 4/4, e todas as notas de uma quiáltera juntas. Pausa ou nota mais longa no meio separa os grupos.</li>
+                                <li><strong>Barras de colcheia</strong>: colcheias e semicolcheias seguidas da mesma voz ficam <strong>ligadas por barras</strong>, como na partitura: de 3 em 3 no 6/8 e no 9/8, a cada semínima no 2/4, 3/4 e 4/4, e todas as notas de uma quiáltera juntas. Pausa ou nota mais longa no meio separa os grupos. Se ficar confuso (barras de duas vozes se cruzando), escolha <strong>Colcheias: Separadas</strong> nas opções: cada nota volta a ter a sua bandeirola.</li>
+                                <li><strong>Rolar a partitura</strong>: arraste a pauta para os lados com o dedo (ou o mouse), ou use a barra embaixo dela. A clave, a armadura e a fórmula de compasso ficam paradas no começo da pauta.</li>
                                 <li><strong>Acordes</strong>: notas vizinhas (Dó e Ré juntas) ficam na mesma vertical, uma em cima da outra.</li>
                                 <li><strong>⏯ Do cursor</strong> (ou <strong>Ctrl+Enter</strong>): toca a partir da posição do cursor no texto; se houver um <strong>trecho marcado</strong>, toca só ele. <strong>▶ Tocar</strong> toca a música inteira.</li>
                                 <li><strong>🎹 Praticar</strong>: a música <strong>espera você</strong>. As teclas da próxima nota piscam e a nota fica marcada no pentagrama; a música só segue quando você toca todas (no acorde, em qualquer ordem). Em <strong>Mão</strong>, escolha praticar a <strong>direita</strong>, a <strong>esquerda</strong> ou <strong>as duas</strong>: a outra mão toca sozinha. <strong>Dica: Sem dica</strong> deixa só a pauta (a tecla certa pisca depois de 2 erros). <strong>Marque um trecho</strong> no texto antes de tocar em Praticar para repetir só ele, sem parar; sem marcação, começa no cursor. No fim aparecem os acertos, os erros e as estrelas.</li>
@@ -368,12 +378,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.066"></script>
-    <script src="sounds.js?v=1.066"></script>
-    <script src="modes.js?v=1.066"></script>
-    <script src="engine.js?v=1.066"></script>
-    <script src="staff.js?v=1.066"></script>
-    <script src="music.js?v=1.066"></script>
-    <script src="game.js?v=1.066"></script>
+    <script src="../assets/combobox.js?v=1.067"></script>
+    <script src="sounds.js?v=1.067"></script>
+    <script src="modes.js?v=1.067"></script>
+    <script src="engine.js?v=1.067"></script>
+    <script src="staff.js?v=1.067"></script>
+    <script src="music.js?v=1.067"></script>
+    <script src="game.js?v=1.067"></script>
 </body>
 </html>

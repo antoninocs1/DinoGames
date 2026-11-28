@@ -319,6 +319,7 @@
     //   pads[i]  { shape, label }: shape é o elemento SVG sem fechar (ex.:
     //            'path d="…"'), usado tanto para a cor quanto para o vidro.
     // =================================================================
+    let usedFill = null, rebuilding = false; // proporção usada no desenho do teclado deitado
     const LOOKS = {
         // Disco preto com botões em forma de gota (fatias de cantos redondos) e cubo central.
         anel(mode) {
@@ -353,10 +354,16 @@
             const hasSharps = whites < mode.pads.length;
             // Até 7 brancas: teclas de 27; com 2 oitavas (14 brancas) ficam mais finas e o corpo alarga.
             // Piano (3 oitavas ou mais): teclas ainda mais finas.
-            const keyW = whites > 28 ? 18 : whites > 14 ? 20 : whites > 7 ? 23 : 27, gap = keyW * 0.096, bw = keyW * 0.56, bh = 47;
+            let keyW = whites > 28 ? 18 : whites > 14 ? 20 : whites > 7 ? 23 : 27;
+            // Celular deitado: teclas mais largas para o teclado ter a proporção da área livre
+            // (largura toda da tela, altura que sobra embaixo da pauta).
+            const fill = fillAr();
+            usedFill = fill;
+            if (fill) keyW = Math.max(keyW, Math.min(64, (fill * 140 - 40) / whites));
+            const gap = keyW * 0.096, bw = keyW * 0.56, bh = 47;
             const keysW = whites * keyW;
             const W = Math.max(210, keysW + 32);
-            const k = keyW / 27; // escala dos rótulos
+            const k = Math.min(1.35, keyW / 27); // escala dos rótulos
             const x0 = -keysW / 2;
             const top = -20, keyH = 80;
             let white = 0;
@@ -474,7 +481,7 @@
         btnStart: $("btn-start"), btnReplay: $("btn-replay"), btnPause: $("btn-pause"), btnSound: $("btn-sound"),
         scoreNow: $("score-now"), scoreBest: $("score-best"), recordInfo: $("record-info"),
         keys: $("keys"), confetti: $("confetti"),
-        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
+        staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), beamsOpt: $("beams-opt"), fieldBeams: $("field-beams"), staffScroll: $("staff-scroll"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
     const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), pan: $("kb-pan"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"),
@@ -483,7 +490,7 @@
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, beams: "1", keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -601,6 +608,23 @@
         fitKeyboard(true);
         staff.refit(); // a pauta enche a caixa (mais notas à vista)
         renderOptsSummary();
+        // Celular deitado: a pauta só aparece depois do 1º desenho; com a altura certa dela,
+        // o teclado é desenhado de novo na proporção da área que sobra.
+        const fill = mode.look === "teclado" ? fillAr() : null;
+        if (fill && !rebuilding && Math.abs(fill - (usedFill || 0)) > 0.05) { rebuilding = true; build(); rebuilding = false; }
+    };
+
+    /**
+     * Celular deitado: proporção (largura/altura) da área livre para o teclado — a largura
+     * toda e a altura que sobra embaixo da pauta. null fora do celular deitado.
+     */
+    const fillAr = () => {
+        if (!window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches) return null;
+        const w = ui.device.parentElement?.clientWidth || window.innerWidth - 20;
+        const staffH = document.body.classList.contains("with-staff") && !ui.staffBox.hidden ? ui.staffBox.offsetHeight + 8 : 0;
+        document.body.style.setProperty("--staff-h", `${staffH}px`);
+        const h = window.innerHeight - staffH - 30;
+        return h > 60 ? w / h : null;
     };
 
     // ---------- Celular: largura das teclas (− / +) e teclado rolando para os lados ----------
@@ -679,7 +703,17 @@
     kb.left.addEventListener("click", () => kb.scroll.scrollBy({ left: -octavePx(), behavior: "smooth" }));
     kb.right.addEventListener("click", () => kb.scroll.scrollBy({ left: octavePx(), behavior: "smooth" }));
     let fitTimer = 0;
-    window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { fitKeyboard(false); staff.refit(); }, 150); });
+    let lastFill = null;
+    window.addEventListener("resize", () => {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(() => {
+            staff.refit();
+            const fill = fillAr();
+            // Deitado (ou acabou de deitar/levantar): o teclado é redesenhado na nova proporção.
+            if (mode.look === "teclado" && (fill || lastFill) && Math.abs((fill || 0) - (lastFill || 0)) > 0.05) { lastFill = fill; build(); }
+            else fitKeyboard(false);
+        }, 150);
+    });
 
     // ---------- Celular em pé: opções recolhidas em "⚙ Opções" ----------
     const optsBtn = $("btn-opts");
@@ -713,6 +747,7 @@
         ui.fieldStaff.hidden = mode.look !== "teclado";
         ui.fieldPauta.hidden = !on || !isFree(); // pauta dupla: no Tocar livre e no Executar música
         ui.fieldTeclado.hidden = !isMusic();
+        ui.fieldBeams.hidden = !(isMusic() && on); // barras de colcheia: só na música
         ui.fieldKeys.hidden = mode.look !== "teclado";
         // Compasso do Tocar livre: as figuras das notas tocadas se ajustam ao que cabe no compasso.
         ui.fieldMeter.hidden = !(isFree() && !isMusic() && mode.pads.some((p) => p.letter));
@@ -1319,10 +1354,11 @@
         });
         Object.keys(groups).forEach(closeGroup);
         Object.keys(runs).forEach(flush);
-        beams.forEach((list) => staff.beam(list));
+        if (prefs.beams !== "0") beams.forEach((list) => staff.beam(list)); // opção Colcheias: com barra ou separadas
         tuplets.forEach(([a, b, n]) => staff.tuplet(a, b, n));
         songSlots = slots;
         if (songEvents.length && info.end) staff.finish(); // "Fim" no texto → barra dupla do fim
+        staff.syncScroll(); // a barra de rolagem da partitura passa a ir até o fim da música
         // Teclas tocadas depois da música seguem o compasso dela, a partir de onde ela terminou.
         songMeterText = info.meter;
         const cap = meterQuarters(info.meter);
@@ -2009,6 +2045,14 @@
     bindSelect(ui.tecladoOpt, "teclado", () => { stopSong(); mode = pickMode(); build(); }); // oitavas do teclado
     bindSelect(ui.names, "names", () => build()); // nome (Dó) ou letra (C)
     bindSelect(ui.keysOpt, "keys", () => build()); // teclas coloridas ou preto e branco
+    bindSelect(ui.beamsOpt, "beams", () => renderSong()); // colcheias com barra ou separadas
+    // Barra de rolagem da partitura (a clave, a armadura e o compasso ficam parados).
+    staff.onScroll((pos, max) => {
+        ui.staffScroll.hidden = max < 1;
+        ui.staffScroll.max = String(max);
+        ui.staffScroll.value = String(pos);
+    });
+    ui.staffScroll.addEventListener("input", () => staff.setShift(Number(ui.staffScroll.value)));
     // Praticar (Executar música): mão, dica e velocidade
     bindSelect(mu.practiceHand, "practiceHand", () => { if (practice) practiceSong(); });
     bindSelect(mu.practiceHint, "practiceHint", () => { if (practice) practiceSong(); });

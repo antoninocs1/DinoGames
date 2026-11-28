@@ -448,7 +448,20 @@
             let want = Math.max(0, n.x - (lead ? x0 + DX : end));
             // Na música, não passa do ponto em que a última nota chega ao fim da pauta.
             if (lead) want = Math.min(want, Math.max(0, notes[notes.length - 1].x - end));
-            if (want === shift) return;
+            applyShift(want);
+        };
+        /** Maior rolagem: a última nota (e a barra do fim) chega ao fim da pauta. */
+        const maxShift = () => {
+            const last = notes[notes.length - 1];
+            if (!last) return 0;
+            const right = Math.max(last.rightEdge ?? last.x + 12, col ? col.right : 0) + (endBar ? 26 : 12);
+            return Math.max(0, Math.ceil(right - W));
+        };
+        let onScroll = null;     // avisa o jogo (barra de rolagem da partitura)
+        const emitScroll = () => onScroll?.(shift, maxShift());
+        /** Rola as notas: a clave, a armadura e a fórmula de compasso ficam paradas. */
+        const applyShift = (want) => {
+            if (want === shift) { emitScroll(); return; }
             shift = want;
             layer.style.transform = `translateX(${f(-shift)}px)`;
             // A nota que passa da 1ª posição some inteira (com o ♯/♭), antes de encostar na clave.
@@ -462,7 +475,25 @@
             const seen = notes.find((m) => !m.el.classList.contains("gone"));
             const k = seen ? seen.key ?? keyCount : keyCount;
             if (k !== keyShown) drawKey(k);
+            emitScroll();
         };
+        // Arrastar a pauta para os lados (dedo ou mouse) rola a partitura.
+        let drag = null;
+        svg.addEventListener("pointerdown", (e) => {
+            if (e.button > 0 || maxShift() < 1) return;
+            drag = { id: e.pointerId, x: e.clientX, shift, moved: false };
+        });
+        svg.addEventListener("pointermove", (e) => {
+            if (!drag || e.pointerId !== drag.id) return;
+            const dx = ((e.clientX - drag.x) * W) / (svg.clientWidth || W);
+            if (!drag.moved && Math.abs(dx) < 4) return;
+            if (!drag.moved) { drag.moved = true; try { svg.setPointerCapture(e.pointerId); } catch { /* sem captura */ } }
+            layer.style.transition = "none";
+            applyShift(Math.max(0, Math.min(maxShift(), drag.shift - dx)));
+        });
+        const endDrag = (e) => { if (drag && e.pointerId === drag.id) { drag = null; layer.style.transition = ""; } };
+        svg.addEventListener("pointerup", endDrag);
+        svg.addEventListener("pointercancel", endDrag);
 
         return {
             figureFor,
@@ -496,7 +527,13 @@
                 this._header();
             },
             /** Recalcula a largura do desenho (a caixa mudou de tamanho: janela, celular girou). */
-            refit() { applyView(); },
+            refit() { applyView(); emitScroll(); },
+            /** Barra de rolagem da partitura: fn(posição, máximo) a cada rolagem. */
+            onScroll(fn) { onScroll = fn; },
+            /** Rola até a posição px (0 = começo), sem passar do fim. */
+            setShift(px) { applyShift(Math.max(0, Math.min(maxShift(), Number(px) || 0))); },
+            /** Avisa a posição atual (depois de desenhar a música inteira). */
+            syncScroll() { emitScroll(); },
             /** Liga ou desliga a pauta dupla (clave de Sol em cima e clave de Fá embaixo). */
             setGrand(on) {
                 if (!!on === grand) return;
@@ -595,6 +632,7 @@
                 layer.innerHTML = "";
                 void layer.getBoundingClientRect();
                 layer.style.transition = "";
+                emitScroll();
             },
             /**
              * Acrescenta uma nota (índice do botão) e acende por ms. Devolve a posição dela.

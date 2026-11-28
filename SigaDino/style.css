@@ -177,6 +177,9 @@ body.kb-wide .kb-scroll .device[data-look="teclado"] { flex: 0 0 auto; width: va
 .staff .note.gone { opacity: 0 !important; transition: opacity .15s; }
 @keyframes surge { from { opacity: 0; } }
 .staff-foot { display: flex; align-items: center; gap: 8px; }
+.staff-scroll { flex: 1; min-width: 80px; max-width: 70%; accent-color: var(--accent); }
+.staff-scroll[hidden] { display: none; }
+.staff { touch-action: pan-y; } /* arrastar para os lados rola a partitura; para cima e para baixo, a página */
 .staff-figure { margin: 0 0 0 auto; font-size: 11px; color: var(--muted); text-align: right; }
 /* Limpar o pentagrama: só no tocar livre, embaixo à esquerda. */
 .staff-clear {
@@ -359,9 +362,11 @@ body.paused .device { opacity: .55; filter: grayscale(.4); transition: opacity .
     .card { padding: 8px 10px; }
     .score-row strong { font-size: 22px; }
     .device { width: min(100%, calc(100dvh - 24px)); }
+    /* O teclado é desenhado na proporção da área que sobra (fill-ar): ocupa a largura toda. */
     .device[data-look="teclado"] { width: min(100%, calc((100dvh - 24px) * var(--ar, 1.557))); }
-    body.with-staff .device[data-look="teclado"],
-    body.with-staff .staff-box { width: min(100%, calc((100dvh - 44px) / (1 / var(--ar, 1.557) + var(--sh, .229)))); }
+    body.with-staff .staff-box { width: 100%; }
+    body.with-staff .staff { max-height: 40vh; max-height: 40dvh; }
+    body.with-staff .device[data-look="teclado"] { width: min(100%, calc((100dvh - var(--staff-h, 0px) - 30px) * var(--ar, 1.557))); }
     .staff-figure { display: none; }
 }
 
