@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.065">
-    <link rel="stylesheet" href="style.css?v=1.065">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.066">
+    <link rel="stylesheet" href="style.css?v=1.066">
 </head>
 <body>
     <main class="app">
@@ -141,9 +141,14 @@
                     <svg class="device" id="device" viewBox="-100 -100 200 200" role="group" aria-label="Aparelho do Siga o Dino"></svg>
                 </div>
                 <div class="kb-nav" id="kb-nav" hidden>
-                    <button class="btn" id="kb-left" type="button" aria-label="Mostrar as teclas mais graves">◀ Graves</button>
-                    <input id="kb-range" type="range" min="0" max="100" value="50" step="1" aria-label="Rolar o teclado: graves à esquerda, agudos à direita">
-                    <button class="btn" id="kb-right" type="button" aria-label="Mostrar as teclas mais agudas">Agudos ▶</button>
+                    <button class="btn kb-zoom" id="kb-minus" type="button" title="Teclas mais estreitas (até caber todas na tela)" aria-label="Diminuir as teclas">−</button>
+                    <span class="kb-pan" id="kb-pan" hidden>
+                        <button class="btn" id="kb-left" type="button" aria-label="Mostrar as teclas mais graves">◀</button>
+                        <input id="kb-range" type="range" min="0" max="100" value="50" step="1" aria-label="Rolar o teclado: graves à esquerda, agudos à direita">
+                        <button class="btn" id="kb-right" type="button" aria-label="Mostrar as teclas mais agudas">▶</button>
+                    </span>
+                    <span class="kb-hint" id="kb-hint">Tamanho das teclas</span>
+                    <button class="btn kb-zoom" id="kb-plus" type="button" title="Teclas mais largas (até o tamanho do dedo)" aria-label="Aumentar as teclas">+</button>
                 </div>
 
                 <section class="card free-notes" id="free-notes" aria-label="Notas tocadas em código">
@@ -152,7 +157,7 @@
                         <span class="song-name">figura pelo ritmo: devagar = [n1], médio = [n1/2], rápido = [n1/4] — com Compasso, a que couber</span>
                     </div>
                     <textarea id="free-text" class="song-text free-text" spellcheck="false" aria-label="Notas tocadas, no código do Executar música"
-                        placeholder="Toque as teclas: as notas aparecem aqui no código, por exemplo E[n1/4]; F[n1/4]; C[n1], E[n1], G[n1];"></textarea>
+                        placeholder="Toque as teclas: as notas aparecem aqui no código, por exemplo 4E[n1/4]; 4F[n1/4]; 4C[n1], 4E[n1], 4G[n1];"></textarea>
                     <div class="music-tools">
                         <button class="btn" id="btn-free-save" type="button" title="Salvar as notas num arquivo .txt">💾 Salvar</button>
                         <button class="btn" id="btn-free-clear" type="button" title="Apagar as notas da caixinha">🧽 Limpar</button>
@@ -203,7 +208,7 @@
                     </div>
                     <input id="song-file" type="file" accept=".txt,text/plain" hidden>
                     <textarea id="song-text" class="song-text" spellcheck="false" autocomplete="off" aria-label="Notas da música (código)"
-                        placeholder="Escreva as notas, por exemplo:&#10;E[n1/4]; E[n1/4]; F[n1/4]; G[n1/4];&#10;C[n1], E[n1], G[n1];   (acorde)"></textarea>
+                        placeholder="Escreva as notas, por exemplo:&#10;4E[n1/4]; 4E[n1/4]; 4F[n1/4]; 4G[n1/4];&#10;4C[n1], 4E[n1], 4G[n1];   (acorde)"></textarea>
                     <p class="song-info" id="song-info" aria-live="polite"></p>
                     <details class="music-help">
                         <summary>❓ Ajuda — como escrever as notas</summary>
@@ -347,7 +352,7 @@
                         <li>No <strong>Tocar livre</strong> e no <strong>Executar música</strong>, o Modelo tem também o <strong>Piano (3 oitavas)</strong> e o <strong>Piano (5 oitavas)</strong>, do Dó grave ao Si agudo (no Siga a sequência ele fica de fora: a sequência usa o teclado de 24 notas). No Tocar livre, escolha <strong>Pauta: Sol e Fá (piano)</strong> para as notas abaixo do Dó central aparecerem na clave de Fá; nas outras opções fica só a clave de Sol.</li>
                         <li>No <strong>Tocar livre</strong> as teclas pretas também tocam. Para usá-las no jogo de memória, escolha o modelo <strong>Teclado (12 notas ♯/♭)</strong>. Em <strong>Nomes ♯/♭</strong> você escolhe se elas aparecem como sustenido (Dó♯) ou bemol (Ré♭).</li>
                         <li>Nos modelos de teclado, o <strong>Pentagrama</strong> mostra as notas na clave de sol, com as cores das teclas, acendendo conforme tocam. Em <strong>Só cor</strong> a nota fica com a cor da tecla, mas sem o nome dentro. Escolha <strong>Só preto (desafio)</strong> para ver as notas como numa partitura de verdade, sem cor nem nome, e aprender a ler a pauta. A figura muda com a velocidade: <strong>semibreve</strong> (devagar), <strong>mínima</strong> e <strong>semínima</strong> (rápido).</li>
-                        <li><strong>No celular</strong>: o piano grande fica com teclas largas, do tamanho do dedo, e <strong>rola para os lados</strong>. Use a barra <strong>◀ Graves · Agudos ▶</strong> embaixo do teclado (ou role a barra) para ver as outras oitavas; ao tocar uma música ou praticar, o teclado acompanha as notas sozinho. Com o celular em pé, as opções ficam guardadas em <strong>⚙ Opções</strong>, para o pentagrama e o teclado aparecerem logo.</li>
+                        <li><strong>No celular</strong>: o tamanho das teclas se ajusta à tela. O padrão é o teclado inteiro na tela (visão geral; no <strong>Executar música</strong> é sempre assim). No <strong>Tocar livre</strong>, toque em <strong>+</strong> embaixo do teclado para alargar as teclas até o tamanho do dedo e em <strong>−</strong> para estreitar até caber todas de novo; com as teclas largas, o teclado rola para os lados com a barra <strong>◀ ▶</strong>. Com o celular em pé, as opções ficam guardadas em <strong>⚙ Opções</strong>, para o pentagrama e o teclado aparecerem logo.</li>
                         <li>Em <strong>Teclas</strong>, troque o teclado colorido pelo <strong>preto e branco</strong> de um piano de verdade (com ou sem os nomes nas teclas), para quem já avançou. A tecla acende em azul quando toca.</li>
                         <li>No <strong>Tocar livre</strong>, escolha o <strong>Compasso</strong> (4/4, 3/4, 2/4, 2/2, 6/8, 9/8): a figura de cada nota se ajusta ao que <strong>cabe</strong> no compasso (no 3/4, a nota longa vira mínima pontuada, nunca semibreve ou breve), a barra aparece quando o compasso enche e as notas em código ficam um compasso por linha.</li>
                         <li>No <strong>Executar música</strong>, toque em <strong>🎹 Praticar</strong>: a música espera você tocar a tecla certa antes de seguir. Dá para praticar só uma mão, repetir um trecho marcado e diminuir a Velocidade.</li>
@@ -363,12 +368,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.065"></script>
-    <script src="sounds.js?v=1.065"></script>
-    <script src="modes.js?v=1.065"></script>
-    <script src="engine.js?v=1.065"></script>
-    <script src="staff.js?v=1.065"></script>
-    <script src="music.js?v=1.065"></script>
-    <script src="game.js?v=1.065"></script>
+    <script src="../assets/combobox.js?v=1.066"></script>
+    <script src="sounds.js?v=1.066"></script>
+    <script src="modes.js?v=1.066"></script>
+    <script src="engine.js?v=1.066"></script>
+    <script src="staff.js?v=1.066"></script>
+    <script src="music.js?v=1.066"></script>
+    <script src="game.js?v=1.066"></script>
 </body>
 </html>

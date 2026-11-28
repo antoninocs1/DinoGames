@@ -220,6 +220,15 @@
         const keyEl = svg.querySelector(".keysig");
         const bassEl = svg.querySelector(".bass-staff");
         const clipRect = svg.querySelector("#staff-clip rect");
+        /**
+         * Recorte das notas: começa logo depois da clave, da armadura e da fórmula de compasso,
+         * para o que rola para a esquerda (barras de colcheia, ligaduras) não passar por cima delas.
+         */
+        const clipToHeader = () => {
+            const left = Math.max(0, x0 - 16);
+            clipRect.setAttribute("x", left);
+            clipRect.setAttribute("width", Math.max(0, W - left));
+        };
         let view = { top: -20, bottom: 76 }; // área do desenho sem o título
         let range = null;        // { lo, hi } steps das notas (teclado ou música) para caber tudo
         let title = "";
@@ -238,7 +247,7 @@
                 W = w;
                 SLOTS = slotsFor(W, x0);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
-                clipRect.setAttribute("width", W);
+                clipToHeader();
             }
             svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
             svg.style.aspectRatio = `${W} / ${height}`;
@@ -561,6 +570,7 @@
                 };
                 meterEl.innerHTML = meter ? meterAt(0) + (grand ? meterAt(BASS_TOP) : "") : "";
                 x0 = X0 + keyW + (meter ? METER_W : 0);
+                clipToHeader();
                 SLOTS = slotsFor(W, x0);
                 this.clear();
             },

@@ -477,12 +477,13 @@
         staffOpt: $("staff-opt"), fieldStaff: $("field-staff"), keysOpt: $("keys-opt"), fieldKeys: $("field-keys"), meterOpt: $("meter-opt"), fieldMeter: $("field-meter"), pautaOpt: $("pauta-opt"), fieldPauta: $("field-pauta"), tecladoOpt: $("teclado-opt"), fieldTeclado: $("field-teclado"), staffBox: $("staff-box"), staffFigure: $("staff-figure"), btnStaffClear: $("btn-staff-clear"),
     };
     const staff = window.SigaDinoStaff.createStaff($("staff"));
-    const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"), keyPx: 0 };
+    const kb = { scroll: $("kb-scroll"), nav: $("kb-nav"), pan: $("kb-pan"), range: $("kb-range"), left: $("kb-left"), right: $("kb-right"),
+        minus: $("kb-minus"), plus: $("kb-plus"), keyPx: 0, fitPx: 0 };
 
     const enabledModes = Object.entries(MODES).filter(([, m]) => m.enabled);
     ui.fieldMode.hidden = enabledModes.length < 2; // só aparece quando houver mais de um conjunto
 
-    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
+    const DEFAULTS = { v: 2, mode: "cores4", play: "memoria", accidental: "sustenido", timbre: "suave", level: "normal", strict: "0", goal: "20", staff: "1", pauta: "auto", teclado: "auto", names: "nome", legend: true, kbKey: 0, keys: "cor", meter: "", practiceHand: "ambas", practiceHint: "1", speed: "1" };
     const saved = storage.get(PREFS_KEY) || {};
     // Versão 2: "Ouvir de novo" passou a ser o padrão (ajuda as crianças) e o modelo flor saiu.
     if (saved.v !== 2) delete saved.strict;
@@ -602,35 +603,62 @@
         renderOptsSummary();
     };
 
-    // ---------- Celular: teclado com teclas largas, rolando para os lados ----------
-    const MIN_KEY = 34; // largura mínima (px) da tecla branca no celular: cabe o dedo
+    // ---------- Celular: largura das teclas (− / +) e teclado rolando para os lados ----------
+    const MIN_KEY = 34; // tecla branca do tamanho do dedo (px): o máximo do "+"
+    const KEY_STEP = 4; // quanto cada toque no − / + muda a tecla (px)
     const phoneScreen = window.matchMedia("(max-width: 860px), (pointer: coarse)");
     // Celular deitado: falta altura, não largura — o piano inteiro continua cabendo na largura.
     const shortLandscape = window.matchMedia("(orientation: landscape) and (max-height: 520px)");
-    /** Liga a rolagem quando as teclas ficariam finas demais para o dedo (piano grande no celular). */
+    /**
+     * Teclado no celular em pé. Padrão: todas as teclas cabem na tela (visão geral; no
+     * Executar música é sempre assim). No Tocar livre, o + alarga as teclas até o tamanho do
+     * dedo (o teclado passa a rolar para os lados) e o − volta até caber na tela.
+     */
     const fitKeyboard = (center = false) => {
         const was = document.body.classList.contains("kb-wide");
-        let wide = false, need = 0;
+        const oldW = kb.scroll.scrollWidth, oldMid = kb.scroll.scrollLeft + kb.scroll.clientWidth / 2;
+        let wide = false, need = 0, zoomable = false, fitPx = 0, target = 0;
         if (mode.look === "teclado" && phoneScreen.matches && !shortLandscape.matches) {
             const whites = mode.pads.filter((p) => !p.sharp).length;
             const keyW = whites > 28 ? 18 : whites > 14 ? 20 : whites > 7 ? 23 : 27; // o mesmo de LOOKS.teclado
             const vw = Number(ui.device.getAttribute("viewBox").split(" ")[2]);
             const avail = kb.scroll.clientWidth;
-            need = Math.ceil((vw * MIN_KEY) / keyW);
-            wide = avail > 0 && need > avail + 2;
-            kb.keyPx = wide ? MIN_KEY : (avail * keyW) / vw;
+            fitPx = avail > 0 ? (avail * keyW) / vw : 0; // largura da tecla com o teclado inteiro na tela
+            zoomable = isFree() && !isMusic() && fitPx > 0 && fitPx < MIN_KEY - 1;
+            target = zoomable ? Math.min(MIN_KEY, Math.max(fitPx, Number(prefs.kbKey) || 0)) : fitPx;
+            need = Math.ceil((vw * target) / keyW);
+            wide = zoomable && need > avail + 2;
         }
+        kb.keyPx = wide ? target : fitPx;
+        kb.fitPx = fitPx;
         document.body.classList.toggle("kb-wide", wide);
-        kb.nav.hidden = !wide;
+        kb.nav.hidden = !zoomable;
+        kb.pan.hidden = !wide;
+        kb.minus.disabled = !wide;
+        kb.plus.disabled = target >= MIN_KEY - 0.5;
         if (!wide) return;
         document.body.style.setProperty("--kbw", `${need}px`);
-        syncKbRange();
         if (center || !was) {
             // Começa mostrando o Dó central (a bolinha) no meio.
             const i = Math.max(0, mode.pads.findIndex((p) => p.center || (!p.octave && p.letter === "C")));
             keepKeyVisible(i, true);
+        } else if (oldW && kb.scroll.scrollWidth !== oldW) {
+            // − / +: continua mostrando o mesmo trecho do teclado no meio.
+            kb.scroll.scrollLeft = (oldMid / oldW) * kb.scroll.scrollWidth - kb.scroll.clientWidth / 2;
         }
+        syncKbRange();
     };
+    /** − / +: muda a largura das teclas (de caber na tela até o tamanho do dedo). */
+    const zoomKeys = (dir) => {
+        const cur = kb.keyPx || MIN_KEY;
+        let next = cur + dir * KEY_STEP;
+        if (next >= MIN_KEY - 1) next = MIN_KEY;
+        prefs.kbKey = dir < 0 && next <= kb.fitPx + 1 ? 0 : next; // 0 = caber na tela (o padrão)
+        storage.set(PREFS_KEY, prefs);
+        fitKeyboard(false);
+    };
+    kb.minus.addEventListener("click", () => zoomKeys(-1));
+    kb.plus.addEventListener("click", () => zoomKeys(1));
     const syncKbRange = () => {
         const max = Math.max(0, kb.scroll.scrollWidth - kb.scroll.clientWidth);
         kb.range.max = String(max);
