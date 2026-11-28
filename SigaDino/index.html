@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#14121a">
     <title>Siga o Dino (e Piano Mágico)</title>
     <link rel="icon" type="image/svg+xml" href="../assets/dino.svg">
-    <link rel="stylesheet" href="../assets/combobox.css?v=1.071">
-    <link rel="stylesheet" href="style.css?v=1.071">
+    <link rel="stylesheet" href="../assets/combobox.css?v=1.072">
+    <link rel="stylesheet" href="style.css?v=1.072">
 </head>
 <body>
     <main class="app">
@@ -32,15 +32,15 @@
                     <span>Jogo</span>
                     <select id="play" aria-label="Tipo de jogo">
                         <option value="memoria">🧠 Siga a sequência</option>
-                        <option value="livre">🎶 Tocar livre</option>
-                        <option value="musica">📜 Executar música (notas)</option>
+                        <option value="livre">🎹 Tocar livre</option>
+                        <option value="musica">🎶 Executar música (notas)</option>
                     </select>
                 </label>
                 <label class="field" id="field-names" hidden>
                     <span>Nomes</span>
                     <select id="names" aria-label="Mostrar o nome ou a letra da nota">
-                        <option value="nome">🗣️ Dó, Ré, Mi…</option>
-                        <option value="letra">🔤 Letras (C, D, E…)</option>
+                        <option value="nome">Dó, Ré, Mi…</option>
+                        <option value="letra">Letras (C, D, E…)</option>
                     </select>
                 </label>
                 <label class="field" id="field-accidental" hidden>
@@ -53,10 +53,10 @@
                 <label class="field" id="field-staff" hidden>
                     <span>Pentagrama</span>
                     <select id="staff-opt" aria-label="Mostrar as notas na partitura">
-                        <option value="1">🏷️ Cor com nome</option>
-                        <option value="3">🎨 Só cor (sem nome)</option>
-                        <option value="2">⚫ Só preto (desafio)</option>
-                        <option value="0">🙈 Esconder</option>
+                        <option value="1">Cor com nome</option>
+                        <option value="3">Só cor (sem nome)</option>
+                        <option value="2">Só preto (desafio)</option>
+                        <option value="0">Esconder</option>
                     </select>
                 </label>
                 <label class="field" id="field-keys" hidden>
@@ -70,7 +70,7 @@
                 <label class="field" id="field-meter" hidden>
                     <span>Compasso</span>
                     <select id="meter-opt" aria-label="Fórmula de compasso do Tocar livre">
-                        <option value="">➖ Sem compasso</option>
+                        <option value="">Sem compasso</option>
                         <option value="4/4">4/4</option>
                         <option value="3/4">3/4</option>
                         <option value="2/4">2/4</option>
@@ -82,28 +82,28 @@
                 <label class="field" id="field-beams" hidden>
                     <span>Colcheias</span>
                     <select id="beams-opt" aria-label="Colcheias e semicolcheias ligadas por barra ou separadas">
-                        <option value="0">♪ Separadas (bandeirolas)</option>
-                        <option value="1">♫ Com barra (partitura)</option>
+                        <option value="0">Separadas (bandeirolas)</option>
+                        <option value="1">Com barra (partitura)</option>
                     </select>
                 </label>
                 <label class="field" id="field-measures" hidden>
                     <span>Nº do compasso</span>
                     <select id="measures-opt" aria-label="Mostrar o número de cada compasso no pé da pauta">
-                        <option value="1">🔢 Mostrar</option>
+                        <option value="1">Mostrar</option>
                         <option value="0">Esconder</option>
                     </select>
                 </label>
                 <label class="field" id="field-scroll" hidden>
                     <span>Rolagem</span>
                     <select id="scroll-opt" aria-label="Como a partitura rola: acompanha a música ou com barra de rolagem">
-                        <option value="auto">👀 Acompanha a música</option>
-                        <option value="barra">↔️ Com barra de rolagem</option>
+                        <option value="auto">Acompanha a música</option>
+                        <option value="barra">Com barra de rolagem</option>
                     </select>
                 </label>
                 <label class="field" id="field-teclado" hidden>
                     <span>Teclado</span>
                     <select id="teclado-opt" aria-label="Quantas oitavas o teclado tem no Executar música">
-                        <option value="auto">✨ Automático (pela música)</option>
+                        <option value="auto">Automático (pela música)</option>
                         <option value="24">2 oitavas</option>
                         <option value="36">3 oitavas</option>
                         <option value="60">Piano (5 oitavas)</option>
@@ -112,9 +112,9 @@
                 <label class="field" id="field-pauta" hidden>
                     <span>Pauta</span>
                     <select id="pauta-opt" aria-label="Pauta da música: clave de sol ou pauta dupla de piano">
-                        <option value="auto">✨ Automática</option>
-                        <option value="sol">𝄞 Clave de Sol</option>
-                        <option value="dupla">🎹 Sol e Fá (piano)</option>
+                        <option value="auto">Automática</option>
+                        <option value="sol">Clave de Sol</option>
+                        <option value="dupla">Sol e Fá (piano)</option>
                     </select>
                 </label>
                 <label class="field">
@@ -125,7 +125,7 @@
                     <span>Velocidade</span>
                     <select id="level" aria-label="Velocidade">
                         <option value="facil">🐢 Fácil</option>
-                        <option value="normal">🚶 Normal</option>
+                        <option value="normal">🐎 Normal</option>
                         <option value="rapido">🐇 Rápido</option>
                     </select>
                 </label>
@@ -143,7 +143,7 @@
                         <option value="14">14 passos</option>
                         <option value="20">20 passos</option>
                         <option value="31">31 passos</option>
-                        <option value="0">♾️ Sem fim</option>
+                        <option value="0">Sem fim</option>
                     </select>
                 </label>
             </div>
@@ -223,7 +223,7 @@
                         <label class="mini-field"><span>Velocidade</span>
                             <select id="song-speed" aria-label="Velocidade da música ao tocar e praticar">
                                 <option value="1">🐇 Normal</option>
-                                <option value="0.75">🚶 75%</option>
+                                <option value="0.75">🐎 75%</option>
                                 <option value="0.5">🐢 Devagar (50%)</option>
                                 <option value="0.25">🐌 Bem devagar (25%)</option>
                             </select>
@@ -393,12 +393,12 @@
 
     <div class="confetti" id="confetti" aria-hidden="true"></div>
 
-    <script src="../assets/combobox.js?v=1.071"></script>
-    <script src="sounds.js?v=1.071"></script>
-    <script src="modes.js?v=1.071"></script>
-    <script src="engine.js?v=1.071"></script>
-    <script src="staff.js?v=1.071"></script>
-    <script src="music.js?v=1.071"></script>
-    <script src="game.js?v=1.071"></script>
+    <script src="../assets/combobox.js?v=1.072"></script>
+    <script src="sounds.js?v=1.072"></script>
+    <script src="modes.js?v=1.072"></script>
+    <script src="engine.js?v=1.072"></script>
+    <script src="staff.js?v=1.072"></script>
+    <script src="music.js?v=1.072"></script>
+    <script src="game.js?v=1.072"></script>
 </body>
 </html>
