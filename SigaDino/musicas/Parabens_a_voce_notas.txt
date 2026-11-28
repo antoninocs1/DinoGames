@@ -1,0 +1,45 @@
+Música: Parabéns a você – canção tradicional (domínio público)
+Nível: fácil
+Compasso: 3/4
+Andamento: semínima = 100
+
+A música começa no fim do compasso (anacruse): o 1º compasso tem uma pausa
+e só as duas notas "Pa-ra". A colcheia pontuada seguida da semicolcheia
+é o ritmo "longo-curto" de "Pa-ra".
+
+Compasso 1 (Pa-ra…):
+MD:  [p1/2]; G[n1/8.]; G[n1/16];
+ME:  [p1/2.];
+
+Compasso 2 (…béns a vo-cê):
+MD:  A[n1/4]; G[n1/4]; 2C[n1/4];
+ME:  0C[n1/2.];
+
+Compasso 3:
+MD:  B[n1/2]; G[n1/8.]; G[n1/16];
+ME:  -1G[n1/2.];
+
+Compasso 4 (nes-ta da-ta que-ri-da):
+MD:  A[n1/4]; G[n1/4]; 2D[n1/4];
+ME:  -1G[n1/2.];
+
+Compasso 5:
+MD:  2C[n1/2]; G[n1/8.]; G[n1/16];
+ME:  0C[n1/2.];
+
+Compasso 6 (mui-tas fe-li-ci-da-des):
+MD:  2G[n1/4]; 2E[n1/4]; 2C[n1/4];
+ME:  0C[n1/2.];
+
+Compasso 7:
+MD:  B[n1/4]; A[n1/4]; 2F[n1/8.]; 2F[n1/16];
+ME:  0F[n1/2.];
+
+Compasso 8 (mui-tos a-nos de vi-da):
+MD:  2E[n1/4]; 2C[n1/4]; 2D[n1/4];
+ME:  0G[n1/2.];
+
+Compasso 9:
+MD:  2C[n1/2.];
+ME:  0C[n1/2.];
+Fim

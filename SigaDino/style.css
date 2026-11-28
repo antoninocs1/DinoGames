@@ -182,8 +182,9 @@ body.kb-wide .kb-scroll .device[data-look="teclado"] { flex: 0 0 auto; width: va
 body.free-play .staff-clear { display: inline-block; }
 
 /* Com pentagrama: pauta + teclado precisam caber juntos na altura da tela. */
-body.with-staff .device[data-look="teclado"],
-body.with-staff .staff-box { width: min(100%, calc(490px * var(--ar, 1.557)), calc((100vh - 170px) / (1 / var(--ar, 1.557) + var(--sh, .229)))); }
+body.with-staff .device[data-look="teclado"] { width: min(100%, calc(490px * var(--ar, 1.557)), calc((100vh - 170px) / (1 / var(--ar, 1.557) + var(--sh, .229)))); }
+/* A pauta usa a largura toda (o desenho fica mais largo e mostra mais notas). */
+body.with-staff .staff-box { width: 100%; }
 
 /* ---------- Tocar livre: some tudo o que é da partida ---------- */
 body.free-play .game-only { display: none !important; }

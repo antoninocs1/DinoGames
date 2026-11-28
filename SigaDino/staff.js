@@ -198,6 +198,7 @@
         let keyShown = 0;        // armadura desenhada depois da clave (a da 1ª nota à vista)
 
         let W = W_NORMAL, SLOTS = slotsFor(W);
+        let baseW = W_NORMAL;    // largura mínima do desenho; W cresce além dela para encher a caixa
         svg.innerHTML = `
             <defs><clipPath id="staff-clip"><rect x="0" y="-400" width="${W_WIDE}" height="1000"/></clipPath></defs>
             <g class="staff-lines">${[0, 1, 2, 3, 4].map((i) =>
@@ -218,6 +219,7 @@
         const meterEl = svg.querySelector(".meter");
         const keyEl = svg.querySelector(".keysig");
         const bassEl = svg.querySelector(".bass-staff");
+        const clipRect = svg.querySelector("#staff-clip rect");
         let view = { top: -20, bottom: 76 }; // área do desenho sem o título
         let range = null;        // { lo, hi } steps das notas (teclado ou música) para caber tudo
         let title = "";
@@ -225,10 +227,23 @@
         const applyView = () => {
             const top = view.top - (title ? 18 : 0);
             const height = view.bottom - top;
+            // Mais notas à vista: quando a altura bate no limite do CSS (max-height), o desenho
+            // fica mais largo (W cresce) e enche a caixa, em vez de encolher no meio dela.
+            const boxW = svg.clientWidth || 0;
+            const maxH = parseFloat(getComputedStyle(svg).maxHeight);
+            let w = baseW;
+            if (boxW && maxH > 0 && (boxW * height) / baseW > maxH) w = Math.min(baseW * 5, (height * boxW) / maxH);
+            w = Math.round(w);
+            if (w !== W) {
+                W = w;
+                SLOTS = slotsFor(W, x0);
+                svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
+                clipRect.setAttribute("width", W);
+            }
             svg.setAttribute("viewBox", `0 ${top} ${W} ${height}`);
             svg.style.aspectRatio = `${W} / ${height}`;
             // O CSS limita a altura do pentagrama (max-height); a conta do layout usa o mesmo teto.
-            document.body.style.setProperty("--sh", String(Math.min(height / W, 0.42)));
+            document.body.style.setProperty("--sh", String(Math.min(height / baseW, 0.42)));
             titleEl.textContent = title;
             titleEl.setAttribute("x", W / 2);
             titleEl.setAttribute("y", top + 13);
@@ -453,7 +468,7 @@
                 svg.classList.toggle("mono", look === "preto");
                 // Altura do desenho: com 2 oitavas sobe para caber as notas agudas.
                 const wide = mode.pads.some((p) => p.octave);
-                W = wide ? W_WIDE : W_NORMAL;
+                W = baseW = wide ? W_WIDE : W_NORMAL;
                 SLOTS = slotsFor(W, x0);
                 svg.querySelectorAll(".staff-lines line").forEach((l) => l.setAttribute("x2", W - 2));
                 // deep: espaço para notas abaixo do Dó central; grand: pauta dupla (clave de Fá embaixo).
@@ -471,6 +486,8 @@
                 keyCount = 0;
                 this._header();
             },
+            /** Recalcula a largura do desenho (a caixa mudou de tamanho: janela, celular girou). */
+            refit() { applyView(); },
             /** Liga ou desliga a pauta dupla (clave de Sol em cima e clave de Fá embaixo). */
             setGrand(on) {
                 if (!!on === grand) return;

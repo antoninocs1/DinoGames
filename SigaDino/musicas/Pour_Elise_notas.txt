@@ -1,0 +1,194 @@
+Música: Pour Elise (Für Elise) – Ludwig van Beethoven
+Transcrição em texto: a parte A (o tema famoso, com as repetições escritas)
+Nível: médio
+
+Referência: Bagatela em Lá menor, WoO 59 — edição digital do Mutopia Project
+(domínio público). "Poco moto". O tema se repete e a parte do meio (compassos 18 a 30)
+passa por Dó maior.
+Compasso: 3/8
+Andamento: semínima = 72
+
+Dica: pratique primeiro só a mão direita, devagar (Velocidade 50%). A mão esquerda
+toca arpejos curtos (Lá–Mi–Lá e Mi–Mi–Sol♯) e descansa no resto do compasso.
+
+Compasso 1 (anacruse: as 2 semicolcheias antes do 1º compasso):
+MD:  [p1/4]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/4]; [p1/8];
+
+Compasso 2:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 3:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 4:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 5:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 6:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 7:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 8:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 9 (1ª vez: as 2 semicolcheias levam de volta ao começo):
+MD:  A[n1/4]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 10 (a melodia de novo):
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 11:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 12:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 13:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 14:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 15:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 16:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 17 (2ª vez: segue para o trecho do meio):
+MD:  A[n1/8]; [p1/16]; B[n1/16]; 2C[n1/16]; 2D[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 18 (o trecho do meio, em Dó maior):
+MD:  2E[n1/8.]; G[n1/16]; 2F[n1/16]; 2E[n1/16];
+ME:  0C[n1/16]; 0G[n1/16]; C[n1/16]; [p1/16]; [p1/8];
+
+Compasso 19:
+MD:  2D[n1/8.]; F[n1/16]; 2E[n1/16]; 2D[n1/16];
+ME:  -1G[n1/16]; 0G[n1/16]; 0B[n1/16]; [p1/16]; [p1/8];
+
+Compasso 20:
+MD:  2C[n1/8.]; E[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 21:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; [p1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; E[n1/16]; [p1/16]; [p1/16]; E[n1/16];
+
+Compasso 22:
+MD:  [p1/16]; 2E[n1/16]; 3E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16];
+ME:  2E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16];
+
+Compasso 23:
+MD:  2E[n1/8]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16]; [p1/8];
+
+Compasso 24:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 25:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 26:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 27:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 28:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 29:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 30:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 31 (volta ao trecho do meio):
+MD:  A[n1/8]; [p1/16]; B[n1/16]; 2C[n1/16]; 2D[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 32 (o trecho do meio de novo):
+MD:  2E[n1/8.]; G[n1/16]; 2F[n1/16]; 2E[n1/16];
+ME:  0C[n1/16]; 0G[n1/16]; C[n1/16]; [p1/16]; [p1/8];
+
+Compasso 33:
+MD:  2D[n1/8.]; F[n1/16]; 2E[n1/16]; 2D[n1/16];
+ME:  -1G[n1/16]; 0G[n1/16]; 0B[n1/16]; [p1/16]; [p1/8];
+
+Compasso 34:
+MD:  2C[n1/8.]; E[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 35:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; [p1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; E[n1/16]; [p1/16]; [p1/16]; E[n1/16];
+
+Compasso 36:
+MD:  [p1/16]; 2E[n1/16]; 3E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16];
+ME:  2E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16];
+
+Compasso 37:
+MD:  2E[n1/8]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16]; [p1/8];
+
+Compasso 38:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 39:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 40:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 41:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 42:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 43:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 44:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 45 (fim da parte A):
+MD:  A[n1/4.];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Fim

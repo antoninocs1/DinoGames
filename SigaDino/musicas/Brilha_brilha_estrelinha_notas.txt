@@ -1,0 +1,56 @@
+Música: Brilha, brilha, estrelinha – canção tradicional
+Nível: muito fácil (a mão esquerda só toca uma nota de cada vez)
+Compasso: 4/4
+Andamento: semínima = 100
+
+Dica: comece praticando só a mão direita (MD). A melodia usa as 6 primeiras
+notas do Dó central: Dó, Ré, Mi, Fá, Sol, Lá.
+
+Compasso 1 (Brilha, brilha, estrelinha):
+MD:  C[n1/4]; C[n1/4]; G[n1/4]; G[n1/4];
+ME:  0C[n1];
+
+Compasso 2:
+MD:  A[n1/4]; A[n1/4]; G[n1/2];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 3:
+MD:  F[n1/4]; F[n1/4]; E[n1/4]; E[n1/4];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 4:
+MD:  D[n1/4]; D[n1/4]; C[n1/2];
+ME:  0G[n1/2]; 0C[n1/2];
+
+Compasso 5 (Lá no alto, lá no céu):
+MD:  G[n1/4]; G[n1/4]; F[n1/4]; F[n1/4];
+ME:  0C[n1/2]; 0F[n1/2];
+
+Compasso 6:
+MD:  E[n1/4]; E[n1/4]; D[n1/2];
+ME:  0C[n1/2]; 0G[n1/2];
+
+Compasso 7:
+MD:  G[n1/4]; G[n1/4]; F[n1/4]; F[n1/4];
+ME:  0C[n1/2]; 0F[n1/2];
+
+Compasso 8:
+MD:  E[n1/4]; E[n1/4]; D[n1/2];
+ME:  0C[n1/2]; 0G[n1/2];
+
+Compasso 9 (Brilha, brilha, estrelinha (de novo)):
+MD:  C[n1/4]; C[n1/4]; G[n1/4]; G[n1/4];
+ME:  0C[n1];
+
+Compasso 10:
+MD:  A[n1/4]; A[n1/4]; G[n1/2];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 11:
+MD:  F[n1/4]; F[n1/4]; E[n1/4]; E[n1/4];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 12:
+MD:  D[n1/4]; D[n1/4]; C[n1/2];
+ME:  0G[n1/2]; 0C[n1/2];
+Fim

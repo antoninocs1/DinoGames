@@ -1,0 +1,48 @@
+Música: Irmão João (Frère Jacques) – cânone tradicional
+Nível: fácil
+Compasso: 4/4
+Andamento: semínima = 112
+
+Cânone: a mão esquerda toca a mesma melodia uma oitava abaixo, começando 2
+compassos depois — as duas vozes se encaixam. Pratique primeiro só a MD.
+
+Compasso 1 (Irmão João, irmão João):
+MD:  C[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+ME:  [p1];
+
+Compasso 2:
+MD:  C[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+ME:  [p1];
+
+Compasso 3 (dormes tu? (a mão esquerda começa: Irmão João…)):
+MD:  E[n1/4]; F[n1/4]; G[n1/2];
+ME:  0C[n1/4]; 0D[n1/4]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 4:
+MD:  E[n1/4]; F[n1/4]; G[n1/2];
+ME:  0C[n1/4]; 0D[n1/4]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 5 (tocam os sinos):
+MD:  G[n1/8]; A[n1/8]; G[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+ME:  0E[n1/4]; 0F[n1/4]; 0G[n1/2];
+
+Compasso 6:
+MD:  G[n1/8]; A[n1/8]; G[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+ME:  0E[n1/4]; 0F[n1/4]; 0G[n1/2];
+
+Compasso 7 (dim, dom, dão):
+MD:  C[n1/4]; 0G[n1/4]; C[n1/2];
+ME:  0G[n1/8]; 0A[n1/8]; 0G[n1/8]; 0F[n1/8]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 8:
+MD:  C[n1/4]; 0G[n1/4]; C[n1/2];
+ME:  0G[n1/8]; 0A[n1/8]; 0G[n1/8]; 0F[n1/8]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 9 (a mão direita terminou; a esquerda acaba sozinha):
+MD:  [p1];
+ME:  0C[n1/4]; -1G[n1/4]; 0C[n1/2];
+
+Compasso 10:
+MD:  [p1];
+ME:  0C[n1/4]; -1G[n1/4]; 0C[n1/2];
+Fim

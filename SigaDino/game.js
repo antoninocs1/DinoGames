@@ -598,6 +598,7 @@
         setInputEnabled(phase === "input" || phase === "free");
         if (phase === "free") { setCount("♪"); setHubText(isMusic() ? "MÚSICA" : "LIVRE"); }
         fitKeyboard(true);
+        staff.refit(); // a pauta enche a caixa (mais notas à vista)
         renderOptsSummary();
     };
 
@@ -650,7 +651,7 @@
     kb.left.addEventListener("click", () => kb.scroll.scrollBy({ left: -octavePx(), behavior: "smooth" }));
     kb.right.addEventListener("click", () => kb.scroll.scrollBy({ left: octavePx(), behavior: "smooth" }));
     let fitTimer = 0;
-    window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitKeyboard(false), 150); });
+    window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { fitKeyboard(false); staff.refit(); }, 150); });
 
     // ---------- Celular em pé: opções recolhidas em "⚙ Opções" ----------
     const optsBtn = $("btn-opts");

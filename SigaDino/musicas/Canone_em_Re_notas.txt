@@ -1,0 +1,79 @@
+Música: Cânone em Ré – Johann Pachelbel (versão simplificada)
+Nível: médio
+Tom: Ré maior
+Compasso: 4/4
+Andamento: semínima = 72
+
+Versão simplificada (arranjo para o Siga o Dino): a mão esquerda repete o baixo
+famoso de 8 notas (Ré, Lá, Si, Fá♯, Sol, Ré, Sol, Lá), e a mão direita faz a melodia
+em três partes, cada vez mais rápidas: semibreves, mínimas e semínimas. Com o Tom de
+Ré maior, F e C já são sustenidos (Fá♯ e Dó♯).
+
+Compasso 1 (o baixo de 8 notas e a melodia em semibreves):
+MD:  2F[n1];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 2:
+MD:  2E[n1];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 3:
+MD:  2D[n1];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 4:
+MD:  2C[n1];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 5:
+MD:  B[n1];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 6:
+MD:  A[n1];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 7:
+MD:  B[n1];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 8:
+MD:  2C[n1];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 9 (a melodia em mínimas):
+MD:  2D[n1/2]; 2C[n1/2];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 10:
+MD:  B[n1/2]; A[n1/2];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 11:
+MD:  G[n1/2]; F[n1/2];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 12:
+MD:  G[n1/2]; E[n1/2];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 13 (a melodia em semínimas):
+MD:  2D[n1/4]; 2F[n1/4]; 2A[n1/4]; 2G[n1/4];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 14:
+MD:  2F[n1/4]; 2D[n1/4]; 2F[n1/4]; 2E[n1/4];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 15:
+MD:  2D[n1/4]; B[n1/4]; 2D[n1/4]; A[n1/4];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 16:
+MD:  G[n1/4]; B[n1/4]; A[n1/4]; G[n1/4];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 17 (acorde final):
+MD:  F[n1], A[n1], 2D[n1];
+ME:  0D[n1];
+Fim

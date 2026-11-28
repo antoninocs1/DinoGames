@@ -919,13 +919,789 @@ partitura, a mão esquerda às vezes usa a clave de Sol e o 8va; aqui ela fica n
 Fá da pauta dupla e as notas aparecem na altura real (por isso as linhas suplementares).
 `;
 
+    // Músicas para aprender (iguais aos arquivos da pasta musicas/), da mais fácil à mais difícil.
+    const SONG_BRILHA = `Música: Brilha, brilha, estrelinha – canção tradicional
+Nível: muito fácil (a mão esquerda só toca uma nota de cada vez)
+Compasso: 4/4
+Andamento: semínima = 100
+
+Dica: comece praticando só a mão direita (MD). A melodia usa as 6 primeiras
+notas do Dó central: Dó, Ré, Mi, Fá, Sol, Lá.
+
+Compasso 1 (Brilha, brilha, estrelinha):
+MD:  C[n1/4]; C[n1/4]; G[n1/4]; G[n1/4];
+ME:  0C[n1];
+
+Compasso 2:
+MD:  A[n1/4]; A[n1/4]; G[n1/2];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 3:
+MD:  F[n1/4]; F[n1/4]; E[n1/4]; E[n1/4];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 4:
+MD:  D[n1/4]; D[n1/4]; C[n1/2];
+ME:  0G[n1/2]; 0C[n1/2];
+
+Compasso 5 (Lá no alto, lá no céu):
+MD:  G[n1/4]; G[n1/4]; F[n1/4]; F[n1/4];
+ME:  0C[n1/2]; 0F[n1/2];
+
+Compasso 6:
+MD:  E[n1/4]; E[n1/4]; D[n1/2];
+ME:  0C[n1/2]; 0G[n1/2];
+
+Compasso 7:
+MD:  G[n1/4]; G[n1/4]; F[n1/4]; F[n1/4];
+ME:  0C[n1/2]; 0F[n1/2];
+
+Compasso 8:
+MD:  E[n1/4]; E[n1/4]; D[n1/2];
+ME:  0C[n1/2]; 0G[n1/2];
+
+Compasso 9 (Brilha, brilha, estrelinha (de novo)):
+MD:  C[n1/4]; C[n1/4]; G[n1/4]; G[n1/4];
+ME:  0C[n1];
+
+Compasso 10:
+MD:  A[n1/4]; A[n1/4]; G[n1/2];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 11:
+MD:  F[n1/4]; F[n1/4]; E[n1/4]; E[n1/4];
+ME:  0F[n1/2]; 0C[n1/2];
+
+Compasso 12:
+MD:  D[n1/4]; D[n1/4]; C[n1/2];
+ME:  0G[n1/2]; 0C[n1/2];
+Fim
+`;
+
+    const SONG_IRMAO = `Música: Irmão João (Frère Jacques) – cânone tradicional
+Nível: fácil
+Compasso: 4/4
+Andamento: semínima = 112
+
+Cânone: a mão esquerda toca a mesma melodia uma oitava abaixo, começando 2
+compassos depois — as duas vozes se encaixam. Pratique primeiro só a MD.
+
+Compasso 1 (Irmão João, irmão João):
+MD:  C[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+ME:  [p1];
+
+Compasso 2:
+MD:  C[n1/4]; D[n1/4]; E[n1/4]; C[n1/4];
+ME:  [p1];
+
+Compasso 3 (dormes tu? (a mão esquerda começa: Irmão João…)):
+MD:  E[n1/4]; F[n1/4]; G[n1/2];
+ME:  0C[n1/4]; 0D[n1/4]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 4:
+MD:  E[n1/4]; F[n1/4]; G[n1/2];
+ME:  0C[n1/4]; 0D[n1/4]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 5 (tocam os sinos):
+MD:  G[n1/8]; A[n1/8]; G[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+ME:  0E[n1/4]; 0F[n1/4]; 0G[n1/2];
+
+Compasso 6:
+MD:  G[n1/8]; A[n1/8]; G[n1/8]; F[n1/8]; E[n1/4]; C[n1/4];
+ME:  0E[n1/4]; 0F[n1/4]; 0G[n1/2];
+
+Compasso 7 (dim, dom, dão):
+MD:  C[n1/4]; 0G[n1/4]; C[n1/2];
+ME:  0G[n1/8]; 0A[n1/8]; 0G[n1/8]; 0F[n1/8]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 8:
+MD:  C[n1/4]; 0G[n1/4]; C[n1/2];
+ME:  0G[n1/8]; 0A[n1/8]; 0G[n1/8]; 0F[n1/8]; 0E[n1/4]; 0C[n1/4];
+
+Compasso 9 (a mão direita terminou; a esquerda acaba sozinha):
+MD:  [p1];
+ME:  0C[n1/4]; -1G[n1/4]; 0C[n1/2];
+
+Compasso 10:
+MD:  [p1];
+ME:  0C[n1/4]; -1G[n1/4]; 0C[n1/2];
+Fim
+`;
+
+    const SONG_PARABENS = `Música: Parabéns a você – canção tradicional (domínio público)
+Nível: fácil
+Compasso: 3/4
+Andamento: semínima = 100
+
+A música começa no fim do compasso (anacruse): o 1º compasso tem uma pausa
+e só as duas notas "Pa-ra". A colcheia pontuada seguida da semicolcheia
+é o ritmo "longo-curto" de "Pa-ra".
+
+Compasso 1 (Pa-ra…):
+MD:  [p1/2]; G[n1/8.]; G[n1/16];
+ME:  [p1/2.];
+
+Compasso 2 (…béns a vo-cê):
+MD:  A[n1/4]; G[n1/4]; 2C[n1/4];
+ME:  0C[n1/2.];
+
+Compasso 3:
+MD:  B[n1/2]; G[n1/8.]; G[n1/16];
+ME:  -1G[n1/2.];
+
+Compasso 4 (nes-ta da-ta que-ri-da):
+MD:  A[n1/4]; G[n1/4]; 2D[n1/4];
+ME:  -1G[n1/2.];
+
+Compasso 5:
+MD:  2C[n1/2]; G[n1/8.]; G[n1/16];
+ME:  0C[n1/2.];
+
+Compasso 6 (mui-tas fe-li-ci-da-des):
+MD:  2G[n1/4]; 2E[n1/4]; 2C[n1/4];
+ME:  0C[n1/2.];
+
+Compasso 7:
+MD:  B[n1/4]; A[n1/4]; 2F[n1/8.]; 2F[n1/16];
+ME:  0F[n1/2.];
+
+Compasso 8 (mui-tos a-nos de vi-da):
+MD:  2E[n1/4]; 2C[n1/4]; 2D[n1/4];
+ME:  0G[n1/2.];
+
+Compasso 9:
+MD:  2C[n1/2.];
+ME:  0C[n1/2.];
+Fim
+`;
+
+    const SONG_MINUETO = `Música: Minueto em Sol – atribuído a Christian Petzold (BWV Anh. 114)
+Transcrição em texto: a peça inteira, com as repetições escritas (A A B B)
+Nível: médio
+
+Referência: Caderno de Anna Magdalena Bach (1725) — edição digital do Mutopia Project
+(domínio público, a partir da edição da Bach-Gesellschaft). Os ornamentos (mordentes)
+não estão no texto.
+Tom: Sol maior
+Compasso: 3/4
+Andamento: semínima = 120
+
+Com o Tom de Sol maior, F já é sustenido (Fá♯).
+ME2 = 2ª voz da mão esquerda (só nos compassos 25, 26 e 29 de cada parte B).
+
+Compasso 1 (parte A):
+MD:  2D[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; 2C[n1/8];
+ME:  0G[n1/2], 0B[n1/2], D[n1/2]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 2:
+MD:  2D[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/2.];
+ME2: [s1/2.];
+
+Compasso 3:
+MD:  2E[n1/4]; 2C[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  C[n1/2.];
+ME2: [s1/2.];
+
+Compasso 4:
+MD:  2G[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/2.];
+ME2: [s1/2.];
+
+Compasso 5:
+MD:  2C[n1/4]; 2D[n1/8]; 2C[n1/8]; B[n1/8]; A[n1/8];
+ME:  0A[n1/2.];
+ME2: [s1/2.];
+
+Compasso 6:
+MD:  B[n1/4]; 2C[n1/8]; B[n1/8]; A[n1/8]; G[n1/8];
+ME:  0G[n1/2.];
+ME2: [s1/2.];
+
+Compasso 7:
+MD:  F[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; G[n1/8];
+ME:  D[n1/4]; 0B[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 8:
+MD:  A[n1/2.];
+ME:  D[n1/4]; 0D[n1/8]; C[n1/8]; 0B[n1/8]; 0A[n1/8];
+ME2: [s1/2.];
+
+Compasso 9:
+MD:  2D[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; 2C[n1/8];
+ME:  0B[n1/2]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 10:
+MD:  2D[n1/4]; G[n1/4]; G[n1/4];
+ME:  0G[n1/4]; 0B[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 11:
+MD:  2E[n1/4]; 2C[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  C[n1/2.];
+ME2: [s1/2.];
+
+Compasso 12:
+MD:  2G[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/4]; C[n1/8]; 0B[n1/8]; 0A[n1/8]; 0G[n1/8];
+ME2: [s1/2.];
+
+Compasso 13:
+MD:  2C[n1/4]; 2D[n1/8]; 2C[n1/8]; B[n1/8]; A[n1/8];
+ME:  0A[n1/2]; 0F[n1/4];
+ME2: [s1/2.];
+
+Compasso 14:
+MD:  B[n1/4]; 2C[n1/8]; B[n1/8]; A[n1/8]; G[n1/8];
+ME:  0G[n1/2]; 0B[n1/4];
+ME2: [s1/2.];
+
+Compasso 15:
+MD:  A[n1/4]; B[n1/8]; A[n1/8]; G[n1/8]; F[n1/8];
+ME:  C[n1/4]; D[n1/4]; 0D[n1/4];
+ME2: [s1/2.];
+
+Compasso 16:
+MD:  G[n1/2.];
+ME:  0G[n1/2]; -1G[n1/4];
+ME2: [s1/2.];
+
+Compasso 17 (parte A de novo):
+MD:  2D[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; 2C[n1/8];
+ME:  0G[n1/2], 0B[n1/2], D[n1/2]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 18:
+MD:  2D[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/2.];
+ME2: [s1/2.];
+
+Compasso 19:
+MD:  2E[n1/4]; 2C[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  C[n1/2.];
+ME2: [s1/2.];
+
+Compasso 20:
+MD:  2G[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/2.];
+ME2: [s1/2.];
+
+Compasso 21:
+MD:  2C[n1/4]; 2D[n1/8]; 2C[n1/8]; B[n1/8]; A[n1/8];
+ME:  0A[n1/2.];
+ME2: [s1/2.];
+
+Compasso 22:
+MD:  B[n1/4]; 2C[n1/8]; B[n1/8]; A[n1/8]; G[n1/8];
+ME:  0G[n1/2.];
+ME2: [s1/2.];
+
+Compasso 23:
+MD:  F[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; G[n1/8];
+ME:  D[n1/4]; 0B[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 24:
+MD:  A[n1/2.];
+ME:  D[n1/4]; 0D[n1/8]; C[n1/8]; 0B[n1/8]; 0A[n1/8];
+ME2: [s1/2.];
+
+Compasso 25:
+MD:  2D[n1/4]; G[n1/8]; A[n1/8]; B[n1/8]; 2C[n1/8];
+ME:  0B[n1/2]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 26:
+MD:  2D[n1/4]; G[n1/4]; G[n1/4];
+ME:  0G[n1/4]; 0B[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 27:
+MD:  2E[n1/4]; 2C[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  C[n1/2.];
+ME2: [s1/2.];
+
+Compasso 28:
+MD:  2G[n1/4]; G[n1/4]; G[n1/4];
+ME:  0B[n1/4]; C[n1/8]; 0B[n1/8]; 0A[n1/8]; 0G[n1/8];
+ME2: [s1/2.];
+
+Compasso 29:
+MD:  2C[n1/4]; 2D[n1/8]; 2C[n1/8]; B[n1/8]; A[n1/8];
+ME:  0A[n1/2]; 0F[n1/4];
+ME2: [s1/2.];
+
+Compasso 30:
+MD:  B[n1/4]; 2C[n1/8]; B[n1/8]; A[n1/8]; G[n1/8];
+ME:  0G[n1/2]; 0B[n1/4];
+ME2: [s1/2.];
+
+Compasso 31:
+MD:  A[n1/4]; B[n1/8]; A[n1/8]; G[n1/8]; F[n1/8];
+ME:  C[n1/4]; D[n1/4]; 0D[n1/4];
+ME2: [s1/2.];
+
+Compasso 32:
+MD:  G[n1/2.];
+ME:  0G[n1/2]; -1G[n1/4];
+ME2: [s1/2.];
+
+Compasso 33 (parte B):
+MD:  2B[n1/4]; 2G[n1/8]; 2A[n1/8]; 2B[n1/8]; 2G[n1/8];
+ME:  0G[n1/2.];
+ME2: [s1/2.];
+
+Compasso 34:
+MD:  2A[n1/4]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8]; 2D[n1/8];
+ME:  0F[n1/2.];
+ME2: [s1/2.];
+
+Compasso 35:
+MD:  2G[n1/4]; 2E[n1/8]; 2F[n1/8]; 2G[n1/8]; 2D[n1/8];
+ME:  0E[n1/4]; 0G[n1/4]; 0E[n1/4];
+ME2: [s1/2.];
+
+Compasso 36:
+MD:  2C#[n1/4]; B[n1/8]; 2C#[n1/8]; A[n1/4];
+ME:  0A[n1/2]; -1A[n1/4];
+ME2: [s1/2.];
+
+Compasso 37:
+MD:  A[n1/8]; B[n1/8]; 2C#[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  0A[n1/2.];
+ME2: [s1/2.];
+
+Compasso 38:
+MD:  2G[n1/4]; 2F[n1/4]; 2E[n1/4];
+ME:  0B[n1/4]; D[n1/4]; C#[n1/4];
+ME2: [s1/2.];
+
+Compasso 39:
+MD:  2F[n1/4]; A[n1/4]; 2C#[n1/4];
+ME:  D[n1/4]; 0F[n1/4]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 40:
+MD:  2D[n1/2.];
+ME:  D[n1/4]; 0D[n1/4]; C[n1/4];
+ME2: [s1/2.];
+
+Compasso 41:
+MD:  2D[n1/4]; G[n1/8]; F[n1/8]; G[n1/4];
+ME:  [p1/4]; D[n1/2];
+ME2: 0B[n1/2]; 0B[n1/4];
+
+Compasso 42:
+MD:  2E[n1/4]; G[n1/8]; F[n1/8]; G[n1/4];
+ME:  [p1/4]; E[n1/2];
+ME2: C[n1/2]; C[n1/4];
+
+Compasso 43:
+MD:  2D[n1/4]; 2C[n1/4]; B[n1/4];
+ME:  0B[n1/4]; 0A[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 44:
+MD:  A[n1/8]; G[n1/8]; F[n1/8]; G[n1/8]; A[n1/4];
+ME:  D[n1/2]; [p1/4];
+ME2: [s1/2.];
+
+Compasso 45:
+MD:  D[n1/8]; E[n1/8]; F[n1/8]; G[n1/8]; A[n1/8]; B[n1/8];
+ME:  [p1/4]; [p1/4]; 0F[n1/4];
+ME2: 0D[n1/2.];
+
+Compasso 46:
+MD:  2C[n1/4]; B[n1/4]; A[n1/4];
+ME:  0E[n1/4]; 0G[n1/4]; 0F[n1/4];
+ME2: [s1/2.];
+
+Compasso 47:
+MD:  B[n1/8]; 2D[n1/8]; G[n1/4]; F[n1/4];
+ME:  0G[n1/4]; -1B[n1/4]; 0D[n1/4];
+ME2: [s1/2.];
+
+Compasso 48:
+MD:  G[n1/2.], D[n1/2.], 0B[n1/2.];
+ME:  0G[n1/4]; 0D[n1/4]; -1G[n1/4];
+ME2: [s1/2.];
+
+Compasso 49 (parte B de novo):
+MD:  2B[n1/4]; 2G[n1/8]; 2A[n1/8]; 2B[n1/8]; 2G[n1/8];
+ME:  0G[n1/2.];
+ME2: [s1/2.];
+
+Compasso 50:
+MD:  2A[n1/4]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8]; 2D[n1/8];
+ME:  0F[n1/2.];
+ME2: [s1/2.];
+
+Compasso 51:
+MD:  2G[n1/4]; 2E[n1/8]; 2F[n1/8]; 2G[n1/8]; 2D[n1/8];
+ME:  0E[n1/4]; 0G[n1/4]; 0E[n1/4];
+ME2: [s1/2.];
+
+Compasso 52:
+MD:  2C#[n1/4]; B[n1/8]; 2C#[n1/8]; A[n1/4];
+ME:  0A[n1/2]; -1A[n1/4];
+ME2: [s1/2.];
+
+Compasso 53:
+MD:  A[n1/8]; B[n1/8]; 2C#[n1/8]; 2D[n1/8]; 2E[n1/8]; 2F[n1/8];
+ME:  0A[n1/2.];
+ME2: [s1/2.];
+
+Compasso 54:
+MD:  2G[n1/4]; 2F[n1/4]; 2E[n1/4];
+ME:  0B[n1/4]; D[n1/4]; C#[n1/4];
+ME2: [s1/2.];
+
+Compasso 55:
+MD:  2F[n1/4]; A[n1/4]; 2C#[n1/4];
+ME:  D[n1/4]; 0F[n1/4]; 0A[n1/4];
+ME2: [s1/2.];
+
+Compasso 56:
+MD:  2D[n1/2.];
+ME:  D[n1/4]; 0D[n1/4]; C[n1/4];
+ME2: [s1/2.];
+
+Compasso 57:
+MD:  2D[n1/4]; G[n1/8]; F[n1/8]; G[n1/4];
+ME:  [p1/4]; D[n1/2];
+ME2: 0B[n1/2]; 0B[n1/4];
+
+Compasso 58:
+MD:  2E[n1/4]; G[n1/8]; F[n1/8]; G[n1/4];
+ME:  [p1/4]; E[n1/2];
+ME2: C[n1/2]; C[n1/4];
+
+Compasso 59:
+MD:  2D[n1/4]; 2C[n1/4]; B[n1/4];
+ME:  0B[n1/4]; 0A[n1/4]; 0G[n1/4];
+ME2: [s1/2.];
+
+Compasso 60:
+MD:  A[n1/8]; G[n1/8]; F[n1/8]; G[n1/8]; A[n1/4];
+ME:  D[n1/2]; [p1/4];
+ME2: [s1/2.];
+
+Compasso 61:
+MD:  D[n1/8]; E[n1/8]; F[n1/8]; G[n1/8]; A[n1/8]; B[n1/8];
+ME:  [p1/4]; [p1/4]; 0F[n1/4];
+ME2: 0D[n1/2.];
+
+Compasso 62:
+MD:  2C[n1/4]; B[n1/4]; A[n1/4];
+ME:  0E[n1/4]; 0G[n1/4]; 0F[n1/4];
+ME2: [s1/2.];
+
+Compasso 63:
+MD:  B[n1/8]; 2D[n1/8]; G[n1/4]; F[n1/4];
+ME:  0G[n1/4]; -1B[n1/4]; 0D[n1/4];
+ME2: [s1/2.];
+
+Compasso 64:
+MD:  G[n1/2.], D[n1/2.], 0B[n1/2.];
+ME:  0G[n1/4]; 0D[n1/4]; -1G[n1/4];
+ME2: [s1/2.];
+
+Fim
+`;
+
+    const SONG_ELISE = `Música: Pour Elise (Für Elise) – Ludwig van Beethoven
+Transcrição em texto: a parte A (o tema famoso, com as repetições escritas)
+Nível: médio
+
+Referência: Bagatela em Lá menor, WoO 59 — edição digital do Mutopia Project
+(domínio público). "Poco moto". O tema se repete e a parte do meio (compassos 18 a 30)
+passa por Dó maior.
+Compasso: 3/8
+Andamento: semínima = 72
+
+Dica: pratique primeiro só a mão direita, devagar (Velocidade 50%). A mão esquerda
+toca arpejos curtos (Lá–Mi–Lá e Mi–Mi–Sol♯) e descansa no resto do compasso.
+
+Compasso 1 (anacruse: as 2 semicolcheias antes do 1º compasso):
+MD:  [p1/4]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/4]; [p1/8];
+
+Compasso 2:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 3:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 4:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 5:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 6:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 7:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 8:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 9 (1ª vez: as 2 semicolcheias levam de volta ao começo):
+MD:  A[n1/4]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 10 (a melodia de novo):
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 11:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 12:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 13:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 14:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 15:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 16:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 17 (2ª vez: segue para o trecho do meio):
+MD:  A[n1/8]; [p1/16]; B[n1/16]; 2C[n1/16]; 2D[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 18 (o trecho do meio, em Dó maior):
+MD:  2E[n1/8.]; G[n1/16]; 2F[n1/16]; 2E[n1/16];
+ME:  0C[n1/16]; 0G[n1/16]; C[n1/16]; [p1/16]; [p1/8];
+
+Compasso 19:
+MD:  2D[n1/8.]; F[n1/16]; 2E[n1/16]; 2D[n1/16];
+ME:  -1G[n1/16]; 0G[n1/16]; 0B[n1/16]; [p1/16]; [p1/8];
+
+Compasso 20:
+MD:  2C[n1/8.]; E[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 21:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; [p1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; E[n1/16]; [p1/16]; [p1/16]; E[n1/16];
+
+Compasso 22:
+MD:  [p1/16]; 2E[n1/16]; 3E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16];
+ME:  2E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16];
+
+Compasso 23:
+MD:  2E[n1/8]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16]; [p1/8];
+
+Compasso 24:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 25:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 26:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 27:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 28:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 29:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 30:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 31 (volta ao trecho do meio):
+MD:  A[n1/8]; [p1/16]; B[n1/16]; 2C[n1/16]; 2D[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 32 (o trecho do meio de novo):
+MD:  2E[n1/8.]; G[n1/16]; 2F[n1/16]; 2E[n1/16];
+ME:  0C[n1/16]; 0G[n1/16]; C[n1/16]; [p1/16]; [p1/8];
+
+Compasso 33:
+MD:  2D[n1/8.]; F[n1/16]; 2E[n1/16]; 2D[n1/16];
+ME:  -1G[n1/16]; 0G[n1/16]; 0B[n1/16]; [p1/16]; [p1/8];
+
+Compasso 34:
+MD:  2C[n1/8.]; E[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 35:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; [p1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; E[n1/16]; [p1/16]; [p1/16]; E[n1/16];
+
+Compasso 36:
+MD:  [p1/16]; 2E[n1/16]; 3E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16];
+ME:  2E[n1/16]; [p1/16]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16];
+
+Compasso 37:
+MD:  2E[n1/8]; [p1/16]; 2D#[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  [p1/16]; 2D#[n1/16]; 2E[n1/16]; [p1/16]; [p1/8];
+
+Compasso 38:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 39:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 40:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; G#[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 41:
+MD:  2C[n1/8]; [p1/16]; E[n1/16]; 2E[n1/16]; 2D#[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 42:
+MD:  2E[n1/16]; 2D#[n1/16]; 2E[n1/16]; B[n1/16]; 2D[n1/16]; 2C[n1/16];
+ME:  [p1/4.];
+
+Compasso 43:
+MD:  A[n1/8]; [p1/16]; C[n1/16]; E[n1/16]; A[n1/16];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Compasso 44:
+MD:  B[n1/8]; [p1/16]; E[n1/16]; 2C[n1/16]; B[n1/16];
+ME:  -1E[n1/16]; 0E[n1/16]; 0G#[n1/16]; [p1/16]; [p1/8];
+
+Compasso 45 (fim da parte A):
+MD:  A[n1/4.];
+ME:  -1A[n1/16]; 0E[n1/16]; 0A[n1/16]; [p1/16]; [p1/8];
+
+Fim
+`;
+
+    const SONG_CANON = `Música: Cânone em Ré – Johann Pachelbel (versão simplificada)
+Nível: médio
+Tom: Ré maior
+Compasso: 4/4
+Andamento: semínima = 72
+
+Versão simplificada (arranjo para o Siga o Dino): a mão esquerda repete o baixo
+famoso de 8 notas (Ré, Lá, Si, Fá♯, Sol, Ré, Sol, Lá), e a mão direita faz a melodia
+em três partes, cada vez mais rápidas: semibreves, mínimas e semínimas. Com o Tom de
+Ré maior, F e C já são sustenidos (Fá♯ e Dó♯).
+
+Compasso 1 (o baixo de 8 notas e a melodia em semibreves):
+MD:  2F[n1];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 2:
+MD:  2E[n1];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 3:
+MD:  2D[n1];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 4:
+MD:  2C[n1];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 5:
+MD:  B[n1];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 6:
+MD:  A[n1];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 7:
+MD:  B[n1];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 8:
+MD:  2C[n1];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 9 (a melodia em mínimas):
+MD:  2D[n1/2]; 2C[n1/2];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 10:
+MD:  B[n1/2]; A[n1/2];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 11:
+MD:  G[n1/2]; F[n1/2];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 12:
+MD:  G[n1/2]; E[n1/2];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 13 (a melodia em semínimas):
+MD:  2D[n1/4]; 2F[n1/4]; 2A[n1/4]; 2G[n1/4];
+ME:  0D[n1/2]; -1A[n1/2];
+
+Compasso 14:
+MD:  2F[n1/4]; 2D[n1/4]; 2F[n1/4]; 2E[n1/4];
+ME:  -1B[n1/2]; -1F[n1/2];
+
+Compasso 15:
+MD:  2D[n1/4]; B[n1/4]; 2D[n1/4]; A[n1/4];
+ME:  -1G[n1/2]; -1D[n1/2];
+
+Compasso 16:
+MD:  G[n1/4]; B[n1/4]; A[n1/4]; G[n1/4];
+ME:  -1G[n1/2]; -1A[n1/2];
+
+Compasso 17 (acorde final):
+MD:  F[n1], A[n1], 2D[n1];
+ME:  0D[n1];
+Fim
+`;
+
     window.SigaDinoMusic = {
         parse,
         UNIT,
         figureOf,
         EXAMPLES: [
-            { id: "ode", title: "Ode à Alegria (Beethoven)", short: "Ode à Alegria", file: "Ode_a_Alegria_notas.txt", text: ODE },
-            { id: "clair", title: "Clair de Lune (Debussy)", short: "Clair de Lune", file: "Clair_de_Lune_notas.txt", text: CLAIR },
+            { id: "ode", title: "⭐ Ode à Alegria — Beethoven (fácil)", short: "Ode à Alegria", file: "Ode_a_Alegria_notas.txt", text: ODE },
+            { id: "brilha", title: "⭐ Brilha, brilha, estrelinha (muito fácil)", short: "Brilha, brilha, estrelinha", file: "Brilha_brilha_estrelinha_notas.txt", text: SONG_BRILHA },
+            { id: "irmao", title: "⭐ Irmão João — cânone (fácil)", short: "Irmão João", file: "Irmao_Joao_notas.txt", text: SONG_IRMAO },
+            { id: "parabens", title: "⭐ Parabéns a você (fácil)", short: "Parabéns a você", file: "Parabens_a_voce_notas.txt", text: SONG_PARABENS },
+            { id: "minueto", title: "⭐⭐ Minueto em Sol — Bach/Petzold (médio)", short: "Minueto em Sol", file: "Minueto_em_Sol_notas.txt", text: SONG_MINUETO },
+            { id: "elise", title: "⭐⭐ Pour Elise — Beethoven (médio)", short: "Pour Elise", file: "Pour_Elise_notas.txt", text: SONG_ELISE },
+            { id: "canon", title: "⭐⭐ Cânone em Ré — Pachelbel (médio)", short: "Cânone em Ré", file: "Canone_em_Re_notas.txt", text: SONG_CANON },
+            { id: "clair", title: "⭐⭐⭐ Clair de Lune — Debussy (difícil)", short: "Clair de Lune", file: "Clair_de_Lune_notas.txt", text: CLAIR },
         ],
     };
 })();
