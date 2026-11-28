@@ -6,8 +6,8 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
+    gap: 6px;
+    padding: 10px;
     background: #1e293b;
     color: #e2e8f0;
     border: 1px solid #334155;
@@ -19,6 +19,7 @@
 }
 
 .dg-combo-titulo {
+    font-size: 0.88rem;
     font-weight: 700;
     text-align: center;
     margin-bottom: 4px;
@@ -28,15 +29,15 @@
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 11px;
     border: 1px solid #334155;
     border-radius: 10px;
     background: #0f172a;
     color: #e2e8f0;
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 0.84rem;
     text-align: left;
     cursor: pointer;
 }
@@ -63,12 +64,12 @@
 
 .dg-combo-check {
     margin-left: auto;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
     color: #16a34a;
 }
 
 /* Ícone da opção (data-icon) */
 .dg-combo-icone { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: -2px; opacity: .9; }
-.dg-combo-icone svg { width: 18px; height: 18px; }
+.dg-combo-icone svg { width: 16px; height: 16px; }
